@@ -1,0 +1,990 @@
+# AI Platform Roadmap
+
+هذه الوثيقة هي مرجع خارطة الطريق التنفيذية للمشروع. أي ميزة أو إصلاح جديد يجب أن ينسجم مع هذه المراحل، ولا ننتقل إلى مرحلة لاحقة قبل التحقق من متطلبات المرحلة الحالية.
+
+## قواعد العمل
+
+1. `main` هو مصدر الحقيقة الوحيد بين الأجهزة والفروع.
+2. كل تغيير مهم يمر عبر PR مستقل مع CI وCodeQL عند توفرهما.
+3. لا نعتبر المرحلة مكتملة بالوصف فقط؛ يجب التحقق من الاختبارات والتشغيل الفعلي.
+4. قبل إضافة ميزة جديدة نراجع التكرار والتوافق مع المعمارية الحالية.
+5. بعد كل مرحلة نسجل: ما تم، ما تم اختباره، وما بقي.
+6. أي تغيير في البنية الإنتاجية يجب أن يحافظ على الأمن، قابلية التوسع، النسخ الاحتياطي، والمراقبة.
+7. لا نعتبر النظام "Production-ready" بسبب نجاح CI وحده؛ يجب إجراء تحقق تشغيلي فعلي.
+
+## المرحلة A — Production Foundation
+
+الحالة: **مستقرة تشغيليًا — الأساس الإنتاجي مكتمل، مع نقاط اختيارية مؤجلة**
+
+1. Render Health Check
+2. Celery Worker
+3. Celery Beat
+4. PostgreSQL بإعداد إنتاجي مناسب
+5. Redis بإعداد إنتاجي مناسب
+6. Object Storage للملفات
+7. Off-site backups
+8. Domain + HTTPS
+9. Production smoke tests وE2E
+
+### الحالة التفصيلية الحالية
+
+- Health Check: **مكتمل** — خدمة `ai-chat-backend` تستخدم الآن Health Check Path = `/health`، وآخر deploy بعد التغيير أصبح `live`. فحص الإنتاج يؤكد أن `/health` يعيد حالة سليمة وأن قاعدة البيانات متاحة.
+- Celery Worker: **يعمل مضمّنًا حاليًا** — سجلات Render تثبت استقبال وتنفيذ `run_due_scheduled_tasks` بنجاح دوريًا. الخدمة المستقلة ما زالت هدفًا لاحقًا عند الحاجة إلى فصل الموارد.
+- Celery Beat: **يعمل مضمّنًا حاليًا** — سجلات Render تثبت تشغيل الجدولة وإرسال المهام المجدولة دوريًا. الخدمة المستقلة ما زالت هدفًا لاحقًا.
+- PostgreSQL: **تم ترحيله إلى Supabase بنجاح** — مشروع `ai-chat-prod-db` في `us-east-2` (Ohio)، PostgreSQL 17.6، وحالة المشروع `ACTIVE_HEALTHY`. تم استعادة النسخة من Render، ثم التحقق من تطابق جميع جداول `public` وعدد صفوفها (34 جدولًا). تم تحويل `DATABASE_URL` في Render إلى Supabase Session Pooler، وأكد Production Smoke نجاح التطبيق بعد التحويل. مورد Render PostgreSQL القديم `ai-chat-db` أصبح `suspended` بسبب انتهاء مورد الخطة المجانية بتاريخ 2026-10-10. لا يُعد الآن خطة رجوع قابلة للاستخدام، ولا ترقيه إلى مورد مدفوع أو تحاول إعادة تشغيله. بعد تعليقه استمرت `/health` و`/ready` في اجتياز فحص قاعدة بيانات فعلي وRedis؛ ويحدد `render.yaml` Supabase كقاعدة خارجية مقصودة، لكن اسم مضيف السر لم يُقرأ مباشرة.
+- Redis/Key Value: **متحقق تشغيليًا على Render Free** — الحالة `available`، و`persistenceMode=off`. سجلات الـbackend تؤكد اتصال Celery بـRedis وتشغيل المهام المجدولة بنجاح بصورة متكررة. لا يوجد إجراء مجاني لتمكين persistence؛ Render يوضح أن الاستمرارية غير متاحة على Free، لذلك يبقى Redis مخصصًا للكاش/الطوابير القابلة لإعادة البناء. فصل Worker عن الـbackend يبقى مؤجلًا لتجنب مورد إضافي مدفوع.
+- Object Storage: **مكتمل ومتحقق** — اختبارات upload/read/delete نجحت.
+- Off-site backups: **مكتمل ومتحقق تشغيليًا** — النسخ الاحتياطي الخارجي نجح قبل الترحيل، ثم تم تحديث Workflow ليدعم PostgreSQL الإنتاجي في Supabase، وتحديث `PRODUCTION_DATABASE_URL` إلى Supabase، وتشغيل النسخ الاحتياطي الجديد بنجاح.
+- Credential rotation: **مكتمل** — تم إنشاء `production_db_2026`، تحديث خدمة الـbackend و`PRODUCTION_DATABASE_URL` في GitHub، حذف `ai_chat_db_6nnl_user`، وتحقق PostgreSQL من أن الحساب القديم لم يعد قابلًا لتسجيل الدخول. تم تعيين `PRODUCTION_DB_CREDENTIAL_ROTATED=true`.
+- Domain + HTTPS: **HTTPS على نطاقات Render مكتمل** — خدمات Render تعمل عبر `onrender.com` مع HTTPS. **Custom Domain مؤجل** حاليًا لأن المستخدم لا يريد دفع تكلفة الآن ولا يوجد نطاق مخصص متحقق.
+- Production smoke tests/E2E: **مكتمل تشغيليًا وموسع** — التشغيل يغطي `/health`، `/ready`، `/billing/plans`، تمرير `X-Request-ID`، والوصول إلى الواجهة الأمامية. تم إضافة retries لمعالجة cold starts على Render Free.
+- Observability: **مكتمل تشغيليًا** — `X-Request-ID` مرتبط بسياق logging، وProduction Smoke يتحقق من propagation، و`/ready` يفحص DB + Redis. أي تحسينات إضافية للمراقبة لاحقة وليست blocker.
+
+### تحقق Render الفعلي — 2026-09-26
+
+- `ai-chat-backend`: Web Service، الخطة Free، Health Check Path = `/health`.
+- آخر deploy للcommit `e14cf2e4b517282c69ae70f8eefb221e764ba831` أصبح **live**.
+- Production Smoke للcommit الجديد: **نجح**.
+- لم يتم إنشاء أو ترقية موارد Render مدفوعة.
+
+### آخر تحقق تشغيلي — 2026-09-26
+
+- Production DB Backup بعد تدوير credential: **نجح** بالكامل.
+- Production Smoke السابق بعد التغييرات الأساسية: **نجح**.
+- Health Check الجديد على Render أصبح فعالًا.
+- readiness endpoint موجود ومربوط بفحص قاعدة البيانات وRedis.
+- التحقق المباشر من endpoint من بيئة التنفيذ المحلية تعذر بسبب فشل DNS، لذلك لا نسجل نتيجة HTTP مباشرة من هذه البيئة كدليل مستقل.
+
+### الأولوية التالية
+
+**إكمال Production Hardening (Stage B) بدون إنشاء مورد مدفوع، ثم الانتقال إلى ميزات المنتج بعد إغلاق بنود B الحرجة.**
+
+## قاعدة المتابعة
+
+عند بدء أي جلسة عمل جديدة، نبدأ من آخر حالة مؤكدة في هذه الوثيقة وGitHub `main`، ثم نكمل أول بند غير مكتمل في المرحلة الحالية قبل الانتقال إلى ميزات جديدة.
+
+### تحقق Redis وCelery — مكتمل ومتحقق — 2026-09-26
+
+- Redis/Key Value: اتصالات نشطة مؤكدة، وCelery متصل بـRedis عبر الشبكة الداخلية.
+- Celery Worker وBeat: تشغيل فعلي مؤكد، مع نجاح متكرر للمهمة `run_due_scheduled_tasks` دون أخطاء في السجلات.
+- قرار التكلفة: لا نرفع Redis إلى خطة مدفوعة ولا ننشئ Background Worker مستقلًا في هذه المرحلة، لأن الهدف الحالي هو البقاء بدون دفع.
+
+### مراجعة الأمن والأداء وCI — مكتملة ومتحققة — 2026-09-26
+
+- Supabase Security Advisor: لا توجد ملاحظات `RLS Disabled` حرجة؛ RLS مفعّل على 34/34 جدولًا. الملاحظة الحالية `RLS Enabled No Policy` مقصودة لأن التطبيق يستخدم اتصال PostgreSQL مباشرًا ولا يعتمد على Supabase Data API، لذلك لم نضف سياسات تخمينية.
+- Supabase Performance Advisor: تم إصلاح جميع علاقات Foreign Key التي ظهرت بلا فهرس مباشر بإضافة 4 فهارس تغطية مناسبة. بقيت ملاحظات `unused_index` فقط، وهي معلوماتية وقد تتغير مع نمو الاستخدام.
+- GitHub CI: يتحقق من اختبارات backend/frontend، `pip-audit`، migrations، build، وCompose configuration.
+- CodeQL: مفعّل لـPython وJavaScript/TypeScript مع `security-extended` على pushes وPRs وجدولة أسبوعية.
+- Production Smoke وProduction DB Backup: كلاهما موجودان بجدولة/تشغيل يدوي ومتحققان تشغيليًا.
+
+### المرحلة B — Production Hardening
+
+الحالة: **مكتملة ومتحققة**
+
+الهدف: تحويل الأساس الإنتاجي الحالي إلى منصة أكثر صلابة قبل إضافة ميزات كبيرة جديدة.
+
+#### B1 — Rate Limiting واستهلاك الموارد: **مكتمل ومتحقق**
+
+- Global rate limit عبر Redis.
+- حدود منفصلة لمسارات المصادقة الحساسة.
+- حدود يومية لـAPI keys مع عملية Redis ذرية.
+- سياسة fail-open للحد العام عند تعطل Redis، وfail-closed للمسارات الحساسة في الإنتاج.
+- التحقق من ownership لمسارات API keys.
+- اختبارات CI ناجحة على هذه الأجزاء.
+
+#### B2 — Observability / Readiness: **مكتمل ومتحقق**
+
+- `X-Request-ID` validation/generation/propagation موجود.
+- Request metrics logging يربط request ID بسياق الطلب.
+- `/health` بقي Liveness check مستقلًا.
+- أضيف `/ready` كـDeep Readiness check لقاعدة البيانات وRedis.
+- اختبارات الوحدة تغطي حالتي readiness الناجحة والفاشلة.
+- Production Smoke أصبح يفحص `/ready` مع retries مناسبة لـRender Free.
+- commit `e14cf2e4b517282c69ae70f8eefb221e764ba831` أصبح **live** على Render.
+- CodeQL وPublish backend image للcommit الجديد نجحا.
+- CI الكامل للcommit `ae5e4dede12dc03ff0179d618f6b8424601fc6c3` أُغلق بنجاح: Backend `pytest`، Frontend tests/build، Production Compose، Production Smoke، CodeQL، وPublish backend image كلها ناجحة.
+
+#### B3 — IDOR/BOLA: **مكتمل ومتحقق**
+
+تمت مراجعة واختبارات cross-user على الموارد والمسارات الحساسة، بما في ذلك:
+
+- Conversations: القراءة، pin، branch، duplicate، bookmarks وغيرها.
+- Workspaces: منع استخدام workspace لمستخدم آخر.
+- Projects: ownership والمشاركة والربط مع workspace.
+- Assistants: CRUD، versions، analytics، وعدم كشف المساعد الخاص لمستخدم آخر.
+- Files: القراءة/التنزيل/الحذف، وقيود workspace/project membership.
+- Conversation sharing: إنشاء/عرض/إلغاء روابط المشاركة من المالك فقط.
+- API keys: منع الإدارة من مستخدم آخر.
+- Sessions: منع التحكم في جلسات مستخدم آخر.
+- Tags, folders, notifications, scheduled-task history وغيرها من موارد المستخدم.
+
+لا يوجد في المراجعة الحالية مسار IDOR/BOLA واضح غير مغطى؛ يبقى توسيع الاختبارات ممكنًا عند إضافة موارد أو مسارات جديدة.
+
+### تحقق B3 النهائي — 2026-09-27
+- تمت إضافة اختبارات cross-user مخصصة لـ **Project Memories** و**Assistant Workspace Sharing** في PR #299.
+- تم تصحيح اختبار دعوة عضو المشروع ليستخدم مسار قبول الدعوة الفعلي ويلتقط token عبر mock لإرسال البريد.
+- PR #299 تم دمجه بنجاح بعد نجاح الفحوصات.
+- CI run `3059` (GitHub Actions run `36334506819`): **نجح**.
+- CodeQL run `333` (GitHub Actions run `36334506818`): **نجح**.
+- commit الدمج بعد squash: `ac88c1cc6f79744bab99f733692caa496ed3b9e4`.
+- النتيجة: **B3 مغلق ومتحقق**؛ لا توجد حاليًا مسارات IDOR/BOLA معروفة غير مغطاة ضمن نطاق المراجعة الحالي.
+
+### تحقق Stage B النهائي — 2026-09-27
+- B1 — Rate Limiting واستهلاك الموارد: **مكتمل ومتحقق**.
+- B2 — Observability / Readiness: **مكتمل ومتحقق**.
+- B3 — IDOR/BOLA: **مكتمل ومتحقق**.
+- B4 — CI/CD والتحقق التشغيلي: **مكتمل ومتحقق**.
+- B5 — التكلفة والموارد: **مكتمل ومتحقق حاليًا**؛ قاعدة Render PostgreSQL القديمة أصبحت `suspended` بسبب انتهاء مورد Free، واستمرت فحوص الإنتاج بنجاح. لا توجد حاجة إلى ترقية مدفوعة؛ تظل المتابعة مقتصرة على مراقبة عدم ظهور مورد مدفوع غير مقصود.
+- القرار: **Stage B مغلقة**، ولا توجد حاجة الآن لإنشاء مورد مدفوع أو الانتقال إلى خطة مدفوعة.
+
+#### B4 — CI/CD والتحقق التشغيلي: **مكتمل ومتحقق**
+
+- Backend/frontend tests.
+- `pip-audit`.
+- Alembic migrations.
+- Production Compose validation.
+- CodeQL.
+- Production Smoke.
+- Production DB Backup.
+- retries في Smoke للتعامل مع cold starts على Render Free.
+
+#### B5 — التكلفة والموارد: **مكتمل ومتحقق حاليًا**
+
+- Render Backend: **Free**.
+- Render Frontend: **Free**.
+- Render Redis: **Free**.
+- قاعدة Render PostgreSQL القديمة `ai-chat-db`: **suspended بسبب انتهاء مورد Free بتاريخ 2026-10-10**؛ لم تعد خطة رجوع قابلة للاستخدام. بعد تعليقها استمرت فحوص قاعدة البيانات الإنتاجية عبر `/health` و`/ready` بالنجاح.
+- Supabase organization الحالية: **Free**، ومشروع الإنتاج `ai-chat-prod-db` حالته `ACTIVE_HEALTHY`.
+- لا توجد ترقية أو مورد مدفوع تم إنشاؤه خلال Stage B.
+- Custom Domain وفصل worker المستقل ما زالا مؤجلين حتى توجد حاجة وميزانية.
+- نقطة المتابعة التشغيلية المتبقية: لا تُعد تشغيل قاعدة Render القديمة ولا تُرقَّ إلى خطة مدفوعة؛ راقب صحة الخادم وتأكد من عدم وجود موارد مدفوعة غير مقصودة.
+
+### ترحيل PostgreSQL — مكتمل ومتحقق — 2026-09-26
+
+- تم إنشاء Supabase مجانًا بدون مورد مدفوع.
+- تم استعادة نسخة PostgreSQL إلى Supabase والتحقق من تطابق **34/34 جدولًا** في `public` مع قاعدة Render.
+- تم تحويل `DATABASE_URL` للإنتاج إلى Supabase Session Pooler.
+- Production Smoke بعد التحويل: **نجح**.
+- Production DB Backup بعد التحويل إلى Supabase: **نجح**.
+- تم تفعيل RLS على **34/34 جدولًا** في `public` كحماية لطبقة Supabase Data API، بدون إضافة سياسات تخمينية قد تتعارض مع نموذج صلاحيات التطبيق. التطبيق يستخدم اتصال PostgreSQL مباشرًا من الـbackend.
+- بقي تحذير غير حرج: امتداد `vector` موجود في schema `public` بسبب متطلبات استعادة النسخة الحالية؛ لا يتم نقله الآن حتى لا نخاطر بوظائف embeddings. يُراجع لاحقًا عند توفر نافذة آمنة للتعديل.
+- Render PostgreSQL القديم `ai-chat-db` أصبح `suspended` بسبب انتهاء مورد Free بتاريخ 2026-10-10، ولم يعد احتياطي رجوع قابلًا للاستخدام. اجتياز `/health` و`/ready` بعد التعليق يؤكد أن الخدمة لا تعتمد على هذه القاعدة المعلّقة.
+
+
+
+## المرحلة D — Agent Platform
+
+الحالة: **مكتملة ومتحققة — D1 إلى D8**
+
+### D2 — MCP Integration: **مكتمل ومتحقق**
+- تمت إضافة MCP Python SDK `2.2.0`.
+- التكامل اختياري ومغلق افتراضيًا عبر `MCP_ENABLED=false`.
+- دعم Streamable HTTP لخوادم MCP المصرح بها.
+- اكتشاف أدوات MCP ودمجها داخل Tool Registry scoped لكل تشغيل Agent.
+- حدود لعدد الخوادم والأدوات، وHTTPS إلزامي في production.
+- أضيفت اختبارات للإعداد والاكتشاف وتنفيذ أداة MCP.
+- PR #305 تم دمجه بنجاح.
+- CI run `3095`: **نجح**.
+- CodeQL run `345`: **نجح**.
+- commit الدمج بعد squash: `f47e065da4beadc7bceb5a293fa6062d81c158ec`.
+
+### D1 — Tool Registry: **مكتمل ومتحقق**
+- تم إنشاء Registry مركزي لتعريف الأدوات واكتشافها وتنفيذها.
+- الأدوات الحالية المسجلة: `calculator`، `python`، `web_search`، `analyze_data`.
+- تم نقل Agent Mode لاستخدام الـRegistry بدل التعريف والتنفيذ الموزع داخل `ai_agent.py`.
+- تمت إضافة اختبارات للـregistry، منع أسماء الأدوات المكررة، والتعامل مع الأدوات غير المسجلة.
+- PR #303 تم دمجه بنجاح.
+- CI run `3080`: **نجح**.
+- CodeQL run `341`: **نجح**.
+- commit الدمج بعد squash: `5330b0ff6064072aa434cd200a7fecda89e19624`.
+
+### D4 — Tool Permissions: **مكتمل ومتحقق**
+- أضيفت `AGENT_ALLOWED_TOOLS_JSON` كقائمة سماح صريحة للأدوات التي يمكن أن يعرّفها Agent للـmodel.
+- أصبح `ToolRegistry` يدعم allowlist حقيقية ويمنع تسجيل أداة خارج الصلاحيات قبل ظهورها للـmodel.
+- تم تطبيق الـallowlist داخل `AgentRuntime` قبل تسجيل أي أداة MCP مكتشفة.
+- أدوات MCP لا تُكشف تلقائيًا؛ كل خادم يتطلب `allowed_tools` بأسماء الأدوات البعيدة بشكل صريح، إضافة إلى allowlist العامة.
+- تم توثيق الإعدادات في `.env.example`.
+- أضيفت اختبارات للصلاحيات في Registry وAgent Runtime وMCP discovery.
+- PR #308 تم دمجه بنجاح.
+- CI run `3126`: **نجح**.
+- CodeQL run `356`: **نجح**.
+- commit الدمج بعد squash: `82f4e295c1c8fe064fef91131adaee17d87a19bf`.
+
+### D3 — Agent Runtime: **مكتمل ومتحقق**
+- تم فصل دورة تشغيل Agent عن طبقة النقل HTTP داخل `ai-backend/app/services/agent_runtime.py`.
+- الـRuntime يعيد نتيجة موحدة تتضمن `run_id` والحالة والنص والمصادر والـtokens وعدد الجولات واستدعاءات الأدوات.
+- تم الإبقاء على الحدود الآمنة الحالية: 3 جولات، 4 استدعاءات أدوات لكل جولة، وحدّ لحجم نتائج الأدوات وسجل المحادثة.
+- أضيفت مهلة مستقلة لتنفيذ كل أداة مع معالجة timeout/cancellation والأخطاء الداخلية دون إسقاط تشغيل Agent بالكامل.
+- أضيفت أحداث lifecycle للتشغيل والجولات والميزانية والإكمال، مع الحفاظ على أحداث الأدوات الحالية.
+- تم ربط `ai_agent.py` بالـRuntime الجديد مع الحفاظ على واجهة الاستدعاء الحالية للتطبيق.
+- أضيفت اختبارات مخصصة لدورة التشغيل، المهلة، lifecycle، وحدود التنفيذ.
+- PR #307 تم دمجه بنجاح بعد إصلاح اختبارات async وsnapshot الرسائل.
+- CI run `3113`: **نجح**.
+- CodeQL run `353`: **نجح**.
+- commit الدمج بعد squash: `d6c8a743d257b035b79814edb019b8fe47aaad15`.
+
+### D4 — Tool Permissions: **مكتمل ومتحقق**
+- تمت إضافة Allowlist عالمية لأدوات Agent عبر `AGENT_ALLOWED_TOOLS_JSON`.
+- الـTool Registry يرفض تسجيل الأدوات غير المسموح بها، وRuntime لا يعرض للـmodel إلا الأدوات المسموح بها.
+- خوادم MCP لا تعرض أي أداة remote تلقائيًا؛ كل خادم يحتاج `allowed_tools` صريحة بأسماء الأدوات البعيدة المسموح بها.
+- أضيفت اختبارات مستقلة لـRegistry permissions وAgent runtime filtering وMCP server allowlists.
+- PR #308 تم دمجه بنجاح.
+- CI run `3126`: **نجح**.
+- CodeQL run `356`: **نجح**.
+- commit الدمج بعد squash: `82f4e295c1c8fe064fef91131adaee17d87a19bf`.
+
+### D5 — Sandboxed Code Execution: **مكتمل ومتحقق**
+- المنفّذ الحالي يعمل داخل عملية Python منفصلة مع AST allowlist قبل التنفيذ.
+- الاستيراد، الوصول للملفات، التنفيذ الديناميكي، attribute access المحظور، وتعريف الدوال/الأصناف غير مسموحة.
+- تم تقييد البيئة: stdin مغلق، globals محدودة، ولا تُمرّر متغيرات البيئة الحساسة إلى worker.
+- توجد حدود واضحة للكود والناتج ووقت التنفيذ، مع Linux resource limits للـCPU والذاكرة وحجم الملفات وعدد الملفات المفتوحة ومنع core dumps.
+- عند تجاوز المهلة يتم إنهاء مجموعة العملية كاملة بدل ترك worker يعمل في الخلفية.
+- أضيفت اختبارات أمنية مباشرة لرفض constructات خطرة، إيقاف الحلقة اللانهائية، حد طول الكود، وعدم كشف مسارات المضيف في أخطاء التنفيذ.
+- PR #327 تم دمجه بنجاح.
+- CI run `3328`: **نجح**.
+- CodeQL run `411`: **نجح**.
+- commit الدمج بعد squash: `6d4bb58e7684c906fe7809b890f88d9f46da9b5a`.
+
+### D4 — Tool Permissions: **مكتمل ومتحقق**
+- تمت إضافة Allowlist صريحة لأدوات Agent عبر `AGENT_ALLOWED_TOOLS_JSON`.
+- الـTool Registry يفرض الـallowlist عند التسجيل والعرض، فلا تصل الأداة غير المسموح بها إلى تعريفات النموذج.
+- خوادم MCP أصبحت تتطلب `allowed_tools` صريحة لكل أداة بعيدة؛ أدوات MCP غير المدرجة لا تُكتشف ولا تُعرض للـAgent.
+- بقي التكامل افتراضيًا مغلقًا، وHTTPS مطلوب في production كما في D2.
+- أضيفت اختبارات للـRegistry والـRuntime وMCP للتحقق من المنع والسماح.
+- PR #308 تم دمجه بنجاح.
+- CI run `3126`: **نجح**.
+- CodeQL run `356`: **نجح**.
+- commit الدمج بعد squash: `82f4e295c1c8fe064fef91131adaee17d87a19bf`.
+
+### D6 — Long-running Agent Jobs: **مكتمل ومتحقق**
+- تم إنشاء نموذج persisted باسم `agent_jobs` مع حالات `queued` و`running` و`succeeded` و`failed` و`cancelled`، ومؤشرات للحالة والمستخدم وworkspace والـCelery task.
+- أضيفت واجهة `POST /agent-jobs` التي ترجع `202 Accepted` بدل تشغيل Agent داخل طلب HTTP، مع endpoints للقائمة وpolling والإلغاء التعاوني.
+- التنفيذ الخلفي يستخدم Celery وRedis الموجودين أصلًا، دون إنشاء Worker أو مورد مدفوع جديد.
+- Job التنفيذ يستخدم `AgentRuntime` وTool Permissions الحالية، ويتحقق من عضوية workspace وحصة AI وميزانية التكلفة قبل التشغيل.
+- النتيجة تُحفظ في محادثة حقيقية مع `run_id` والمصادر والـtokens، ويُسجل الاستهلاك في `UsageLog`.
+- تمت إضافة migration `0066_agent_jobs` واختبارات lifecycle للعزل والإنشاء والإلغاء والتنفيذ.
+- PR #311 تم دمجه بنجاح بعد إصلاح عرض `celery_task_id` وإعادة استخدام transaction الاختبار.
+- CI run `3154`: **نجح** بالكامل.
+- CodeQL run `367`: **نجح** بالكامل.
+- commit الدمج بعد squash: `a12e5b08af51746042b78ff2acf2c7def8a4c3d4`.
+- تحقق Render التشغيلي بعد الدمج: خدمة الـbackend بدأت نشر commit `a12e5b08…`، وlogs تؤكد تنفيذ migration `0065_object_storage → 0066_agent_jobs`، وبدء Embedded Celery Worker وBeat، ونجاح `/health` عدة مرات بحالة `200` على instance الجديد. حالة Render deploy API بقيت `update_in_progress` في آخر استعلام رغم أن instance الجديد كان يخدم الطلبات بنجاح.
+
+### D7 — Scheduled Agents: **مكتمل ومتحقق**
+- أضيف `execution_mode=standard|agent` إلى المهام المجدولة، مع بقاء `standard` هو الافتراضي للمهمات الحالية.
+- عند حلول موعد مهمة بوضع `agent` يتم إنشاء `AgentJob` persisted وربطه بـ`ScheduledTaskRun` ثم وضعه في Celery/Redis الموجودين أصلًا.
+- أضيفت migration `0067_scheduled_agents` لإضافة وضع التنفيذ وربط سجل الجدولة بالـAgent Job.
+- يتم تحديث `ScheduledTaskRun` عند اكتمال Agent أو فشله/إلغائه، مع إبقاء سجل المحادثة والـrun_id والنتيجة ضمن مسار Agent نفسه.
+- واجهات إنشاء وتعديل المهام المجدولة تعرض وتقبل وضع Agent، مع اختبار للعزل وربط سجل الجدولة بالـjob.
+- PR #312 تم دمجه بنجاح.
+- CI run `3170`: **نجح** بالكامل.
+- CodeQL run `370`: **نجح** بالكامل.
+- commit الدمج بعد squash: `08a5c0ff7ac5e0eb5e4918dfc1d05c7751a6c84d`.
+- لا توجد موارد مدفوعة جديدة؛ D7 يعيد استخدام Celery وRedis الموجودين.
+
+### D5 — Sandboxed Code Execution: **مكتمل ومتحقق**
+- أداة Python تعمل داخل process منفصل باستخدام Python isolated mode (`-I`) مع `-S` و`-B` وبيئة تشغيل دنيا.
+- AST allowlist تمنع imports، attribute access، dynamic evaluation، definitions، comprehensions، وميزات خطرة أخرى قبل التنفيذ.
+- لا توجد filesystem/network imports، و`__builtins__` معطلة داخل worker.
+- حدود تشغيل حالية: 2 ثانية، 256MB ذاكرة افتراضية، 1MB لحجم الملفات، و16 file descriptors مع output limit 12,000 حرف.
+- الاختبارات الإضافية تغطي محاولات `__import__` و`eval` والوصول إلى builtins وattributes وcomprehensions وحد الناتج.
+- PR #310 تم دمجه بنجاح.
+- CI run `3134`: **نجح** بالكامل.
+- CodeQL run `360`: **نجح**.
+- commit الدمج بعد squash: `705a5b6e3b924a49322805c1e2dbdf03dd073c36`.
+- ملاحظة معمارية: هذا sandbox على مستوى Python/process وresource limits، وليس container/kernel isolation كاملًا؛ لذلك يبقى فصل code-runner في container مستقل خيارًا لاحقًا عند الحاجة.
+
+### D8 — Prompt-injection / Tool-abuse defenses: **مكتمل ومتحقق**
+- أضيفت طبقة أمن مشتركة للتحقق من tool arguments عبر JSON schema مبسط، وحجم أقصى `12,000` حرف، وعمق أقصى `8` مستويات.
+- تم تصنيف مخرجات Web Search وData Analysis وMCP كـuntrusted data، مع اكتشاف أنماط شائعة لـprompt injection.
+- مخرجات الأدوات غير الموثوقة تُمرر إلى model داخل حدود بيانات صريحة، ولا تُعامل كتعليمات.
+- بعد وصول محتوى غير موثوق، يمنع Agent Runtime أي tool chaining إضافي ويطلب ردًا نهائيًا بدون أدوات.
+- أضيفت اختبارات للصلاحيات، رفض arguments غير الصالحة أو الكبيرة، كشف prompt injection، تغليف untrusted output، ومنع متابعة استدعاءات الأدوات بعد المحتوى غير الموثوق.
+- PR #313 تم دمجه بنجاح.
+- CI run `3185`: **نجح** بالكامل.
+- CodeQL run `373`: **نجح** بالكامل.
+- commit الدمج بعد squash: `4d9a2f17d03cbad9397aa40b597f3b26673bd157`.
+
+
+
+1. Tool Registry
+2. MCP integration
+3. Agent runtime
+4. Tool permissions
+5. Sandboxed code execution
+6. Long-running agent jobs
+7. Scheduled agents
+8. Prompt-injection / tool-abuse defenses
+
+## المرحلة E — Platform & Developer Ecosystem
+
+الحالة: **مكتملة ومتحققة — E1 إلى E8**
+
+### E1 — API Keys: **مكتمل ومتحقق**
+- إدارة مفاتيح Developer API موجودة عبر `GET /api-keys` و`POST /api-keys` و`DELETE /api-keys/{key_id}`.
+- السر الكامل للمفتاح (`ak_live_...`) يُعاد عند الإنشاء فقط، بينما قاعدة البيانات تخزن `SHA-256` hash وprefix فقط.
+- المفاتيح تدعم الإلغاء، انتهاء الصلاحية، حدًا متدحرجًا للطلبات، ومراقبة الاستخدام عبر `GET /api-keys/{key_id}/usage`.
+- نقطة Developer API الحالية هي `POST /v1/chat` وتستخدم `X-API-Key` مع التحقق من حالة الحساب والملكية وعزل موارد المستخدم.
+- تسجيل الاستخدام يرتبط بالمفتاح نفسه (`api_key_id`) لدعم التحليلات والحصص.
+- واجهة Account Settings توفر إنشاء المفتاح ونسخ السر وإلغاءه وعرض استخدامه.
+- أضيفت اختبارات شاملة للإنشاء، المصادقة، الإلغاء، الانتهاء، العزل بين المستخدمين، الاستخدام، والـrate limit.
+- CI وCodeQL اللذان يغطيان هذه المكونات نجحا ضمن التحققات الحالية على `main`.
+
+### E2 — API Versioning: **مكتمل ومتحقق**
+- تم تثبيت Developer API الحالي كإصدار `v1` مع نقطة اكتشاف `GET /v1`.
+- بقي `POST /v1/chat` هو المسار المستقر للمطورين.
+- الاستجابات الناجحة من `/v1/chat` تحمل `X-API-Version: v1`.
+- تمت إضافة سياسة توافق واضحة: التغييرات الكاسرة تتطلب إصدار URL رئيسيًا جديدًا مثل `/v2`، بينما الإضافات غير الكاسرة يمكن أن تبقى داخل الإصدار نفسه.
+- تم توثيق الفصل بين Developer API versioning ومسارات إدارة المفاتيح مثل `/api-keys`.
+- أضيفت اختبارات لاكتشاف الإصدار والتحقق من ترويسة الإصدار.
+- PR #317 تم دمجه بنجاح.
+- CI run `3211`: **نجح**.
+- CodeQL run `380`: **نجح**.
+- commit الدمج بعد squash: `ba948ae101a5feee94c29738a040939952a430c2`.
+
+### E3 — Developer Webhooks: **مكتمل ومتحقق**
+- تمت إضافة إدارة Webhook endpoints للمطورين تحت `/webhooks` مع عزل كامل حسب المستخدم.
+- secret الخاص بالـWebhook يُعاد عند الإنشاء أو تدويره فقط، ويُخزن مشفرًا في قاعدة البيانات.
+- كل delivery يستخدم HMAC-SHA256 مع `X-Webhook-Id` و`X-Webhook-Event` و`X-Webhook-Timestamp` و`X-Webhook-Signature`.
+- تم تطبيق تحقق SSRF على وجهة الـWebhook: رفض localhost والشبكات الداخلية والعناوين غير العامة، مع إلزام HTTPS في production ومنع redirects.
+- تمت إضافة سجل persisted للـdeliveries مع حالات المحاولة والنتيجة والـHTTP status والـretry schedule.
+- retry محدود إلى 5 محاولات مع backoff، ويستخدم Celery/Redis الموجودين أصلًا دون إنشاء مورد مدفوع جديد.
+- أحداث Developer API الحالية: `api_key.created` و`api_key.revoked`، إضافة إلى `webhook.test` للتحقق اليدوي من endpoint.
+- أضيفت واجهة اختبار endpoint وقائمة deliveries، مع تدوير secret.
+- تمت إضافة migration `0068_developer_webhooks` واختبارات E3 للأمان والعزل والتوقيع والتسليم.
+- PR #318 تم دمجه بنجاح.
+- CI run `3232`: **نجح** بالكامل.
+- CodeQL run `384`: **نجح**.
+- commit الدمج بعد squash: `e684a55585a90404d72a64c1ee64d88ec1404ae3`.
+
+### E4 — OAuth / Connectors: **مكتمل ومتحقق**
+- تمت إضافة أساس OAuth 2.0 قابل للتفعيل اختياريًا لمزوّدي Google وMicrosoft.
+- تدفق التفويض يستخدم Authorization Code مع PKCE S256 وstate أحادي الاستخدام مع صلاحية زمنية.
+- حالات OAuth وcode verifiers تُخزّن في PostgreSQL، والأسرار وaccess/refresh tokens تُخزن مشفرة باستخدام Fernet.
+- تمت إضافة اكتشاف المزودين المهيئين، بدء/إكمال التفويض، إدارة الاتصالات، تحديث tokens، والفصل، مع عزل كامل حسب المستخدم.
+- أضيفت migration `0069_oauth_connectors` ونماذج `oauth_connections` و`oauth_states` واختبارات lifecycle وإعادة استخدام state والعزل والتحديث.
+- مزودو OAuth يبقون معطلين افتراضيًا حتى تُضبط بيانات الاعتماد من الخادم؛ لا توجد حاجة لمورد Render أو Supabase مدفوع.
+- أضيف تحقق production يلزم `OAUTH_CALLBACK_BASE_URL` عبر HTTPS عند تفعيل موفّر OAuth.
+- تم تعزيز منع replay المتزامن لقيمة state باستخدام قفل صف PostgreSQL أثناء الاستهلاك.
+- PR #320 تم دمجه بنجاح.
+- CI run `3266`: **نجح** بالكامل.
+- CodeQL run `392`: **نجح**.
+- commit الدمج بعد squash: `9a537eb5a77c6fbf20667eae25ed1b1df9c3c8e6`.
+
+### E5 — Python + JavaScript SDKs: **مكتمل ومتحقق**
+- تمت إضافة SDK رسمي للـPython داخل `sdk/python` باسم الحزمة `ai-chat-saas`، مع دعم Python 3.9+، وعميل `AIChatClient` لنقطة `POST /v1/chat`.
+- تمت إضافة SDK رسمي للـJavaScript داخل `sdk/javascript` باسم الحزمة `ai-chat-saas`، مع دعم Node.js 18+ واستخدام `fetch` المدمج.
+- كلا الـSDKs يستخدمان عقد Developer API `v1` نفسه، والمصادقة `X-API-Key`، ويقدمان نماذج رد واضحة ومعالجة أخطاء typed مع `X-Request-ID` و`Retry-After` عند توفرها.
+- أضيفت اختبارات مستقلة للـPython والـJavaScript SDKs، وأصبح CI يشغل حزمة SDK الخاصة بهما إلى جانب اختبارات backend/frontend وProduction Compose.
+- CI run `3290`: **نجح** بالكامل، بما في ذلك اختبارات Python SDK وJavaScript SDK.
+- CodeQL run `397`: **نجح** لـPython وJavaScript/TypeScript.
+- PR #324 تم دمجه بنجاح.
+- commit الدمج بعد squash: `05910814f0a0edf2c527a1da9e98540df5197bf8`.
+### E7 — Usage / billing / cost controls: **مكتمل ومتحقق**
+- Usage Logs مرتبطة بالمستخدم وWorkspace وAPI key مع input/output tokens وprovider/model وlatency لدعم التحليلات والحصص.
+- Developer API وBilling يعرضان الاستخدام والحدود اليومية، مع `API key` usage مستقل وعزل حسب المالك.
+- أضيف تسعير قابل للتهيئة عبر `AI_PRICING_JSON`؛ عندما لا يتوفر سعر معروف لا يتم تخمين تكلفة مالية، وتظهر الطلبات غير المسعّرة بوضوح في التحليلات.
+- يوجد guardrail للميزانية الشهرية العامة عبر `AI_MONTHLY_BUDGET_USD` يمنع المستخدمين غير الإداريين من بدء طلبات AI بعد تجاوز الميزانية المهيأة.
+- لكل Workspace حد يومي اختياري وميزانية AI شهرية اختيارية، مع منع التجاوز قبل الطلب وتدقيق التغيير.
+- `/billing/usage` و`/workspaces/{id}/usage` وتحليلات Admin للتكلفة والميزانية توفّر الاستخدام الحالي، تكلفة الشهر، المتبقي، والطلبات غير المسعّرة، مع CSV للاستخدام.
+- واجهات Billing وWorkspace وAdmin تعرض usage/cost guardrails، مع اختبارات backend/frontend للصلاحيات والحسابات وحالات التسعير غير المعروف.
+- لا توجد موارد مدفوعة جديدة مطلوبة لهذه الوظائف؛ تعتمد على PostgreSQL/Redis الموجودين.
+
+### E6 — Enterprise RBAC: **مكتمل ومتحقق**
+- تم إضافة RBAC على مستوى مساحة العمل مع أدوار مخصصة محفوظة في PostgreSQL، وصلاحيات مسماة مثل `members.read` و`members.invite` و`members.manage` و`rbac.manage` وغيرها.
+- الأدوار المخصصة تُنشأ وتُعدّل وتُحذف من خلال API مخصص، ولا يمكن للمستخدم منح أو تعيين صلاحيات تتجاوز صلاحياته الحالية.
+- أصبح بالإمكان إسناد دور RBAC مخصص لعضو غير المالك، مع منع تعيين الدور المخصص للمالك.
+- تم توحيد فحص صلاحيات أعضاء مساحة العمل بدل الاعتماد فقط على `owner/admin/member` في المسارات المغطاة، مع الحفاظ على سلوك الأدوار القديمة كـfallback.
+- أضيفت واجهات لاكتشاف permission catalog وإدارة roles وتعيين/إزالة الدور عن العضو.
+- تمت إضافة migration `0070_enterprise_rbac` مع foreign key اختياري من `workspace_members` إلى دور RBAC.
+- أضيفت اختبارات للعزل، إنشاء الدور، منع تصعيد الصلاحيات، تعيين الدور، ومنع أعضاء الدور المحدود من إدارة RBAC.
+- PR #328 تم دمجه بنجاح بعد نقل E6 إلى أحدث `main` وإصلاح اختبار تصادم invitation token.
+- CI run `3342`: **نجح بالكامل**.
+- CodeQL run `414`: **نجح بالكامل**.
+- commit الدمج بعد squash: `57dd468eef3aaf1140dd86f14109a8ebfe4c2d1b`.
+- PR #326 القديم أُغلق باعتباره superseded ولا يحمل تغييرًا إضافيًا على `main`.
+- لا توجد أي موارد مدفوعة جديدة ضمن E6.
+### E8 — Versioning for assistants, prompts, knowledge bases and agents: **مكتمل ومتحقق**
+- Assistant versions أصبحت snapshots غير قابلة للتعديل تتضمن إعدادات المساعد، قائمة ملفات المعرفة المرتبطة، وtool-policy snapshot.
+- استرجاع نسخة Assistant يعيد أيضًا snapshot ملفات المعرفة التي ما تزال مملوكة للمستخدم، ثم ينشئ version جديدة بدل تعديل التاريخ القديم.
+- Saved Prompts أصبحت تمتلك تاريخ versions immutable مع endpoints للعرض والاسترجاع، والاسترجاع ينشئ version جديدة.
+- AgentJob يحفظ `agent_version` مشتقًا من runtime/tool-policy/limits، إضافة إلى `tool_policy_snapshot`، بحيث تبقى المهمة قابلة للتتبع حتى عند تغيّر الإعدادات لاحقًا.
+- Scheduled Agent jobs تستخدم نفس snapshot عند إنشاء AgentJob.
+- تمت إضافة migration `0072_platform_asset_versioning` بعد `0071_workspace_cost_controls` لضمان سلسلة Alembic واحدة بدون multiple heads.
+- PR #331 تم دمجه بنجاح بعد إصلاح سلسلة migration.
+- CI run `3398`: **نجح** بالكامل، بما في ذلك Alembic وpytest.
+- CodeQL run `427`: **نجح** بالكامل لـPython وJavaScript/TypeScript.
+- commit الدمج بعد squash: `4c8d52dd89ec828fed5f2aff3e18f1be18ca2b31`.
+- لا توجد موارد مدفوعة جديدة ضمن E8.
+
+1. API Keys
+2. API versioning
+3. Webhooks
+4. OAuth / connectors
+5. Python + JavaScript SDKs
+6. Enterprise RBAC
+7. Usage / billing / cost controls
+8. Versioning for assistants, prompts, knowledge bases and agents
+
+### المرحلة C — Product UX
+
+الحالة: **C1 وC2 وC3 مكتملة ومتحققة**
+
+الهدف: تحسين تجربة الاستخدام اليومية مع الحفاظ على المعمارية الحالية، نظام Toast العالمي، اختبارات الواجهة، وعدم إضافة موارد مدفوعة.
+
+#### C1 — Global error feedback: **مكتمل ومتحقق**
+- تم استبدال رسائل الخطأ المعروضة عبر `window.alert` في إجراءات Workspace الأساسية باستخدام Global Toast.
+- تم نشر التغيير على Render Frontend والتحقق من Production Smoke.
+
+#### C2 — Workspace member action errors: **مكتمل ومتحقق**
+- أخطاء تحميل بيانات Workspace.
+- دعوات الأعضاء.
+- تحديث الأدوار.
+- إزالة الأعضاء.
+- إلغاء الدعوات.
+- تحديث النموذج الافتراضي والحصة اليومية.
+- تصدير CSV للاستخدام.
+- تمت إضافة اختبارات UI لأحداث `app:toast` للحالات الجديدة.
+- الإصلاح النهائي في commit `ae5e4dede12dc03ff0179d618f6b8424601fc6c3`.
+- Render Frontend للـcommit النهائي أصبح **live**.
+- CI النهائي للـcommit نجح بالكامل.
+
+#### C3 — Global Toast / API error feedback: **مكتمل ومتحقق**
+تم توحيد مسارات أخطاء API الرئيسية في الواجهة ضمن Global Toast مع اختبارات UI، بدل ترك فشل التحميل أو الإجراءات يتحول إلى حالة فارغة أو خطأ محلي بصمت.
+
+النطاق الذي تم تغطيته يشمل:
+- Workspace/shared conversations وعمليات التعليقات.
+- Files وعمليات الرفع/الإرفاق/الفصل/الحذف/المعاينة.
+- Admin Dashboard، Pricing/Billing، Scheduled Tasks، Account Settings.
+- Public Assistant وModel Compare وConversation Share Manager.
+- تحميل المحادثات وProjects وAssistants وAI Models وبيانات الـsidebar وبيانات المستخدم.
+- AssistantEditor: المعرفة، سجل النسخ، Analytics، إعدادات الرابط العام، المقارنة، وعمليات تفعيل/تدوير/تعطيل الرابط العام.
+- ProjectEditor: تحميل/إضافة/تعديل/حذف ذاكرة المشروع.
+
+### تحقق C3 النهائي — 2026-09-27
+- PRs الأخيرة #295 و#296 و#297 تم دمجها بنجاح.
+- CI وCodeQL نجحا لكل PR من هذه السلسلة.
+- آخر Frontend deployment للcommit `a11c01fb03235d1bafc5a4966c82fc447658b1a1` أصبح **live** على Render.
+- لا توجد موارد Render مدفوعة أضيفت ضمن C3.
+- التدقيق النهائي لمسارات `catch` و`setError` ميّز الحالات التي تحتاج Global Toast عن الحالات المحلية/أفضل جهد، مثل المصادقة، مشاركة محمية بكلمة مرور، clipboard/speech synthesis، وlocal storage.
+- الحالة الحالية: **C3 مغلقة، والمرحلتان A–G موثقتان بحسب نطاقهما السابق**. مسار العمل الحالي هو المرحلة H في `docs/POST_RELEASE_ROADMAP_H_TO_T_AR.md`؛ لا نعيد فتح Stage B ولا نكرر إصلاحات وصلت إلى `main`. تبقى H مفتوحة إلى أن تُغلق بوابات قبول الهاتف والملفات وحماية الفرع وإعداد Auto Deploy.
+
+## المرحلة F — Agent Product & Project Workspace
+
+الحالة الحالية: **F1 وF2 وF3 مكتملة ومتحققة على `main`**.
+
+### F1 — Agent UX / Runtime Activity: مكتمل
+- تم ربط تشغيل Agent داخل المحادثة بأحداث runtime واضحة للجولات، الأدوات، الميزانية، الإلغاء، والتحذيرات والإكمال.
+- تم إبقاء حالة الإكمال ظاهرة بعد انتهاء البث، ثم مسحها عند بدء رسالة جديدة.
+- PR #354 وPR #355 تم دمجهما في `main`.
+
+### F2 — Project Workspace: مكتمل ومتحقق
+#### F2.1 — Persistent Project Files
+- أضيفت ملفات مصدر دائمة للمشروع مع CRUD محمي بعزل المشروع والـworkspace.
+- أضيفت شجرة ملفات ومحرر داخل `ProjectEditor`.
+- تتم مزامنة الملفات التي ينشئها Agent مع شجرة المشروع مع الحفاظ على artifact ZIP الحالي.
+- PR #356 تم دمجه في `main`.
+
+#### F2.2 — Agent Project Context & Safe Editing
+- أضيفت أدوات Agent: `list_project_files`, `read_project_file`, `search_project_files`, `edit_project_file`.
+- الأدوات مقيدة بالمشروع الحالي، مع حدود للحجم والمسارات، وoptimistic concurrency عبر `expected_content`، وإظهار unified diff محدود.
+- محتوى المشروع الخارج من الأدوات يُعامل كـuntrusted data حتى لا يتحول إلى تعليمات للنموذج.
+- PR #357 وPR #358 تم دمجهما في `main`.
+- commit المرحلة قبل F3: `75f12a5485134a9cf4eebffa536a61dd1e99baaa`.
+
+### F3 — Project Validation & Preview: مكتملة ومتحققة
+تم إغلاق F3 عبر PR #360 ودمجه إلى `main` في commit:
+`05cdd9f3d556b3c6863f96cbfc3cc5b0d7420068`.
+
+#### F3.1 — Read-only Project Validation
+- أضيف `GET /projects/{project_id}/validate` مع عزل كامل حسب عضوية المشروع.
+- يفحص نوع المشروع، `package.json`، `pyproject.toml`، `requirements.txt`، بنية `index.html`، NUL bytes، وأسماء الملفات التي تبدو أسرارًا أو مفاتيح خاصة.
+- يعيد أخطاء وتحذيرات مرتبطة بالملف مع ملخص counts.
+- تمت إضافة اختبارات backend للعزل ونتائج التحقق.
+
+#### F3.2 — Safe Static Preview
+- أضيفت معاينة `index.html` من داخل `ProjectEditor`.
+- المعاينة تستخدم `iframe sandbox=""` بدون `allow-scripts` أو `allow-same-origin` أو `allow-forms`.
+- لا يتم تشغيل JavaScript المولّد داخل بيئة التطبيق الرئيسية.
+- تمت إضافة اختبارات frontend للتأكد من وجود الـsandbox وعدم منح صلاحية تشغيل السكربتات.
+
+#### تحقق F3
+- CI run #3831: **نجح بالكامل** — Backend، Frontend، SDK، Production Compose.
+- CodeQL run #596: **نجح بالكامل** لـPython وJavaScript/TypeScript.
+- PR #360: **Merged**.
+- لا توجد موارد مدفوعة جديدة مطلوبة لـF3.
+
+### F3.3 — Advanced Preview Architecture: **مكتملة ومتحققة — 2026-10-02**
+الهدف كان بناء عقد آمن لمعاينة المشاريع التي تحتاج build/runtime بدون تشغيل كود المستخدم داخل origin التطبيق الرئيسي.
+
+ما تم:
+- تحليل نوع المشروع وتحديد استراتيجية المعاينة.
+- بناء JavaScript/React داخل خدمة Builder منفصلة عن Backend.
+- منع Node/npm من الدخول إلى صورة Backend.
+- تشغيل build عبر Builder معزول مع bubblewrap وتعطيل الشبكة أثناء خطوة build.
+- إخراج artifact محدود الحجم والملفات، مع رفض symlinks ومسارات ZIP غير الآمنة.
+- نشر artifact كملفات منفصلة تحت مسار مشروع محدد بدل تنفيذ ZIP داخل Backend.
+- توكن معاينة موقّع ومؤقت ومقيد بالمشروع وartifact.
+- تقديم ملفات المعاينة عبر مسار مخصص مع CSP وsandbox وconnect-src 'none'.
+- عرض المعاينة التنفيذية داخل iframe sandbox="allow-scripts" بدون allow-same-origin.
+- الحفاظ على المعاينة الثابتة السابقة باستخدام sandbox="".
+- إضافة اختبارات أمنية لمسارات ZIP، توكن المعاينة، CSP، عزل workspace، ونشر artifact.
+- عدم تشغيل artifact أو JavaScript المشروع داخل خدمة Backend نفسها.
+
+### تحقق F3.3 النهائي — 2026-10-02
+- PR #362: **Merged** — أساس preview-plan.
+- PR #363: **Merged** — عقد Builder المعزول.
+- PR #364: **Merged** — خدمة Preview Builder مستقلة.
+- PR #365: **Merged** — ربط نتائج build بواجهة ProjectEditor.
+- PR #366: **Merged** — Secure Preview Origin/CSP/artifact serving.
+- CI #3924 على commit c6be6165611b8380849dab2901f39b2f0a505637: **نجح بالكامل** — Backend، Frontend، SDK، Production Compose، Preview Builder.
+- CodeQL #623: **نجح**.
+- Production Smoke #171: **نجح** بعد الدمج.
+- Publish backend image #355: **نجح** بعد الدمج.
+- لم تتم إضافة أو ترقية أي موارد Render مدفوعة ضمن F3.3.
+
+### F4 — Project Collaboration / Import-Export Improvements
+الحالة: **مكتملة ومتحققة — F4.1 وF4.2 وF4.3 على `main`**
+
+#### F4.1 — Project Collaboration / Membership: **مكتمل ومتحقق**
+- أضيفت عضوية المشروع بأدوار `viewer` و`editor` و`manager`.
+- أضيفت فحوصات موحدة للوصول إلى المشروع والقراءة والتعديل وإدارة الأعضاء.
+- تمت حماية Project Files وProject Memories وChat وسياق المحادثات المرتبط بالمشروع من الوصول بعد سحب العضوية.
+- أضيفت اختبارات للعزل بين المستخدمين ومساحات العمل، وصلاحيات viewer/editor/manager، وسحب الوصول.
+- migration: `0074_project_collaboration`.
+- PR #368 تم دمجه بنجاح.
+- merge commit: `325fab92b8e0f6f7fcbbab4cba4e764748fe4976`.
+
+#### F4.2 — Project Import / Export: **مكتمل ومتحقق**
+- أضيف archive ZIP canonical بإصدار schema واضح للـmetadata والملفات والذكريات.
+- تمت إضافة validation صارمة للحجم، عدد الملفات، المسارات، UTF-8، checksums، والملفات غير المعلنة.
+- الاستيراد يدعم fail-by-default عند تعارض الاسم و`rename` صريحًا دون overwrite.
+- تم تسجيل نجاح الاستيراد في audit log.
+- أضيفت واجهات Frontend لتصدير المشروع واستيراده، مع معالجة تعارض الاسم.
+- تم الحفاظ على فحوصات project access وعزل المحادثات حسب المشروع.
+- PR #370 تم دمجه بنجاح.
+- CI #4008: **نجح بالكامل** — Backend، Frontend، SDK، Production Compose، Preview Builder.
+- CodeQL #645: **نجح بالكامل** لـPython وJavaScript/TypeScript.
+- merge commit: `a12ee1a863640fbcb9bbdff3ed8a72c4a0de40eb`.
+- لم تتم إضافة أو ترقية أي موارد Render مدفوعة ضمن F4.
+
+#### F4.3 — Artifact Management / Conflict Improvements: **مكتمل ومتحقق**
+- تم حفظ lifecycle metadata للـproject preview artifacts داخل PostgreSQL.
+- أصبحت artifacts السابقة تُعلَّم `superseded` عند نشر artifact أحدث.
+- تم رفض duplicate normalized ZIP paths أثناء نشر artifact.
+- أصبح عرض preview artifact يتطلب artifact مسجلًا وحالته `active` وضمن مدة الصلاحية.
+- أضيفت مسارات project-scoped لعرض وحذف artifacts مع فحوص ownership/membership.
+- تمت إضافة تنظيف ملفات artifacts عند الاستبدال وحذف المشروع.
+- أضيفت اختبارات lifecycle والعزل والتعارض.
+- migration: `0075_project_preview_artifacts`.
+- PR #374 تم دمجه بنجاح.
+- PR #378 أضاف انتهاء صلاحية artifacts بحالة `expired` وتنظيفًا opportunistic للتخزين، وشدّد عزل تاريخ artifacts، وفرض uniqueness غير حساسة لحالة الأحرف لأسماء المشاريع داخل الـWorkspace.
+- CI #4040: **نجح بالكامل** لـPR #374.
+- CodeQL #653: **نجح بالكامل** لـPR #374.
+- CI #4080: **نجح بالكامل** لـPR #378.
+- CodeQL #659: **نجح بالكامل** لـPR #378.
+- merge commit لPR #378: `952f7c9aa0991fca7d03a46eec81b4ea67920fac`.
+- لا توجد موارد مدفوعة جديدة ضمن F4.
+
+#### إصلاح سلسلة Alembic بعد F4/F5.1: **مكتمل ومتحقق**
+- نتج رأسان مستقلان على `0075_project_preview_artifacts`: `0076_project_name_conflict_index` و`0076_agent_workflow_checkpoints`.
+- أضيف merge migration `0077_merge_f4_f5_heads` لدمج الرأسين دون تغيير schema إضافي.
+- PR #385 تم دمجه بنجاح.
+- CI #4134: **نجح بالكامل**.
+- CodeQL #671: **نجح بالكامل**.
+- merge commit: `cde7d3c4c0045d36c15efd532e614e4a8b33cfc4`.
+- بعد الإصلاح أصبح `alembic upgrade head` يصل إلى head واحد في CI.
+
+#### التحقق التشغيلي بعد F4
+- لا نعتبر F4 مرادفًا لـProduction-ready؛ يبقى Production Smoke على Render Free نقطة تحقق تشغيلية مستقلة.
+- Production Smoke #174 سبق أن سجل timeout متكررًا في `/health` مع نجاح `/ready` وباقي الفحوص، بينما كان التشغيل #173 ناجحًا.
+
+## قاعدة العمل بعد F4
+**F4 مغلقة بالكامل.** لا توجد بنود F4 متبقية.
+
+### F5 — Advanced Agent Project Workflows
+
+#### F5.1 — Multi-step Agent Workflow Checkpoints: **مكتمل ومتحقق**
+- تم دعم workflow منظم داخل AgentJob بحد أقصى 6 خطوات.
+- الخطوات تُنفّذ بالتتابع عبر AgentRuntime الحالي.
+- يتم حفظ حالة كل خطوة، عدد المحاولات، run ID، النتيجة، وcheckpoint metadata.
+- الخطوات المكتملة تبقى محفوظة عبر الإعادة، ويمكن استئناف المهمة من أول خطوة غير مكتملة.
+- الحد الأقصى لمحاولات الخطوة 3 محاولات، مع الحفاظ على توافق إنشاء AgentJob التقليدي.
+- أضيفت اختبارات للعزل، checkpoints، resume، وحالات الفشل.
+- PR #379 تم دمجه بنجاح.
+- CI #4096: **نجح بالكامل**.
+- CodeQL #662: **نجح بالكامل** لـPython وJavaScript/TypeScript.
+- merge commit: `1c0cb1efeb9ef78a36bbb68e01cdeaf1c47e5385`.
+- PR #382 أُغلق لأنه نسخة مكررة من F5.1 بعد دمج #379.
+
+#### F5.2 — Verification / Retry Enhancements: **مكتمل ومتحقق — 2026-10-02**
+- أضيفت مرحلة تحقق مستقلة قبل اعتبار خطوة Agent ناجحة.
+- أضيفت حالات checkpoint إضافية: `executing` و`verifying` و`retrying` و`step_completed` و`completed` و`failed` و`cancelled`.
+- أضيفت bounded retries مع الحفاظ على cumulative input/output token usage.
+- تم كشف `workflow_phase` و`retry_count` و`max_retries` و`checkpoint` و`checkpoint_at` داخل AgentJob API.
+- تم منع إعادة المحاولة عند التوقف الأمني، مع إعادة تطبيق فحوصات quota وcost budget قبل كل retry.
+- migration: `0078_agent_verify_retry`.
+- اختبارات regression تغطي retry بعد فشل التحقق ومنع retry بعد security stop.
+- PR #387 تم دمجه بنجاح.
+- CI #37047362318: **نجح بالكامل** — Backend، Frontend، SDK، Production Compose، Preview Builder.
+- CodeQL #37047368789: **نجح**.
+- merge commit: `a2d0d7a2dd6d6da124cb7db8834bd8d1d4720780`.
+- تم إغلاق PR #381 القديم لأنه أصبح تنفيذًا متجاوزًا بعد اكتمال F5.1 واعتماد تنفيذ F5.2 الجديد.
+- لا توجد موارد بنية تحتية جديدة مطلوبة؛ يعتمد التنفيذ على PostgreSQL/Celery/Redis الموجودة.
+
+## F5.3 — Agent Job Lifecycle Control: **مكتمل ومتحقق — 2026-10-02**
+
+- أضيفت حالة persistent باسم `pause_requested` إلى `AgentJob`.
+- أضيفت حالة lifecycle جديدة `paused` مع إيقاف تعاوني عند نقاط checkpoint/event الآمنة، دون قتل تنفيذ المزوّد الجاري.
+- يمكن إيقاف المهمة وهي `queued` أو أثناء التنفيذ، ثم استئنافها من checkpoint الموجود مع الحفاظ على attempt/retry semantics الخاصة بـF5.1 وF5.2.
+- يمكن إلغاء المهمة وهي `paused` مباشرة، وتبقى حالات الـworkflow والـcheckpoint متسقة.
+- تم كشف حالة الإيقاف داخل AgentJob API وإضافة endpoints للإيقاف والاستئناف.
+- migration: `0079_agent_pause`.
+- PR #388 تم دمجه بنجاح.
+- commit الدمج بعد squash: `f165c4944ff9c90345947be60f5d40d046381456`.
+- CI على آخر commit `da9c26006ea204320dfda5a2df8f9a4686fb3cb2`: **نجح بالكامل** — Backend، Frontend، SDK، Production Compose، Preview Builder.
+- CodeQL على آخر commit: **نجح**.
+- لا توجد موارد بنية تحتية جديدة أو موارد مدفوعة مطلوبة لـF5.3.
+
+## قاعدة العمل بعد F5.3
+
+F5.1 وF5.2 وF5.3 مغلقة ومتحققة على `main`.
+لا توجد حاليًا مواصفة سابقة محفوظة داخل المستودع لمرحلة G، لذلك لا ننسب لها متطلبات تاريخية غير موثقة.
+لأغراض الإغلاق العملي للمشروع، يتم تعريف G التالية كمرحلة **Final Productization & Production Acceptance**، وتُنفذ فقط عبر PRs مستقلة وCI/CodeQL والتحقق التشغيلي.
+
+### المرحلة G — Final Productization & Production Acceptance
+
+#### حالة التقدم — 2026-10-02
+
+- **G1 — UI / Mobile Acceptance: مغلقة على مستوى الكود والتحقق الآلي.**
+  - تم دمج PR #390.
+  - قائمة إجراءات المحادثة في رأس الصفحة أصبحت سياقية ولا تظهر عندما لا توجد إجراءات متاحة.
+  - اختبارات Frontend وCI وProduction Smoke بعد الدمج نجحت.
+  - يبقى التحقق اليدوي على جهاز هاتف فعلي جزءًا من الإغلاق النهائي الشامل.
+
+- **G2 — Agent / Project End-to-End Acceptance: مكتملة ومتحققة — 2026-10-03.**
+  - PR #391 تم دمجه بالـcommit `51cb1bb80ee02878941a9941be5e17c1bea3c475`.
+  - أضيف Dockerfile مستقل لنشر Preview Builder، وتم الحفاظ على عزل bubblewrap ومنع الشبكة أثناء build.
+  - خدمة Render باسم `ai-chat-preview-builder` تعمل على خطة **Free** وأصبحت `live`.
+  - تم إنشاء secret قوي داخل Render للخدمة `ai-chat-preview-builder`، ثم ضبط `PREVIEW_BUILDER_URL=https://ai-chat-preview-builder.onrender.com` و`PREVIEW_BUILDER_TOKEN` في خدمة Backend بالقيمة السرية نفسها، مع إبقاء بقية المتغيرات دون تغيير.
+  - تم حفظ إعدادات الخدمتين وإعادة النشر، ثم أكدت سجلات Render أن Builder أصبح `live` وأن Backend استقر ويعيد `/health = 200`.
+  - تم إجراء اختبار المشروع والمعاينة فعليًا من المستخدم، وبذلك أُغلقت متطلبات G2 الحالية.
+
+- **G3 — Security / Reliability / Cost Acceptance: مغلقة ومتحققة — 2026-10-06.**
+  - في Supabase `ai-chat-prod-db` تم التحقق مباشرة من أن جميع **46/46** جدولًا في schema `public` لديها RLS مفعّل، ولا يوجد أي جدول عام بدون RLS.
+  - Migration `0080_harden_public_rls` فعّلت RLS على الجداول الحساسة الـ12 التي كانت خارج الحماية سابقًا: `agent_jobs`, `agent_workflow_steps`, `oauth_connections`, `oauth_states`, `project_files`, `project_members`, `project_preview_artifacts`, `saved_prompt_versions`, `webhook_deliveries`, `webhook_endpoints`, `workspace_rbac_permissions`, `workspace_rbac_roles`.
+  - تم التحقق من أن هذه الجداول الـ12 لا تمنح `anon` أو `authenticated` أي صلاحيات جدول مباشرة؛ والمنح الموجودة في بقية الجداول محكومة بـRLS مع عدم وجود سياسات، ما يجعل الوصول المباشر عبر Data API **default-deny**.
+  - راجعنا نموذج الوصول الفعلي: التطبيق لا يعتمد على Supabase client في الواجهة، والوصول التشغيلي يتم عبر Backend FastAPI/PostgreSQL المباشر، لذلك **لم نضف سياسات RLS تخمينية** مثل `auth.uid()` قد لا تطابق نموذج الصلاحيات الفعلي.
+  - Security Advisor يسجل **46 ملاحظة INFO** من نوع `rls_enabled_no_policy`، وهي متسقة مع هذا التصميم، وتحذيرًا واحدًا `extension_in_public` للامتداد `vector`. تم الإبقاء على `vector` في `public` عمدًا لأن نقله قد يغير موضع نوع `vector(768)` المستخدم في RAG ويحتاج نافذة تغيير منفصلة؛ لا يُعتبر مانعًا وظيفيًا للإغلاق الحالي.
+  - Deploy Backend للـcommit `6063adebae906f907148acda77995a78a24f2716` أصبح **live** على Render Free، وPublish Backend Image نجح.
+  - PR #399 أصلح ترتيب Production Smoke ليبدأ بـ`/ready` قبل `/health`، ثم نجحت CI وCodeQL، وتم دمجه في `main`.
+  - PR #400 وثّق المراجعة الأمنية، ونجحت CI وCodeQL، ثم تم دمجه في `main`.
+  - **G3 مغلقة رسميًا.**
+
+- **G4 — Production Acceptance: مغلقة ومتحققة — 2026-10-05.**
+  - تم إصلاح تشغيل Backend ليحترم `PORT` الخاص بـRender، وأصبح deploy الإصلاح `live`.
+  - تم التحقق من أن قاعدة الإنتاج الحقيقية هي Supabase `ai-chat-prod-db` في `us-east-2`.
+  - تم إنشاء fixture حقيقي للإنتاج باسم **G4 Production Editor Smoke**، Project ID = `1`، في workspace `2`، ويحتوي `index.html`.
+  - تم نشر مدخل مباشر إلى Project Editor داخل صف المشروع، مع إبقاء صلاحية التعديل مقيدة بمالك المشروع أو `owner/admin`.
+  - تم تنفيذ قبول G4 يدويًا من واجهة الإنتاج على الهاتف.
+  - تم التحقق من فتح **Project Editor** للمشروع، وظهور **Project Files** و`index.html`.
+  - تم التحقق من **Preview Plan** وظهور الاستراتيجية `static-html` والحالة `ready`.
+  - تم التحقق من **Validate** والنتيجة `0 errors, 0 warnings` لملف المشروع.
+  - تم التحقق من **Safe Preview** بنجاح.
+  - اختبارات CI الآلية الخاصة بـProjectEditor تغطي أيضًا preview وpreview-plan وpreview-build، وآخر CI عام نجح بالكامل.
+  - لم يتم استخدام خدمة المتصفح المدفوعة في الإغلاق النهائي؛ تم الاعتماد على التحقق اليدوي المجاني واختبارات CI.
+  - **G4 مغلقة.**
+
+- **G5 — Release & Closure: مكتملة ومتحققة — 2026-10-06.**
+  - G1 وG2 وG3 وG4 مغلقة ومتحققة.
+  - تم تثبيت **commit الإصدار v1.0.0** على `b8e54dbc6f15ae76805c89ea51f8f7832e7c9e0a`.
+  - تم تنفيذ تحسين Production Smoke ودمجه في `main` قبل الإصدار.
+  - تم التحقق من CI وCodeQL وProduction Smoke على نسخة الإصدار النهائية.
+  - تم إنشاء ونشر GitHub Release رسمي باسم **AI Chat App v1.0.0 — Production Release**.
+  - تم إنشاء Tag رسمي: `v1.0.0` يشير إلى commit الإصدار `b8e54dbc6f15ae76805c89ea51f8f7832e7c9e0a`.
+  - بعد نشر الإصدار، أضيف commit توثيقي لإغلاق G5؛ آخر `main` الحالي هو `5e45d2f03610f434b9b928371d7de29bd3065ced` ولا يغيّر محتوى الإصدار `v1.0.0`.
+  - الإصدار ليس Draft وليس Pre-release، ولا يحتوي حاليًا على Assets مرفقة.
+  - **G5 مغلقة رسميًا، ولا توجد بنود Release & Closure متبقية.**
+
+### حالة المشروع بعد الإصدار الأول — 2026-10-06
+
+- الإصدار الإنتاجي الرسمي الحالي: **v1.0.0**.
+- `main` هو مصدر الحقيقة الوحيد.
+- جميع مراحل A وB وD وF وG1-G5 مغلقة ومتحققة ضمن النطاق الموثق في هذه الخارطة.
+- أي تطوير جديد بعد `v1.0.0` يجب أن يبدأ كفرع مستقل من أحدث `main`، ويمر عبر PR وCI/CodeQL والتحقق التشغيلي عند انطباقه.
+- **المرحلة التالية المقترحة:** v1.1.0 — Product Improvement & Optimization، ولا تبدأ بإضافة ميزات قبل تحديد الأولويات ومراجعة التكرار والتكلفة والأثر الأمني.
+  
+### ترتيب التنفيذ الحالي بعد G4 — 2026-10-06
+
+1. G3 — **مغلقة رسميًا**.
+2. G5 — **مغلقة رسميًا** بعد إصدار `v1.0.0`.
+3. المرحلة التالية: **v1.1.0 — Product Improvement & Optimization** بعد تحديد الأولويات.
+
+---
+
+### متابعة الإصدار v1.1.0 — تحقق 2026-10-11
+
+هذه الإضافة تسجل التقدم المؤكد بعد إصدار `v1.0.0`، ولا تستبدل سجل المراحل السابقة.
+
+#### آخر تحقق على `main` — 2026-10-20
+
+- أحدث commit على `main`: `c20b173006ec877f8f178543f06b7c3b39af0a55` بعد دمج PR #591 الذي حدّث مشغلات CI ومهلة اختبارات Backend وتثبيت `actions/setup-node`؛ لا يغيّر هذا commit كود التطبيق.
+- CI #5493 وCodeQL #1147 وProduction Smoke #369 ونشر صورة Backend #536 جميعها نجحت على أحدث `main`.
+- Frontend Render منشور `live` على `74174c60cdcdc971fc998a2b41038fd218722cd6`، وآخر نشر Backend وظيفي `live` على `920c1876b1208b220826d0f8144750528e027cc9`.
+- في 2026-10-20 ظهر `503` مؤقتًا على `/health` و`/ready` أثناء غياب instance؛ سجل Render `Warm shutdown` عند `00:17:20 UTC` ثم بدء instance جديد عند `01:36:53 UTC`. عاد `/health` و`/ready` إلى `200` عند `01:37:18 UTC` واستمرت طلبات الصحة بالنجاح؛ نسجل التعافي ولا نجزم بسبب نهائي يتجاوز نمط الاستيقاظ/إعادة التشغيل.
+- بوابات H ما زالت مفتوحة: قبول يدوي على الهاتف، رحلة ملف حقيقية، حماية GitHub لفرع `main` (`protected=false` بلا Rulesets فعالة)، وحسم الفرق بين `autoDeployTrigger=commit` في Render الحي و`checksPass` في `render.yaml`. لم تتغير إعدادات الإنتاج أو الأسرار، ولم تُضف موارد مدفوعة.
+
+#### سجل تاريخي — تحقق 2026-10-11 (ليس أحدث حالة على main)
+
+- آخر حالة مؤكدة للمستودع — 2026-10-11: أحدث `main` هو `3bf726b226a7c4a8c13e119e6b6c686b3322a7a5` بعد دمج PR #486. أصلح PR #486 تكرار كائنات الترجمة التي كانت تجعل بعض نصوص العربية/الإنجليزية تُستبدل بصمت، ونقل مجموعات English إلى namespace الصحيحة وفصل رسائل أخطاء الإدخال الصوتي عن الإخراج الصوتي، مع اختبارات انحدار. نجح CI الخاص بالـPR على commit `29dd9aa3` ونجح CodeQL؛ وبعد الدمج نجحت CI #4884 وCodeQL #917 وProduction Smoke #277 ونشر صورة Backend #452. [CI #4884](https://github.com/HVA09/ai-chat-app/actions/runs/38176965152) و[CodeQL #917](https://github.com/HVA09/ai-chat-app/actions/runs/38176965167) و[Production Smoke #277](https://github.com/HVA09/ai-chat-app/actions/runs/38176965170) و[نشر الصورة #452](https://github.com/HVA09/ai-chat-app/actions/runs/38176965153).
+- سجل نشر الواجهة في المراجعة السابقة (2026-10-11) كان على commit `3bf726b226a7c4a8c13e119e6b6c686b3322a7a5`. وقد حلّ محله الآن نشر واجهة `aabb1742345c68c9679d7575d4e37beae6a5c80b` بعد PR #492؛ الخلفية لا تزال على آخر نشر وظيفي `2de50b832cb4f0838483d55b3c2f9c579a8e1829` لأن التغييرات الأخيرة تخص الواجهة والتوثيق.
+- GitHub branch protection: آخر فحص يؤكد أن `main.protected=false`، ولا توجد فحوص مطلوبة على مستوى حماية الفرع؛ هذه بوابة تشغيلية مفتوحة ولا يمكن اعتبارها مكتملة من نجاح CI وحده.
+- PR #466 أصلح استخدام الملفات بعد إعادة نشر Render، وأضاف اختبارًا لطبقة التخزين وتحليل الملفات والصور. لا يُعد نجاح deploy وحده بديلًا عن اختبار استخدام الملفات فعليًا بعد النشر.
+- PR #484 أصلح غياب تنبيه الخطأ عند فشل استرجاع نسخة المساعد، وأضاف اختبارين لانحدار فشل الاسترجاع وفشل تحديث سجل النسخ بعد نجاحه. نجحت جميع فحوص PR ثم فحوص `main` #4864 وCodeQL #909 وProduction Smoke #275، وأصبح نشر الواجهة على Render `live`.
+- PR #486 أزال كائنات ترجمة إنجليزية مكررة من namespace العربية وأعادها إلى namespace الإنجليزية الصحيحة، وحذف مفاتيح مكررة، وفصل رسائل خطأ الميكروفون عن رسائل القراءة الصوتية. نجحت اختبارات PR، ثم CI #4884 وCodeQL #917 وProduction Smoke #277 ونشر الصورة #452 بعد الدمج.
+- سجل بناء الواجهة على Render تحذيرًا بأن chunk الرئيسي `index` بلغ **585.41 kB** قبل الضغط (**164.98 kB gzip**) فوق حد التحذير 500 kB؛ البناء نجح والنشر `live`. هذه نقطة تحسين أداء لاحقة في K وليست فشلًا في النشر، ولا ينبغي إخفاء التحذير بمجرد رفع الحد.
+- قاعدة الإنتاج في Supabase `ai-chat-prod-db` بحالة `ACTIVE_HEALTHY`. تحقق SQL للقراءة فقط في 2026-10-09 أكد وجود **46/46** جدولًا في `public`، وتفعيل RLS على **46/46**، وآخر Alembic revision هو `0080_harden_public_rls`.
+- قاعدة Render القديمة `ai-chat-db` أصبحت `suspended` بواسطة الفوترة في `2026-10-10T18:23:32Z`. استعلام قراءة فقط في Supabase بتاريخ 2026-10-11 أظهر 4 مستخدمين في `public.users` و88 محادثة و307 رسائل؛ أحدث رسالة مؤرخة `2026-10-11 21:35:30 UTC`. هذه لقطة وقتية وليست أعدادًا ثابتة.
+- إجراء السلامة: لا تُعد تشغيل قاعدة Render المعلّقة ولا تُرقِّها ولا تغيّر `DATABASE_URL` بالتخمين. بعد تعليقها أعاد `/health` الحالة `ok` مع `database=ok` وأعاد `/ready` الحالة `ready` مع `database=ok` و`redis=ok`؛ وهذا يثبت أن الخدمة لا تعتمد على قاعدة Render المعلّقة. يحدد `render.yaml` Supabase كوجهة PostgreSQL الخارجية المقصودة، لكن اسم المضيف الحرفي لم يُقرأ ولم نغيّر أي سر أو إعداد إنتاجي.
+
+#### تقدم تفكيك الواجهة — `v1.1.0`
+
+- تفكيك `ai-frontend/src/App.jsx` ما زال قيد التنفيذ، وليس مكتملًا. عند commit `3411b7eb` في 2026-10-13 كان الملف **2,108 أسطر**؛ في حالة `main` الحالية بعد PR #591 أصبح **1,652 سطرًا**. وحدات الإدارة المختبرة قللت المسؤوليات، لكن لا تعني اكتمال التفكيك.
+- Hooks موجودة ومربوطة داخل التطبيق لوظائف المرفقات والمسودات وقائمة المحادثات وفتحها وإنشاء محادثة جديدة والاختيار والإجراءات الجماعية والبيانات الوصفية والعلامات والاستيراد والتفرع وتعديل الرسائل والمشاركة وحذف الرسائل وإعادة توليد الرد وتقييم الرسائل وتحليل الصور وإدارة المساعدين والمجلدات وغيرها.
+- تم إنجاز استخراج منطق تحديث آخر رسالة أثناء البث إلى `ai-frontend/src/hooks/useAppendToLastMessage.js`؛ يستخدمه `App.jsx` حاليًا للإرسال وتعديل الرسائل وإعادة التوليد، لذلك أُزيل هدف التكرار القديم من قائمة المهام. الخطوة المعمارية التالية هي اختيار مسؤولية متبقية بناءً على مراجعة حدود الحالة والاعتمادات الفعلية، لا بدء استخراج جديد لمجرد تقليل عدد أسطر `App.jsx`.
+- تم استخراج إدارة المساعدين في `useAssistantManagement.js` عبر PR #491، واستخراج CRUD واختيار المجلدات في `useFolderManagement.js` عبر PR #492، وكلاهما لديه اختبارات مركزة. تظل إدارة مساحات العمل والمشاريع وبعض منطق إرسال الرسائل وتوليد الردود ضمن مسؤوليات `App.jsx`; لذلك لا يُعلن اكتمال التفكيك بمجرد وجود Hooks متعددة.
+
+#### القبول اليدوي وتجربة الهاتف
+
+- أُغلقت G1–G5 حسب خارطة الطريق وإصدار `v1.0.0`، لكن قبول الإصدار لا يعني إغلاق كل التحسينات اللاحقة.
+- ما زال يلزم التحقق العملي على هاتف فعلي من: فتح القائمة الجانبية، وإمكانية الوصول إلى زر الإرسال بعد إرفاق ملف، وحجم فقاعات الرسائل، وسهولة الوصول إلى الإدخال الصوتي والإعدادات، وإغلاق القوائم غير الضرورية.
+- لا تسجل نتائج هذه الاختبارات كمكتملة قبل تأكيدها على الجهاز أو عبر اختبار آلي مناسب.
+- توجد الآن خارطة موثقة للمراحل H–T في `docs/POST_RELEASE_ROADMAP_H_TO_T_AR.md`. المرحلة H هي النشطة؛ قبول الهاتف اليدوي ما زال مطلوبًا. المراحل I–T خطة مستقبلية، وليست إنجازات مكتملة ولا التزامًا بإضافة كل الميزات قبل قياس الحاجة.
+
+#### ترتيب التنفيذ الحالي
+
+1. إجراء قبول يدوي على هاتف فعلي: تسجيل الدخول، فتح القائمة الجانبية، تبديل محادثة، إرسال رسالة، وإرفاق ملف مع التأكد من بقاء زر الإرسال ظاهرًا.
+2. تنفيذ اختبار استخدام ملف بعد النشر: رفعه وقراءته وتحليله، ثم التحقق من رسائل الفشل وإعادة المحاولة دون فقد المحتوى أو تكراره.
+3. مراجعة حماية `main`: فحص GitHub الحالي لم يُظهر Rulesets نشطة وأظهر أن الفرع غير محمي؛ يجب تفعيل قاعدة تتطلب PR وفحوص CI وCodeQL قبل الدمج.
+4. مواصلة تفكيك `App.jsx` بتغييرات صغيرة ومختبرة، ثم معالجة تحسينات الهاتف (حجم الفقاعات، موضع الصوت والإعدادات، وتقليل القوائم غير الضرورية).
+
+
+### متابعة تشغيلية حديثة — مراجعة 2026-10-14 (تحديث بعد commit 5809e50)
+
+- **آخر `main`:** `5809e50e2b7e5f3a27ddb991fd13e86f7f72649f`. نُقلت صور PostgreSQL وValkey المستخدمة في CI وخدمة Preview Builder من ECR Public إلى صور GHCR؛ صورة Python مثبّتة بالـdigest وNode 22 ما زال متطلبًا لبناء المشاريع.
+- **الفحوص بعد آخر commit:** CI #5008 وCodeQL #962 وProduction Smoke #297 ونشر صورة Backend #469 نجحت جميعًا على `5809e50e`. بذلك انتهى الانتظار القديم لنتيجة `pytest -q` في CI #4993؛ لا تُعرض تلك النتيجة القديمة بوصفها حالة CI الحالية. [CI #5008](https://github.com/HVA09/ai-chat-app/actions/runs/38603629057) · [CodeQL #962](https://github.com/HVA09/ai-chat-app/actions/runs/38603629175) · [Production Smoke #297](https://github.com/HVA09/ai-chat-app/actions/runs/38603629059) · [نشر الصورة #469](https://github.com/HVA09/ai-chat-app/actions/runs/38603629100).
+- **النشر الحي في Render:** Frontend `live` على `0c72f5e5`، وBackend `live` على `7180eee7`، وPreview Builder `live` على `5809e50e`. اكتمل نشر Builder بعد تغيير Dockerfile. تظهر الواجهة شاشة تسجيل الدخول، لكنها لا تثبت وحدها نجاح تدفق تسجيل الدخول والمحادثة والملفات.
+- **إعادة تشغيل مؤقتة في 2026-10-14:** سجل Backend إغلاقًا طبيعيًا للعملية عند `17:22:25 UTC`؛ بدأ التشغيل الجديد قرابة `17:25:25 UTC`، واكتمل تشغيل Uvicorn عند `17:27:00 UTC`. خلال الانتقال ظهرت استجابات `503` مؤقتة؛ لا يظهر في السجلات التي فُحصت استثناء يثبت سبب الإغلاق. أُعيد التحقق بعد الاستقرار: `/health` يعيد `status=ok,database=ok` و`/ready` يعيد `status=ready,database=ok,redis=ok`. Preview Builder يعيد `/healthz = {status:ok, enabled:true}`. نسجل هذا بوصفه خطر إتاحة وقت إعادة التشغيل، لا مشكلة قاعدة بيانات ثبت استمرارها.
+- **البيانات والنسخ:** لقطة SQL الأخيرة ما زالت تعرض 4 مستخدمين و90 محادثة و312 رسالة، وآخر رسالة في تلك اللقطة `2026-10-13 18:26:59 UTC`. Backup #30 وObject Storage Smoke #23 نجحا؛ هذه الاختبارات الاصطناعية لا تستبدل رحلة ملف مستخدم فعلية من الواجهة إلى القراءة والتحليل.
+- **بوابات المرحلة H الباقية:** قبول يدوي على هاتف حقيقي لتسجيل الدخول والقائمة وتبديل المحادثة والإرسال وإرفاق ملف؛ رحلة ملف مستخدم حقيقية تشمل القراءة والتحليل والفشل وإعادة المحاولة؛ حماية `main` (آخر فحص يُظهر `protected=false` ولا توجد Rulesets فعالة)؛ ومراجعة الفرق بين إعداد Render الحي `autoDeployTrigger=commit` و`checksPass` في `render.yaml`. لم نغير الأسرار أو إعدادات الخدمات أو الخطط، ولم نضف موارد مدفوعة.
+- **ترتيب العمل:** اطلب من المستخدم تأكيد اختبار الهاتف والملف فقط عندما يكون جاهزًا على جهازه؛ وبالتوازي تبقى مراجعة اعتماديات Dependabot القديمة منفردة، وتحسين حجم حزمة الواجهة (تحذير سابق للـchunk الرئيسي 585.41 kB) وتحسين تجربة الهاتف ضمن v1.1.0. لا يُرفع حد تحذير الحزمة لإخفاء المشكلة، ولا تُطبق تغييرات Blueprint جماعية بالتخمين.
+
+
+### تحديث متابعة v1.1.0 — 2026-10-15
+
+- أحدث `main` عند بدء هذا التحديث: `7fd2ce7bdad4446638b3a0f4d446a26846d66a5b` بعد دمج PR #520، الذي نقل منطق إنشاء الرد بعد تعديل رسالة المستخدم إلى `ai-frontend/src/hooks/useEditMessageGeneration.js` وأرفق اختبارات تركّز على النجاح والفشل واستعادة الحالة. انخفض `App.jsx` إلى **1,882 سطرًا**، لكنه ما زال يحمل مسؤوليات أخرى ولا يُعد التفكيك مكتملًا.
+- فحوص PR #520 نجحت قبل الدمج، وProduction Smoke #304 نجح بعده. ثم اكتملت فحوص ما بعد الدمج على `7fd2ce7b`: CI #5074 **نجح**، وCodeQL #988 **نجح**، ونشر صورة Backend #475 **نجح**. نشر الواجهة على Render أصبح `live` على `7fd2ce7b`. [CI #5074](https://github.com/HVA09/ai-chat-app/actions/runs/38724007634) · [CodeQL #988](https://github.com/HVA09/ai-chat-app/actions/runs/38724007773) · [Backend image #475](https://github.com/HVA09/ai-chat-app/actions/runs/38724007593).
+- فحص الإنتاج المباشر أعاد `/health` بحالة قاعدة بيانات `ok`، و`/ready` بحالة `database=ok, redis=ok`. هذا تحقق تشغيلي فقط، ولا يغني عن قبول الهاتف ورحلة الملف الفعلية.
+- ما زال مطلوبًا إغلاق بوابات H قبل اعتبار الاستقرار النهائي مكتملًا: اختبار تسجيل الدخول والقائمة وتبديل المحادثة والإرسال والرفع على الهاتف، اختبار قراءة الملف وتحليله وإعادة المحاولة، حماية فرع `main`، وحسم الفرق بين إعداد Render الحي `autoDeployTrigger=commit` و`checksPass` في `render.yaml`.
+- لا توجد تغييرات على الأسرار أو قاعدة البيانات أو إعدادات Render الحساسة ضمن هذا التحديث، ولم تُضف موارد مدفوعة.
+
+### متابعة v1.1.0 — مراجعة 2026-10-15 بعد PR #523
+
+- **آخر `main`:** `feac1f242cefca26ce1580f49baef379f40e0c51`، ناتج دمج PR #523 لاستخراج تحميل دور عضو المشروع إلى `ai-frontend/src/hooks/useProjectMemberRoles.js` مع اختبارات مستقلة. `App.jsx` أصبح 1,761 سطرًا في هذا الـcommit؛ التفكيك تحسن لكنه ما زال جزئيًا.
+- **السلوك المحفوظ:** مالك المشروع أو مسؤول مساحة العمل يُعامل كـ`manager`، وبقية الأعضاء يُقرأ دورهم من API؛ فشل تحميل العضوية يرجع إلى `null`، والاستجابة المتأخرة لا تستبدل نتيجة المشروع المحدد بعد تغييره. لم يتغير Backend أو قاعدة البيانات أو عقد API.
+- **فحوص PR #523 قبل الدمج:** نجحت اختبارات Frontend/build وBackend `pytest` وSDK وPreview Builder وProduction Compose وCodeQL على head `4a599987fa8e5a06f8c0292f109122337f2ca82e`. بعد الدمج نجح Production Smoke #307 وCodeQL #999 ونشر صورة Backend #478، ثم اكتملت CI #5104 بنجاح على commit `feac1f24` بما فيها Backend `pytest` وFrontend وSDK وPreview Builder وProduction Compose.
+- **Render:** نشر Frontend أصبح `live` على `feac1f24`. Backend ما زال منشورًا على `7180eee7` لأن PR #523 واجهة فقط. بعد 503 مؤقت أثناء إعادة تشغيل Backend عادت الفحوص المباشرة: `/health` = `status=ok,database=ok` و`/ready` = `status=ready,database=ok,redis=ok`. هذه إشارة تعافٍ تشغيلي، وليست قبولًا يدويًا كاملًا لتدفقات المستخدم.
+- **البوابة التالية:** إكمال توثيق هذا التحقق بعد إغلاق CI #5104؛ ثم مواصلة التدقيق قبل أي استخراج آخر من `App.jsx`. تظل بوابات H الأساسية مفتوحة: قبول الهاتف الفعلي، رحلة ملف حقيقية من الرفع إلى القراءة والتحليل وإعادة المحاولة، حماية `main`، ومطابقة `autoDeployTrigger=commit` في Render مقابل `checksPass` في `render.yaml`. لا تُضف موردًا مدفوعًا ولا تغيّر سرًا أو إعدادًا إنتاجيًا بالتخمين.
+
+
+### متابعة v1.1.0 — تحديث 2026-10-15 بعد PR #525 و#526
+
+- **آخر `main`:** `0f25d1151861e5c1fb8135cdef5067cdf4b6f6a2`. دُمج PR [#525](https://github.com/HVA09/ai-chat-app/pull/525) لاستخراج إيقاف التوليد إلى `useStopGeneration` مع اختبارات لحالة الإلغاء وحالة عدم وجود تدفق نشط. ثم دُمج PR [#526](https://github.com/HVA09/ai-chat-app/pull/526) لاستخراج حالة المستخدم الحالي وتحديثها ورسالة الفشل وإعادة ضبطها عند تسجيل الخروج إلى `useCurrentUser` مع اختبارات منفصلة.
+- **تفكيك الواجهة:** أصبح `ai-frontend/src/App.jsx` **1,751 سطرًا** في هذا الـcommit. التفكيك مستمر وليس مكتملًا؛ لا نعتبر تقليل عدد الأسطر وحده معيارًا للقبول.
+- **الفحوص بعد الدمج:** CI **#5123** وCodeQL **#1005** وProduction Smoke **#310** ونشر صورة Backend **#481** نجحت على `0f25d115`. [CI #5123](https://github.com/HVA09/ai-chat-app/actions/runs/38760068384) · [CodeQL #1005](https://github.com/HVA09/ai-chat-app/actions/runs/38760068595) · [Production Smoke #310](https://github.com/HVA09/ai-chat-app/actions/runs/38760068213) · [Backend image #481](https://github.com/HVA09/ai-chat-app/actions/runs/38760068492).
+- **Render والتشغيل:** نشر الواجهة أصبح `live` على `0f25d115`. آخر نشر وظيفي للـBackend ما زال `7180eee7` لأن التغييرين Frontend فقط. الفحص المباشر الأخير أعاد `/health = {status:ok,database:ok}` و`/ready = {status:ready,database:ok,redis:ok}`. ظهور صفحة تسجيل الدخول لا يثبت وحده قبول المصادقة أو المحادثات أو المرفقات.
+- **لقطة SQL للقراءة فقط بتاريخ 2026-10-15:** 4 مستخدمين في `public.users`، و91 محادثة، و316 رسالة؛ أحدث رسالة في اللقطة `2026-10-15 15:14:08 UTC`. هذه أرقام وقتية وليست ثوابت.
+- **بوابات المرحلة H المفتوحة:** قبول يدوي على هاتف فعلي لتسجيل الدخول وفتح القائمة وتبديل المحادثة وإرسال رسالة وإرفاق ملف؛ رحلة ملف حقيقية تشمل الرفع والقراءة والتحليل والفشل وإعادة المحاولة؛ حماية فرع `main` (آخر فحص أظهر `protected=false` ولا توجد Rulesets فعالة)؛ وحسم الاختلاف بين `autoDeployTrigger=commit` في خدمتي Render الحيتين و`checksPass` في `render.yaml`. لم نغيّر إعدادات الخدمة أو الأسرار أو قاعدة البيانات، ولم نضف موردًا مدفوعًا.
+
+### متابعة v1.1.0 — 2026-10-16 بعد تحسين الهاتف وتفكيك دورة الترحيب
+
+- **محطات معمارية سابقة في v1.1.0:** commit `225ceff40fb69a4e9753277939da8961d5cef30f` نقل مستمعات انتهاء الجلسة وفتح Command Palette ورسائل Toast إلى `useAppGlobalEvents` مع اختبارات. ثم commit `fa3187864a8524830cb25d6d88d3434978d97cac` حدّث Vite إلى `^8.3.4` و`@vitejs/plugin-react` إلى `^6.1.2` ونقل تقسيم vendor chunks إلى Rolldown `codeSplitting`; نجحت CI #5140 وCodeQL #1011 وProduction Smoke #313 ونشر الصورة #484 على تلك النسخة قبل التغييرات الأحدث.
+- **آخر `main`:** `944370c1a7ecf4b6629169e070aebb760f1e4436`. دُمج PR [#533](https://github.com/HVA09/ai-chat-app/pull/533) لتحسين تجربة الهاتف: إدخال إعدادات مستقل في القائمة الجانبية، تقليل حجم فقاعات الرسائل، تثبيت اتجاه منطقة المحادثة عموديًا، إبقاء زر الميكروفون ظاهرًا مع رسالة واضحة عند عدم دعم المتصفح، وإعادة التركيز إلى مربع الكتابة بعد اختيار أداة. ودُمج PR [#530](https://github.com/HVA09/ai-chat-app/pull/530) لاستخراج دورة الترحيب إلى `useOnboarding` مع معالجة تعذّر تخزين المتصفح وتبديل المستخدم.
+- **حالة المعمارية:** أصبح `ai-frontend/src/App.jsx` **1,713 سطرًا** في المراجعة الحالية. التفكيك مستمر؛ تقليل عدد الأسطر ليس وحده معيار اكتمال المرحلة J.
+- **الفحوص:** اجتازت فحوص PR #533 وPR #530 قبل الدمج. على `main`، نجح Production Smoke **#316** وCodeQL **#1023** ونشر صورة Backend **#487** على `944370c1`. CI **#5174** اكتمل بنجاح على commit الهاتف `4ecc899d`؛ CI **#5175** الخاص بأحدث commit كان لا يزال قيد التنفيذ عند آخر فحص، لذلك لا نعدّه ناجحًا حتى تظهر نتيجته النهائية.
+- **Render:** نشر الواجهة `live` على `944370c1`. آخر نشر Backend مسجل ما زال `7180eee7`، ولم تتغير شيفرة Backend في هذين التغييرين. الفحص المباشر أعاد `/health = status:ok,database:ok` و`/ready = status:ready,database:ok,redis:ok`.
+- **بوابات H التي ما زالت مفتوحة:** قبول يدوي فعلي على هاتف لتسجيل الدخول وفتح القائمة وتبديل المحادثة والإرسال والملف؛ رحلة ملف من الرفع إلى القراءة والتحليل والفشل وإعادة المحاولة؛ حماية فرع `main` (الفحص الحالي يظهر `protected=false` ولا توجد Rulesets نشطة)؛ وحسم اختلاف `autoDeployTrigger=commit` في خدمتي Render الحيتين عن `checksPass` في `render.yaml`.
+- لم تتغير قاعدة الإنتاج أو الأسرار أو إعدادات Render الحساسة، ولم تُضف موارد مدفوعة.
+
+### متابعة v1.1.0 — 2026-10-16 بعد PR #536 و#535
+
+- **آخر `main`:** `e9b420c49a6317eafafadcf7056369f0f064dc06`. دُمج PR [#536](https://github.com/HVA09/ai-chat-app/pull/536) لحراسة استقبال إشعارات WebSocket: رفض JSON غير الصالح أو شكل الرسالة غير المكتمل، وإظهار خطأ الاتصال برسالة مترجمة، مع اختبارات للحالات السليمة والفاشلة. ثم دُمج PR [#535](https://github.com/HVA09/ai-chat-app/pull/535) لنقل Command Palette إلى غلاف التطبيق بعد تسجيل الدخول وإضافة اختبار استرجاع الجلسة.
+- **الفحوص قبل الدمج وبعده:** اكتملت فحوص PR #536 بنجاح، بما فيها Frontend/build وBackend وSDK وPreview Builder وProduction Compose وCodeQL. فحوص PR #535 وCodeQL نجحت قبل الدمج. Production Smoke #319 على `2e43c35d` وProduction Smoke #320 على `e9b420c4` نجحا. التحقق اللاحق على `main` أكد نجاح CI #5198 وCodeQL #1033 ونشر صورة Backend #491؛ بذلك اكتملت بوابة الفحوص الآلية بعد دمج PR #535 و#536. قبول الهاتف ورحلة الملف العملية ما زالا غير مكتملين.
+- **Render والتشغيل:** نشر الواجهة أصبح `live` على `e9b420c4`. الفحص المباشر أعاد صفحة تسجيل الدخول، و`/health = status:ok,database:ok`، و`/ready = status:ready,database:ok,redis:ok`. ظهور صفحة الدخول وصحة الخادم لا يثبتان وحدهما نجاح جلسة تسجيل دخول فعلية أو تبادل المحادثات ورفع الملفات من الهاتف.
+- **حالة المعمارية:** `ai-frontend/src/App.jsx` ما زال نحو **1,713 سطرًا** بعد نقل مسؤوليات متعددة إلى Hooks؛ التفكيك مستمر وليس مكتملًا. من التغييرات السابقة القريبة: تحسين تخطيط الهاتف وأزرار التحكم، إصلاح إرسال الملفات بصيغة multipart، واستخراج دورة الترحيب إلى `useOnboarding`.
+- **بوابات H المفتوحة:** قبول يدوي على هاتف فعلي لتسجيل الدخول، فتح القائمة الجانبية، فتح Command Palette عبر Ctrl/Cmd+K، تبديل محادثة، إرسال رسالة وإرفاق ملف؛ رحلة ملف حقيقية تشمل الرفع ثم القراءة والتحليل والفشل وإعادة المحاولة؛ تفعيل حماية فرع `main`؛ وحسم اختلاف `autoDeployTrigger=commit` في Render الحي مقابل `checksPass` في `render.yaml`.
+- **حماية `main`:** أحدث قراءة من GitHub أظهرت `protected=false` و`required_status_checks.enforcement_level=off`، ولم تظهر Rulesets فعّالة. يجب ضبط الحماية من إعدادات GitHub لتتطلب PR ونجاح CI وCodeQL قبل الدمج. لم تتغير أسرار أو إعدادات إنتاجية ولم تُضف أي موارد مدفوعة.
+- **تنظيف التكرار:** أُغلقت طلبات قديمة ثبت أن تغييرها موجود بالفعل في `main` أو استُبدلت بطلب أحدث، بدل دمج تغييرات متباعدة قد تعيد عملًا قديمًا. تبقى طلبات Dependabot الأخرى للمراجعة الفردية؛ لا تُدمج ترقيات رئيسية جماعيًا.
+
+
+
+### متابعة v1.1.0 — 2026-10-16 بعد PR #539
+
+- **آخر `main`:** `630d5a2ca0e6c1998564852fd3399bdf0a20f613`. دُمج [PR #539](https://github.com/HVA09/ai-chat-app/pull/539) لإهمال نتائج تحميل الفروع ومعلومات مشاركة Workspace إذا أصبح فتح محادثة أخرى أحدث منها. أُضيف اختباران يغطيان تأخر كل من طلب الفروع وطلب المشاركة.
+- **الفحوص:** فحوص PR #539 نجحت قبل الدمج، بما فيها Frontend tests/build وBackend `pytest -q` وSDK وPreview Builder وProduction Compose وCodeQL. بعد الدمج نجح CI **#5218** وCodeQL **#1041** وProduction Smoke **#323** ونشر صورة Backend **#493** على commit `630d5a2`.
+- **Render والتشغيل:** نشر Frontend أصبح `live` على `630d5a2`. أعاد الفحص المباشر صفحة تسجيل الدخول؛ وأعاد `/health = status:ok,database:ok` و`/ready = status:ready,database:ok,redis:ok`. هذا يثبت جاهزية نقاط الفحص، لا قبول رحلة المصادقة والمحادثة والملف على الهاتف.
+- **حالة المعمارية:** `ai-frontend/src/App.jsx` حاليًا **1,715 سطرًا**. التفكيك إلى Hooks متقدم لكنه لم يكتمل؛ لم نعتبر عدد الأسطر معيارًا وحيدًا للإغلاق.
+- **بوابات H المفتوحة:** قبول يدوي فعلي على هاتف لتسجيل الدخول، والقائمة الجانبية، وCommand Palette، وتبديل المحادثة، وإرسال رسالة، وإرفاق ملف؛ تجربة ملف مستخدم من الرفع إلى القراءة والتحليل والفشل وإعادة المحاولة؛ حماية `main` (الفحص يظهر `protected=false` ولا توجد Rulesets فعالة)؛ وحسم اختلاف `autoDeployTrigger=commit` في Render الحي مقابل `checksPass` في `render.yaml`.
+- لم تتغير قاعدة البيانات أو الأسرار أو إعدادات Render الحساسة، ولم تُضف أي موارد مدفوعة.
+
+
+### متابعة v1.1.0 — 2026-10-16 بعد PR #541 و#543
+
+- **آخر `main` المؤكد عند هذه المراجعة:** `0d8590afc606039b9ba298235748e124ddddf3d2`. PR [#543](https://github.com/HVA09/ai-chat-app/pull/543) أصلح سباقًا آخر في `useConversationList`: تجاهل أخطاء التنزيل والتنظيف المتأخر إذا بدأ تحديث أحدث، وإعادة ضبط حالة «تحميل المزيد» عند التحديث الجديد، واستخدام المشروع المحدد حاليًا عند التحديث الافتراضي.
+- **صيانة CodeQL — PR #541:** وُحّدت نسختا `github/codeql-action/init` و`analyze` على v4.38.3 مع SHA واحد، وأضيفت مجموعة Dependabot لطلبات `github/codeql-action/*` لمنع تحديث الخطوتين بشكل منفصل. نجحت فحوص PR #541، بما فيها CodeQL وCI، ودُمج في `5458fd98b1c24919b040f358209c1bae43aaa01e`. أُغلق PR #542 كنسخة مكررة، وأُغلق #516 و#514 بعد توحيدهما.
+- **التحقق من commit الواجهة الأحدث `0d8590a`:** Production Smoke #326 وCodeQL #1055 ونشر صورة Backend #496 وCI #5249 نجحت. أكمل Backend `pytest -q` بنتيجة **492 passed, 666 warnings in 283.92s**؛ التحذيرات مسجلة للمتابعة لكنها لم تفشل المجموعة.
+- **Render والتشغيل:** نشر الواجهة أصبح `live` على commit `0d8590a` (PR #543). الفحص المباشر يعرض صفحة تسجيل الدخول، ويعيد `/health` حالة `status=ok,database=ok` ويعيد `/ready` حالة `status=ready,database=ok,redis=ok`. هذه مؤشرات جاهزية، لا بديل عن اختبار المصادقة والمحادثة والرفع على هاتف حقيقي.
+- **بوابات H المفتوحة كما هي:** قبول هاتف فعلي (تسجيل الدخول، القائمة الجانبية، Command Palette، تبديل محادثة، إرسال، إرفاق ملف)؛ رحلة ملف من الرفع إلى القراءة والتحليل والفشل وإعادة المحاولة؛ حماية فرع `main` (آخر فحص يظهر `protected=false`)؛ ومراجعة الفرق بين `autoDeployTrigger=commit` في Render الحي و`checksPass` في `render.yaml`.
+- **السلامة:** لا تغييرات على قاعدة الإنتاج أو الأسرار أو إعدادات Render الحساسة في هذه التحديثات، ولا موارد مدفوعة جديدة. التفكيك إلى Hooks ما زال جاريًا ومرحلة J لم تُغلق.
+
+
+### متابعة v1.1.0 — 2026-10-16 بعد PR #551
+
+- **آخر `main`:** `6be501d03be6c8b3dc3c72e6f9eff0648543e8b2`. دُمج PR [#551](https://github.com/HVA09/ai-chat-app/pull/551) لإبطال طلبات تحميل بيانات المستخدم الجارية عند إعادة الضبط/الخروج، وتجاهل نتائج طلب أقدم إذا تداخل طلبان وعادت نتائجهما بترتيب عكسي.
+- **الاختبارات:** أضيف اختباران لحالة وصول استجابة بعد تسجيل الخروج ولحالة تداخل الطلبات. نجحت فحوص PR قبل الدمج. بعد الدمج نجحت CI #5263 وCodeQL #1059 وProduction Smoke #328 ونشر صورة Backend #498.
+- **Render والتشغيل:** نشر الواجهة أصبح `live` على `6be501d0`. Backend لم يتغير في هذا الإصلاح الأمامي؛ آخر نشره الوظيفي الموثق هو `7180eee7`. الفحص بعد الدمج أعاد صفحة تسجيل الدخول، و`/health = status:ok,database:ok` و`/ready = status:ready,database:ok,redis:ok`. هذه مؤشرات جاهزية وليست قبولًا يدويًا لتسجيل الدخول أو المحادثة أو الملف.
+- **بوابات H المفتوحة:** قبول حقيقي على الهاتف (تسجيل الدخول، القائمة الجانبية، Command Palette، تبديل المحادثة، إرسال رسالة وإرفاق ملف)؛ رحلة ملف من الرفع إلى القراءة والتحليل والفشل وإعادة المحاولة؛ تفعيل حماية `main` (الفحص ما زال `protected=false`)؛ وحسم اختلاف `autoDeployTrigger=commit` في Render الحي مقابل `checksPass` في `render.yaml`.
+- **السلامة والتكلفة:** التغيير يخص Hook واختباراته فقط؛ لا تغييرات على قاعدة الإنتاج أو الأسرار أو إعدادات Render الحساسة، ولم تُضف موارد مدفوعة.
+
+
+### متابعة v1.1.0 — 2026-10-17 بعد PR #565
+
+- **آخر `main`:** `41e7aaeb29c4bca32fdb82aeecb345938a939c5c`. دُمج PR [#565](https://github.com/HVA09/ai-chat-app/pull/565) لاستخراج إجراءات Command Palette من `App.jsx` إلى `useCommandPaletteActions` مع اختبارات لتسجيل الإجراءات، وتقييد إجراء الإدارة بدور المسؤول، وانتقالات الأرشيف وسلة المحذوفات، وأزرار التنقل.
+- **التحقق بعد الدمج:** CI #5350 نجح، وCodeQL #1089 نجح، وProduction Smoke #341 نجح، ونشر صورة Backend #510 اكتمل بنجاح. هذه خطوة Frontend لا تغيّر عقد API أو قاعدة البيانات.
+- **النشر المباشر:** نشر Frontend على Render أصبح `live` على commit `41e7aaeb`. الفحص المباشر أعاد `/health = status:ok,database:ok` و`/ready = status:ready,database:ok,redis:ok`.
+- **تحسينات تزامن الحالة:** أضيفت حماية من نتائج الطلبات القديمة في Hooks الخاصة بالمحادثات والمستخدم الحالي والمحفوظات والإشعارات والذاكرة والعلامات والمجلدات والنماذج والمشاريع والمساعدين ومساحات العمل. توجد اختبارات regression للمسارات التي تم تعديلها، ولا يُعامل نجاح البناء وحده كإثبات قبول كامل.
+- **الحالة المعمارية:** أصبح `ai-frontend/src/App.jsx` نحو **1,642 سطرًا** في هذه النسخة. تفكيك المسؤوليات إلى Hooks مستمر؛ لم تُغلق المرحلة J، ولا يُعدّ انخفاض عدد الأسطر وحده معيار اكتمال.
+- **بوابات H الباقية:** القبول اليدوي على الهاتف لتسجيل الدخول وفتح القائمة الجانبية وCommand Palette وتبديل المحادثة وإرسال رسالة وإرفاق ملف؛ واختبار ملف فعلي من الرفع إلى القراءة والتحليل ومعالجة الفشل وإعادة المحاولة؛ وتفعيل حماية `main`؛ ومراجعة اختلاف `autoDeployTrigger=commit` في إعداد Render الحي عن `checksPass` في `render.yaml`. لا توضع علامة اكتمال لهذه البنود قبل التحقق الفعلي.
+- **السلامة والتكلفة:** لم يتضمن PR #565 تغييرات Backend أو قاعدة البيانات أو الأسرار أو إعدادات Render الحساسة، ولم تُضف موارد مدفوعة.
+
+### متابعة v1.1.0 — 2026-10-17 بعد آخر تحديثات `main`
+
+- **آخر `main` المؤكد:** `bd6f347c47187318aef540dbaa82bd86279537fa` — أضيفت اختبارات مستقلة لعقد أحداث فتح/إغلاق القائمة الجانبية في الهاتف. سبقتها سلسلة إصلاحات لتجاهل نتائج الطلبات القديمة في تحميل المستخدم الحالي، المحادثات، الموجهات المحفوظة، الإشعارات، الذاكرة، المحفوظات، المجلدات، النماذج، الوسوم، المشاريع، المساعدين ومساحات العمل.
+- **الفحوص بعد أحدث commit:** CI #5362، CodeQL #1093، Production Smoke #343، ونشر صورة Backend #512 نجحت. كما نجح Object Storage Smoke #26 والنسخ الاحتياطي #33 في التشغيل المجدول الأخير.
+- **النشر والتشغيل:** Frontend Render أصبح `live` على `bd6f347c`. آخر Backend deploy وظيفي مسجل على `7180eee7e2f7746cbee02d60765bebbc30b468d7`. التحقق المباشر الحالي يعيد `/health = status:ok,database:ok` و`/ready = status:ready,database:ok,redis:ok`. صفحة تسجيل الدخول تظهر؛ هذا ليس إثباتًا لنجاح المصادقة أو المحادثة أو رفع الملفات للمستخدم.
+- **الحالة المعمارية:** `App.jsx` نحو **1,642 سطرًا**؛ فصل المسؤوليات إلى Hooks تحسن، لكنه ما زال جزئيًا. لا نغلق المرحلة J بسبب عدد الأسطر فقط.
+- **بوابات H المفتوحة:** قبول يدوي على الهاتف لتسجيل الدخول، والقائمة الجانبية، وCommand Palette، وتبديل محادثة، وإرسال رسالة، وإرفاق ملف؛ تجربة ملف حقيقية من الرفع إلى القراءة والتحليل ومعالجة الفشل وإعادة المحاولة؛ حماية `main` (الفحص الحالي `protected=false` ولا توجد Rulesets فعّالة)؛ وحسم اختلاف `autoDeployTrigger=commit` في Render الحي عن `checksPass` في `render.yaml`.
+- **السلامة والتكلفة:** أحدث التغييرات الأمامية لم تغيّر عقد Backend أو قاعدة الإنتاج أو الأسرار. لا تطبق Blueprint جماعيًا ولا تغيّر Auto Deploy أو الأسرار بالتخمين، ولا تضف موارد مدفوعة.
+
+### متابعة v1.1.0 — 2026-10-17 بعد PR #571
+
+- **آخر `main` المؤكد:** `cb6aa446eef2575366acfd63610af3c303e55804`. دُمج [PR #571](https://github.com/HVA09/ai-chat-app/pull/571) لمعالجة سباق طلبات فتح المحادثة: يُلغى أثر أي طلب قديم عند بدء محادثة جديدة أو تسجيل الخروج، وأضيفت اختبارات انحدار في `useOpenConversation.test.jsx` و`useStartNewChat.test.jsx`.
+- **فحوص PR وما بعد الدمج:** اجتازت فحوص PR Frontend وBackend وSDK وPreview Builder وProduction Compose وCodeQL. بعد الدمج نجح CI **#5392**، وCodeQL **#1104**، وProduction Smoke **#347**، ونشر صورة Backend **#516**.
+- **النشر الحي:** Frontend Render أصبح `live` على `cb6aa446`. Backend ما زال على آخر نشر وظيفي مسجل `7180eee7e2f7746cbee02d60765bebbc30b468d7` وخطته Free. فحص الإنتاج المباشر أعاد `/health = status:ok,database:ok` و`/ready = status:ready,database:ok,redis:ok`.
+- **الحالة المعمارية:** `App.jsx` صار نحو **1,642 سطرًا**، لكن تفكيك مسؤولياته ما زال جزئيًا. لا يُعلن اكتمال التنظيم المعماري لمجرد نقل المزيد من الدوال إلى Hooks.
+- **بوابات H التي لا تزال مفتوحة:** قبول يدوي على هاتف فعلي (تسجيل الدخول، القائمة الجانبية، Command Palette، تبديل المحادثة، إرسال رسالة وإرفاق ملف)؛ رحلة ملف حقيقية تشمل الرفع والقراءة والتحليل والفشل وإعادة المحاولة؛ تفعيل حماية `main` (الفحص الحالي يعيد `protected=false` ولا توجد Rulesets فعّالة)؛ وحل اختلاف `autoDeployTrigger=commit` في خدمتي Render الحيتين عن `checksPass` في `render.yaml`.
+- **التكلفة والسلامة:** لم يغيّر PR #571 عقد API أو قاعدة الإنتاج أو الأسرار أو خطط الخدمات. لم تُضف أي موارد مدفوعة. لا تطبّق Blueprint جماعيًا ولا تغيّر إعدادات النشر الحساسة بالتخمين.
+
+
+### متابعة v1.1.0 — 2026-10-17 بعد أحدث فحوص CI والإنتاج
+
+- **أحدث `main` وقت التحديث:** `8441445c3b149c45169acd23a7ef36444bffbbf2`. نجحت CI #5417 وCodeQL #1115 وProduction Smoke #352 ونشر صورة Backend #521 على هذا الـcommit.
+- **حالة الواجهة:** `ai-frontend/src/App.jsx` أصبح **1,646 سطرًا** في النسخة الحالية. جرى فصل عدة مسؤوليات إلى Hooks وإضافة حراسة لاستخدام استجابات الطلبات المتأخرة؛ لا نعد تفكيك المعمارية مكتملًا بسبب عدد الأسطر وحده.
+- **النشر الفعلي في Render:** Frontend `live` على `4c94e9d74074c874c36af7da66daf85636d9e0bf`، وBackend `live` على `920c1876b1208b220826d0f8144750528e027cc9`. الـcommit الحالي `8441445c` عدّل سر JWT المستخدم في الاختبارات فقط، وليس أي سر إنتاجي.
+- **الصحة والجاهزية:** `/health` يعيد `status=ok,database=ok` و`/ready` يعيد `status=ready,database=ok,redis=ok`. هذه فحوص تشغيلية ولا تثبت نجاح رحلة المستخدم كاملة.
+- **بوابات H المتبقية:** القبول اليدوي على هاتف حقيقي؛ رحلة ملف فعلية من الرفع إلى القراءة والتحليل والفشل وإعادة المحاولة؛ حماية فرع `main` (ما زال `protected=false`)؛ وحسم الفرق بين `autoDeployTrigger=commit` في خدمتي Render الحيتين و`checksPass` في `render.yaml`. لا نغلق H قبل إثبات هذه البنود.
+
+### متابعة v1.1.0 — 2026-10-18 بعد PR #580
+
+- **آخر `main`:** `8f12b60aaa72f2e869724403a7636127064c9e64`. دُمج PR [#580](https://github.com/HVA09/ai-chat-app/pull/580) لحماية عمليات الإشعارات من استجابات قديمة تكتمل بعد إعادة ضبط الحالة عند تسجيل الخروج: أُضيف `sessionGenerationRef`، وتُتجاهل نجاحات وأخطاء عمليتي «تعليم إشعار كمقروء» و«تعليم الكل كمقروء» إذا بدأت قبل إعادة الضبط.
+- **اختبارات الانحدار:** أضيفت أربعة اختبارات تغطي نجاح/فشل العمليتين عند وصول الرد بعد إعادة الضبط. اجتازت فحوص PR #580: Backend `pytest` وFrontend وSDK وPreview Builder وProduction Compose وCodeQL.
+- **التحقق بعد الدمج:** CI #5439 وCodeQL #1123 وProduction Smoke #357 ونشر صورة Backend #525 كلها `success` على commit `8f12b60a`.
+- **Render:** نشر Frontend أصبح `live` على `8f12b60a`. آخر نشر Backend وظيفي مسجل ما زال `920c1876b1208b220826d0f8144750528e027cc9` لأن التغيير Frontend فقط. الفحص المباشر أعاد `/health = status:ok,database:ok` و`/ready = status:ready,database:ok,redis:ok`.
+- **بوابات H المفتوحة:** قبول يدوي على هاتف فعلي (تسجيل الدخول، القائمة الجانبية، Command Palette، تبديل محادثة، إرسال رسالة، إرفاق ملف)؛ رحلة ملف فعلية من الرفع إلى القراءة والتحليل والفشل وإعادة المحاولة؛ حماية فرع `main` (ما زال `protected=false` ولا توجد Rulesets فعالة)؛ ومراجعة اختلاف `autoDeployTrigger=commit` في Render الحي عن `checksPass` في `render.yaml`.
+- **السلامة والتكلفة:** PR #580 يخص Hook الإشعارات واختباراته فقط؛ لا تغييرات على قاعدة البيانات أو الأسرار أو خطط الخدمات، ولا موارد مدفوعة جديدة. المرحلة H لا تزال مفتوحة حتى قبول الهاتف والملفات وحل بوابتي الحماية والنشر.
+
+
+### متابعة v1.1.0 — 2026-10-18 بعد إصلاح رفع المرفقات المتأخر
+
+- **آخر `main`:** `e77a36cd231efa6b6daecbc28bf72f6e4cf4c4b3`. أصلح commit [e77a36c](https://github.com/HVA09/ai-chat-app/commit/e77a36cd231efa6b6daecbc28bf72f6e4cf4c4b3) سباق رفع مرفقات الدردشة: إذا أُعيد ضبط المسودة أثناء رفع الملف، يحاول التطبيق حذف الملف الذي وصل متأخرًا بدل ترك مرفق يتيم غير ظاهر. أضيف اختبار نجاح للتنظيف واختبار يؤكد بقاء المسودة سليمة حتى إذا فشل الحذف التعويضي.
+- **الفحوص بعد الدمج:** CI [#5451](https://github.com/HVA09/ai-chat-app/actions/runs/39126133181)، وCodeQL [#1127](https://github.com/HVA09/ai-chat-app/actions/runs/39126133000)، وProduction Smoke [#359](https://github.com/HVA09/ai-chat-app/actions/runs/39126133071)، ونشر صورة Backend [#527](https://github.com/HVA09/ai-chat-app/actions/runs/39126133131) اكتملت بنجاح.
+- **النشر والتشغيل:** Frontend Render أصبح `live` على `e77a36c`. آخر Backend deploy وظيفي مسجل ما زال `920c1876b1208b220826d0f8144750528e027cc9` لأن التغيير الأخير في الواجهة فقط. آخر فحص مباشر أعاد صفحة تسجيل الدخول، و`/health` أعاد `status=ok,database=ok`، و`/ready` أعاد `status=ready,database=ok,redis=ok`.
+- **ما لم يُغلق:** لا يزال قبول الهاتف الفعلي مطلوبًا لتسجيل الدخول والقائمة الجانبية وCommand Palette وتبديل المحادثة والإرسال وإرفاق الملف. كما أن نجاح اختبار التنظيف الآلي لا يثبت رحلة ملف مستخدم كاملة من الرفع إلى القراءة والتحليل والفشل وإعادة المحاولة.
+- **الحماية والنشر:** أحدث قراءة GitHub ما زالت تعرض `main.protected=false` دون فحوص حالة مطلوبة على مستوى الفرع. إعداد Render الحي ما زال `autoDeployTrigger=commit` بينما `render.yaml` يحدد `checksPass`. لم أغيّر هذه الإعدادات لأن تغييرها يتطلب قرارًا مقصودًا ومراجعة أثره.
+- **السلامة والتكلفة:** التغيير Frontend فقط؛ لا تغييرات على قاعدة الإنتاج أو الأسرار أو خطط الخدمات، ولم تُضف موارد مدفوعة. لا تُغلق المرحلة H قبل قبول الهاتف والملف ومراجعة الحماية وAuto Deploy.
+
+### متابعة v1.1.0 — 2026-10-18 بعد PR #584
+
+- **آخر `main`:** `262f243bf999baad50b1a2618130e456f9716c9e`. دُمج [PR #584](https://github.com/HVA09/ai-chat-app/pull/584) لتحصين `useNotificationPreferences`: التفضيلات تعود إلى الافتراضي خارج جلسة دخول فعالة، ومستمع أحداث التفضيلات وكتابة التغييرات يعملان فقط أثناء الجلسة النشطة.
+- **التغطية الاختبارية:** أضيفت ستة اختبارات مركزة لتفضيلات المستخدم، وتبديل المستخدم، والخروج، ومزامنة الحدث، ومنع الكتابة دون مصادقة. نجحت فحوص PR، بما فيها Backend `pytest` وFrontend وSDK وPreview Builder وProduction Compose وCodeQL.
+- **الفحوص بعد الدمج:** CI [#5461](https://github.com/HVA09/ai-chat-app/actions/runs/39131256465)، وCodeQL [#1131](https://github.com/HVA09/ai-chat-app/actions/runs/39131256510)، وProduction Smoke [#361](https://github.com/HVA09/ai-chat-app/actions/runs/39131256490)، ونشر صورة Backend [#529](https://github.com/HVA09/ai-chat-app/actions/runs/39131256475) كلها نجحت.
+- **النشر الحي:** Frontend Render أصبح `live` على `262f243b`. لم يتغير Backend؛ آخر نشر وظيفي مسجل هو `920c1876b1208b220826d0f8144750528e027cc9`. آخر فحص مباشر أعاد `/health = status:ok,database:ok` و`/ready = status:ready,database:ok,redis:ok`.
+- **المتبقي في H:** قبول الهاتف الفعلي، والاختبار الكامل لرحلة الملف من الرفع إلى القراءة والتحليل والفشل وإعادة المحاولة، وتفعيل حماية فرع `main` (ما زال `protected=false`)، وحسم اختلاف `autoDeployTrigger=commit` في Render الحي عن `checksPass` في `render.yaml`. لم تُعدّل هذه الإعدادات الحساسة في هذا التغيير.
+- **حالة المعمارية:** `App.jsx` بقي نحو 1,646 سطرًا بعد هذا الإصلاح، لأن التعديل اقتصر على Hook تفضيلات الإشعارات واختباراته؛ التفكيك المعماري ما زال جزئيًا.
+
+### متابعة الإصدار v1.1.0 — 2026-10-20 بعد PR #588
+
+- **آخر main:** `3a2d1a902d0d9efba3a7b94d5d560df8ba9e5dfe`، commit توثيقي يسجل حالة المرحلة H بعد إصلاح PR #588.
+- **تحديث واجهة المستخدم:** PR [#588](https://github.com/HVA09/ai-chat-app/pull/588) أغلق تسرب حالة الواجهة بين الجلسات؛ يُمسح محرر المساعد والمشروع ومقارنة النماذج وCommand Palette ومرشحات البحث/الأرشيف عند الخروج.
+- **التحقق على أحدث main:** نجحت CI [#5484](https://github.com/HVA09/ai-chat-app/actions/runs/39270173761)، وCodeQL [#1142](https://github.com/HVA09/ai-chat-app/actions/runs/39270173770)، وProduction Smoke [#367](https://github.com/HVA09/ai-chat-app/actions/runs/39270173752)، ونشر صورة Backend [#534](https://github.com/HVA09/ai-chat-app/actions/runs/39270173700).
+- **النشر المباشر:** Frontend Render ما زال `live` على `74174c60cdcdc971fc998a2b41038fd218722cd6`، وBackend على آخر نشر وظيفي مسجل `920c1876b1208b220826d0f8144750528e027cc9`. الفحص الحالي يعيد `/health = status:ok,database:ok` و`/ready = status:ready,database:ok,redis:ok`.
+- **المتبقي في H:** لم يُنفذ قبول الهاتف اليدوي، ولم تُثبت رحلة الملف الإنتاجية كاملة، وحماية `main` لا تزال معطلة (`protected=false` بلا Rulesets فعالة)، ولا تزال سياسة Auto Deploy غير موحدة بين Render الحي و`render.yaml`.
+- **قرار المتابعة:** لا نبدأ I قبل إغلاق هذه البوابات أو توثيق قرار صريح بتأجيل أي منها. لا تغييرات على قاعدة البيانات أو الأسرار أو خطط الخدمات؛ لا موارد مدفوعة جديدة.
+
+## متابعة المرحلة H — 2026-10-20 بعد PR #595
+
+- **آخر main:** d804f37c58a176d85ccb714290def474bc44aecc. دُمج [PR #595](https://github.com/HVA09/ai-chat-app/pull/595) لإصلاح إعادة محاولة الإرسال بعد فشل النقل أو بدء التوليد، مع حفظ نص الرسالة ومعرّفات الملفات والمساعد والنموذج والسياق؛ يميّز المسار الآن بين إعادة إرسال طلب لم يُحفظ وبين إعادة توليد رد بعد حفظ رسالة المستخدم.
+- **اختبارات الانحدار:** أضيفت تغطية لـ useRetryFailedGeneration وuseSendMessageGeneration ولحالة فشل Agent قبل حفظ الرسالة. CI [#5504](https://github.com/HVA09/ai-chat-app/actions/runs/39467122427)، CodeQL [#1158](https://github.com/HVA09/ai-chat-app/actions/runs/39467122429)، Production Smoke [#374](https://github.com/HVA09/ai-chat-app/actions/runs/39467122434)، ونشر صورة Backend [#540](https://github.com/HVA09/ai-chat-app/actions/runs/39467122444) كلها success على هذا commit.
+- **النشر الفعلي:** Render Frontend أصبح live على d804f37c58a176d85ccb714290def474bc44aecc بتاريخ 2026-10-20 17:34 UTC، وRender Backend أصبح live على commit نفسه بتاريخ 17:35 UTC. الصفحة المنشورة تعرض تسجيل الدخول؛ /health يعيد status=ok,database=ok و/ready يعيد status=ready,database=ok,redis=ok.
+- **بوابات H المفتوحة:** ما زال مطلوبًا قبول يدوي من هاتف فعلي لتسجيل الدخول والقائمة وCommand Palette وتبديل المحادثة والإرسال وإرفاق ملف؛ ورحلة ملف فعلية من الرفع إلى القراءة والتحليل والفشل وإعادة المحاولة. كما أن حماية main غير مفعلة (protected=false) ولا توجد Rulesets نشطة، وإعداد Auto Deploy الحي في خدمتي Render هو commit بينما render.yaml يحدد checksPass.
+- **السلامة والتكلفة:** التغيير السابق كان إصلاحًا للكود واختباراته؛ توثيق هذه الحالة فقط لا يغير الأسرار أو قاعدة البيانات أو إعدادات الإنتاج ولا يضيف موارد مدفوعة. نجاح Smoke وCI لا يغلق الاختبار اليدوي.
+
+
+### متابعة المرحلة H — 2026-10-22 بعد إصلاح حالة المحادثة الجديدة عند إعادة المحاولة
+
+- **آخر `main`:** `f5858b53cb54171f9cf47e9320194baae420967c`. تم إصلاح حفظ علامة المحادثة الجديدة عبر مسار إعادة المحاولة؛ حتى لو أعاد الخادم معرّف محادثة بعد بدء المحاولة، لا يفقد الواجهة سياق أن المحادثة بدأت الآن، ويظل توليد العنوان وتحديث القائمة صحيحين. تشمل التغطية فشل Agent قبل الحفظ وإعادة توليد رد بعد الحفظ.
+- **الفحوص على أحدث `main`:** نجحت CI [#5512](https://github.com/HVA09/ai-chat-app/actions/runs/39472513963)، وCodeQL [#1166](https://github.com/HVA09/ai-chat-app/actions/runs/39472513882)، ونشر صورة Backend [#542](https://github.com/HVA09/ai-chat-app/actions/runs/39472513877). وفي 2026-10-22 نجح Production Smoke [#378](https://github.com/HVA09/ai-chat-app/actions/runs/39749095384)، والنسخ الاحتياطي لقاعدة الإنتاج [#38](https://github.com/HVA09/ai-chat-app/actions/runs/39744306809)، وفحص Object Storage [#31](https://github.com/HVA09/ai-chat-app/actions/runs/39754887542).
+- **النشر الحي:** Frontend Render يعمل على `f5858b53cb54171f9cf47e9320194baae420967c` بحالة `live`. آخر نشر Backend وظيفي مسجل يعمل على `d804f37c58a176d85ccb714290def474bc44aecc` بحالة `live`. في الفحص المباشر الحالي يعيد `/health` ‏`status=ok,database=ok`، ويعيد `/ready` ‏`status=ready,database=ok,redis=ok`. تعرض الواجهة صفحة تسجيل الدخول؛ هذا لا يثبت نجاح تسجيل الدخول أو إرسال الرسائل من حساب مستخدم.
+- **بوابات H التي لا تزال مفتوحة:** قبول عملي على الهاتف لتسجيل الدخول، فتح القائمة الجانبية، Command Palette، تبديل المحادثة، إرسال رسالة وإرفاق ملف؛ وتجربة ملف كاملة بحساب مستخدم من الرفع إلى القراءة والتحليل ثم حالات الفشل وإعادة المحاولة.
+- **حماية الفرع:** أحدث قراءة GitHub لا تزال تعرض `main.protected=false` ولا توجد Rulesets نشطة. لا أستطيع تفعيل إعدادات الإدارة عبر الاتصال الحالي؛ يلزم ضبطها من إعدادات المستودع بصلاحية Admin.
+- **Auto Deploy:** خدمتا Render الحيتان تضبطان `autoDeployTrigger=commit` بينما `render.yaml` يحدد `checksPass`. لم تُغيّر إعدادات الإنتاج تلقائيًا لأن توحيد سياسة النشر قرار تشغيلي منفصل.
+- **PR قديم متجاوز:** PR #596 يحتوي تحديثًا لوثائق المرحلة H على الحالة السابقة `d804f37c`؛ يتم استبداله بهذا التوثيق المحدث حتى لا تبقى نسختان متباعدتان من حالة المشروع.
+- **السلامة والتكلفة:** هذا التحديث توثيقي. لم تتغير قاعدة البيانات أو الأسرار أو إعدادات Render، ولم تتم إضافة موارد مدفوعة. نجاح CI وSmoke والنسخ الاحتياطي لا يغلق قبول الهاتف أو دورة الملف اليدوية.
+
+### متابعة المرحلة H — 2026-10-22 بعد PR #606 (عزل تنظيف Object Storage smoke)
+
+- **التغيير على `main`:** `6db8eba9cba58d60bc0e6c6b166b3e0ae814420a` بعد دمج [PR #606](https://github.com/HVA09/ai-chat-app/pull/606). أصبح اختبار Object Storage يستخدم مفتاحًا فريدًا لكل تشغيل، وينظف الكائن حتى عند فشل الرفع الجزئي أو القراءة، ويحافظ على الخطأ الأصلي إذا فشل التنظيف أيضًا. التغيير يحسّن أداة smoke واختباراتها؛ **لا يُعد قبولًا كاملًا لرفع ملفات المستخدم من الواجهة**.
+- **الفحوص على هذا commit:** Production Smoke [#380](https://github.com/HVA09/ai-chat-app/actions/runs/39809370265) نجح، وCodeQL [#1176](https://github.com/HVA09/ai-chat-app/actions/runs/39809370120) ونشر صورة Backend [#544](https://github.com/HVA09/ai-chat-app/actions/runs/39809370124) نجحا. عند هذا التحديث، CI [#5522](https://github.com/HVA09/ai-chat-app/actions/runs/39809370230) ما زال يعمل في خطوة Backend `pytest -q`؛ اجتازت بالفعل خطوة تدقيق الاعتماديات، وcompileall، وAlembic upgrade، بينما نجحت فحوص Frontend وSDK وPreview Builder وProduction Compose.
+- **النشر الحي:** Render Backend أصبح `live` على `6db8eba9`. Frontend ما زال `live` على `f5858b53cb54171f9cf47e9320194baae420967c`؛ لم يطرأ عليه تغيير في PR #606. الفحص المباشر بعد نشر Backend أعاد `/health` بالحالة `status=ok,database=ok` و`/ready` بالحالة `status=ready,database=ok,redis=ok`. الصفحة الأمامية تعرض تسجيل الدخول، وهذا لا يثبت اكتمال تسجيل الدخول أو المحادثة الفعلية للمستخدم.
+- **بوابات H التي ما زالت مفتوحة:** قبول عملي من الهاتف لتسجيل الدخول، فتح القائمة الجانبية وCommand Palette، تبديل المحادثة، إرسال رسالة وإرفاق ملف؛ اختبار رحلة ملف المستخدم كاملة من الرفع إلى القراءة والتحليل وحالات الفشل وإعادة المحاولة؛ حماية `main` (ما زال `protected=false` ولا توجد Rulesets نشطة)؛ وتوحيد `autoDeployTrigger=commit` في Render الحي مع `checksPass` في `render.yaml`. لم نغيّر إعدادات الإدارة أو النشر الحساسة تلقائيًا.
+- **التكلفة والسلامة:** PR #606 لا يعدّل قاعدة البيانات أو الأسرار أو متغيرات البيئة ولا يضيف موارد مدفوعة. نجاح smoke وفحوص الصحة لا يغلق اختبار قبول الهاتف أو رحلة الملف اليدوية.
+
+### متابعة المرحلة H — حالة محدثة بعد PR #614 وPR #613 — 2026-10-22
+
+- **واجهة الهاتف:** دُمج PR #614 بالـcommit `83d8a8120b578009186a213249056e67e3ca88c8`، وأصبح نشر Frontend في Render `live` على هذا commit. التغيير يعالج التفاف أزرار الرسائل ويستخدم مفتاح الترجمة الموجود لإجراء إنشاء فرع المحادثة. نجح Production Smoke #385 وCodeQL #1205 ونشر الصورة #549.
+- **سياق الملفات:** دُمج PR #613 بالـcommit `897cbf59faedb247216574a373e1e56744755bb3`. يحافظ المسار على الملفات المرفقة صراحةً حتى إذا لم يُرجع البحث الدلالي مقاطع، ويبيّن حدود القراءة عندما لا يتوفر نص مستخرج، مع اختبار انحدار. نجح Production Smoke #386؛ عند آخر فحص كانت CI #5552 في الانتظار وCodeQL #1206 ونشر الصورة #550 قيد التشغيل، كما كان نشر Backend في Render `update_in_progress`.
+- **حالة الإغلاق:** لا نعتبر H مغلقة بعد. قبول الهاتف اليدوي، ورحلة ملف مستخدم كاملة، وحماية `main`، ومطابقة سياسة Auto Deploy بين Render الحي و`render.yaml` ما زالت بوابات مفتوحة. الصحة التشغيلية التي ظهرت أثناء تحديث Backend لا تغني عن إعادة الفحص بعد اكتمال النشر.
+### متابعة المرحلة H — تحقق ما بعد نشر Backend — 2026-10-22
+
+- **الحالة التشغيلية بعد نشر `897cbf59`:** أكد Render انتهاء النشر بنجاح في `2026-10-22 21:39:59 UTC` وأصبح Backend `live`. أعاد فحص مباشر بعد النشر `/health = status:ok,database:ok` و`/ready = status:ready,database:ok,redis:ok`.
+- **الفحوص:** Production Smoke #386 وCodeQL #1206 ونشر الصورة #550 نجحت على commit `897cbf59`. عند آخر فحص CI #5552 كان `pending` وCI #5551 على commit الواجهة `83d8a812` كان قيد التنفيذ؛ لا تُعلن نجاح CI على `897cbf59` قبل اكتماله.
+- **قرار المتابعة:** تبقى H مفتوحة حتى قبول الهاتف اليدوي، واختبار دورة ملف كاملة بحساب مستخدم، وتفعيل حماية `main`، وحسم اختلاف إعداد Auto Deploy بين Render الحي و`render.yaml`.
+
+### متابعة المرحلة H — 2026-10-22 بعد دمج PR #616
+
+- **اختبار دورة الملف:** دُمج [PR #616](https://github.com/HVA09/ai-chat-app/pull/616) بالـcommit `f4bcb75cc1a5d628784de3849e1490990af43f14`. أضاف الاختبار في `ai-backend/tests/test_file_conversation_links.py` مسارًا تكامليًا يرفع ملف UTF-8 إلى محادثة، ويتحقق من ظهوره في قائمة الملفات وتنزيل البايتات الأصلية دون تغيير، ثم يرسل رسالة لاحقة بينما يعيد البحث الدلالي صفر نتائج ويتحقق من وصول النص إلى prompt باعتباره `untrusted reference material`.
+- **فحوص PR:** نجحت فحوص PR الـ8، بما فيها Backend `pytest -q` وFrontend build/tests وSDK وPreview Builder وProduction Compose وCodeQL والتحليلين الأمنيين.
+- **الفحوص بعد الدمج:** اكتمل CI [#5557](https://github.com/HVA09/ai-chat-app/actions/runs/39861423409) بنجاح على `main` عند `2026-10-22 22:04:19 UTC`، بما في ذلك Backend `pytest -q` بعد دمج PR #616. نجح أيضًا Production Smoke [#388](https://github.com/HVA09/ai-chat-app/actions/runs/39861423353) وCodeQL [#1211](https://github.com/HVA09/ai-chat-app/actions/runs/39861423421) ونشر صورة Backend [#552](https://github.com/HVA09/ai-chat-app/actions/runs/39861423508). ملاحظة تاريخية: كان فحص Backend لطلب التوثيق #617 قيد التنفيذ عند كتابة ذلك السجل؛ دُمج #617 لاحقًا في `14a6f36500a2feb8841804d8ca4da1cad27cf00e`، واكتملت جميع فحوصه، بما فيها Backend `pytest -q`، بنجاح.
+- **النشر الحي:** بدأ Render نشرًا تلقائيًا على commit الاختبار رغم أن PR #616 غيّر ملف اختبار فقط. أكد Render انتهاء النشر بنجاح بتاريخ `2026-10-22 22:00:32 UTC`، وأصبحت الخدمة `live` على `f4bcb75`. أكد فحص مباشر بعد النشر `/health = status:ok,database:ok` و`/ready = status:ready,database:ok,redis:ok`.
+- **بوابات H المفتوحة:** الاختبار الجديد يغطي نجاح الرفع والربط والتنزيل وسياق الملف آليًا، لكنه لا يغلق رحلة المستخدم الإنتاجية كاملة ولا حالات الفشل وإعادة المحاولة. ما زال مطلوبًا قبول الهاتف الفعلي، وحماية فرع `main` (ما زال `protected=false`)، وحسم اختلاف `autoDeployTrigger=commit` في Render الحي عن `checksPass` في `render.yaml`.
+- **السلامة والتكلفة:** PR #616 غيّر ملف اختبار فقط؛ لا تغييرات على كود التطبيق أو مخطط/بيانات قاعدة الإنتاج أو الأسرار أو متغيرات البيئة أو خطط الخدمات، ولم تُضف موارد مدفوعة.
+
+
+### متابعة الإصدار v1.1.0 — تحديث التحقق 2026-10-23
+
+- **آخر `main`:** `0275b9440d515ec6628545a2c184bcab4b62bde4`. دُمج PR [#620](https://github.com/HVA09/ai-chat-app/pull/620) لإضافة ترجمة عربية لاسمي اختيار نموذج الذكاء الاصطناعي والخيار الافتراضي في قائمة أدوات الهاتف، مع اختبارات ترجمة بالعربية والإنجليزية.
+- **اختبار دورة الملف:** دُمج PR [#618](https://github.com/HVA09/ai-chat-app/pull/618) على `913e80371e2c0fb040fc96e371dd028d8f5b28a5`. أضاف اختبارات لفشل Object Storage المؤقت ثم إعادة الرفع والتنزيل من التخزين البعيد بعد حذف النسخة المحلية، ولإبقاء الملف الأصلي قابلًا للتنزيل عند فشل استخراج النص.
+- **فحوص PR #620:** نجحت جميع الفحوص الثمانية قبل الدمج، ومنها Backend وFrontend وSDK وPreview Builder وProduction Compose وCodeQL والتحليلان الأمنيان.
+- **فحوص ما بعد الدمج على `0275b944`:** اكتملت جميع وظائف CI [#5570](https://github.com/HVA09/ai-chat-app/actions/runs/39867337687) بنجاح، بما فيها Backend `pytest -q` عند `2026-10-22 22:52:24 UTC`. نجح أيضًا Production Smoke [#391](https://github.com/HVA09/ai-chat-app/actions/runs/39867337763)، وCodeQL [#1224](https://github.com/HVA09/ai-chat-app/actions/runs/39867337755)، ونشر صورة Backend [#555](https://github.com/HVA09/ai-chat-app/actions/runs/39867337756).
+- **النشر الحي:** Render Frontend أصبح `live` على `0275b944`. آخر نشر Backend مسجّل على `913e8037` بعد اختبارات دورة التخزين. الفحص المباشر أعاد `/health = status:ok,database:ok` و`/ready = status:ready,database:ok,redis:ok`.
+- **بوابات المرحلة H المفتوحة:** قبول الهاتف الفعلي من حساب مستخدم (تسجيل الدخول، القائمة الجانبية، Command Palette، تبديل المحادثة، إرسال رسالة، فتح الأدوات وإرفاق ملف)؛ وتجربة ملف إنتاجية كاملة من الرفع إلى القراءة والتحليل ثم حالات الفشل وإعادة المحاولة. ما زالت حماية `main` معطلة (`protected=false` ولا توجد Rulesets فعالة)، كما أن إعداد Render الحي `autoDeployTrigger=commit` يختلف عن `checksPass` في `render.yaml`.
+- **السلامة والتكلفة:** هذه التحديثات لا تضيف خدمات أو موارد مدفوعة. لا نعتبر Smoke أو اختبارات التكامل الآلية بديلًا عن قبول الهاتف ورحلة الملف من حساب مستخدم حقيقي، ولا نغلق H قبل حسم البوابات المتبقية أو توثيق قرار تأجيل صريح.
