@@ -159,3 +159,13 @@
 - أضيفت اختبارات للمستخدم العادي والإداري، ولقطع discovery للمستخدم العادي، وإخفاء metadata القديمة في استجابات Agent Jobs.
 - **حالة الفحوص على الرأس الحالي:** CI run `43972899224` وCodeQL run `43972899294`؛ backend وCodeQL كانا قيد التنفيذ عند آخر تحقق، وSDK نجح. وظائف frontend وpreview-builder وproduction-compose لم تكن قد اكتملت بعد في هذا التشغيل. التشغيل الأسبق `43972151077` أصبح قديماً بعد تحديث الرأس، ولا يُستخدم لقبول الإصدار الحالي.
 - لا يُغلق Issue #719 ولا توصف الفجوة بأنها معالجة قبل نجاح كل الفحوص المطلوبة ومراجعة التغيير ودمجه. لم يُتصل بأي MCP server ولم تُغيّر إعدادات الإنتاج.
+
+
+## 9. نتيجة إصلاح تفويض MCP — 2026-11-17
+
+- **تم الدمج:** [AI Chat App PR #721](https://github.com/HVA09/ai-chat-app/pull/721)، head `45cfab03669093511397619f6ac33d31fa536454`، merge commit `59ea8043b51c1abedf80906c999cc4e64fa251d9`.
+- **الفحوص على الرأس المدمج:** CI run `43972899224` نجح في backend وfrontend وSDK وpreview-builder وproduction-compose؛ CodeQL run `43972899294` نجح في Python وJavaScript/TypeScript.
+- **تحقق main بعد الدمج:** `agent_runtime.py` يحتوي Runtime version 2 وrole gate على MCP؛ `agent_jobs.py` يحتوي redaction للـglobal MCP metadata من استجابات jobs. ظهرت التغييرات على main.
+- **Issue #719:** أُغلقت بعد الدمج والتحقق.
+- **قيود النطاق:** لم يتم تشغيل أو تفعيل MCP server، ولم تتغير إعدادات الإنتاج؛ الوصول يقتصر على application admins ما دام إعداد MCP مفعلاً، إلى أن يوجد عقد connector grants لكل مستخدم/Workspace.
+- **المتبقي:** Issue #718 لصلاحية المهام المجدولة لا تزال مفتوحة. Issue #720 لها PR مستقل #722 لإعادة فحص Project ACLs؛ لا تحتسب منجزة قبل انتهاء فحوصه ومراجعته ودمجه.
