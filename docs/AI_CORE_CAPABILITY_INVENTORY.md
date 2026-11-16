@@ -83,3 +83,69 @@
 3. تصنيفها: Product-owned، Reusable contract، Shared service candidate، أو Not implemented.
 4. تحديث هذا الجرد فقط مع SHA/PR/CI واضح.
 5. بعد ذلك يبدأ تصميم AI Core التفصيلي، لا قبله.
+
+
+## 7. تدقيق تنفيذ وصلاحيات على main — 2026-11-17
+
+**خط الأساس:** `HVA09/ai-chat-app` عند `main = 17c9868fc17a37a1743c4a49cdb378d93160650c`. هذا فحص قراءة للمصدر والاختبارات؛ لم تُشغّل اختبارات محلياً ولم يتم التحقق من نشر حي.
+
+### Agent Runtime وTool Registry
+
+| المجال | دليل main | اختبارات main | حالة القبول |
+|---|---|---|---|
+| Runtime limits | `ai-backend/app/services/agent_runtime.py`: 3 rounds، 4 calls/round، 8,000 chars، 20 history messages، 30 sec/tool | `tests/test_agent_runtime.py` | Runtime موجود ومحدود؛ الأرقام قيود المنتج وليست SLO أو ضماناً أمنياً مستقلاً. |
+| Global tool allowlist | `app/config.py` و`services/agent_runtime.py` و`services/tools/registry.py` | `tests/test_agent_runtime.py::test_runtime_exposes_only_globally_allowed_tools`، `tests/test_tool_registry.py::test_scoped_registry_enforces_explicit_tool_allowlist` | موجودة على main؛ السماح العالمي لا يغني عن التحقق من صلاحية مورد محدد داخل handler. |
+| Argument validation | `services/tool_security.py` ثم `ToolRegistry.execute` | اختبارات `test_tool_registry.py` | يوجد تحقق schema وحجم وعمق؛ يجب استمرار اختبار schemas القادمة من MCP كمصدر غير موثوق. |
+| Untrusted outputs | `ToolResult.untrusted` و`wrap_untrusted_tool_output` ووقف tool follow-ups بعد نتيجة غير موثوقة | `tests/test_agent_runtime.py::test_runtime_wraps_untrusted_output_and_blocks_followup_tools`، `tests/test_tool_registry.py::test_registry_marks_untrusted_output_and_detects_injection` | أساس موجود؛ كشف injection heuristic وليس تصنيفاً كاملاً، ولذلك تبقى كل مخرجات المصدر الخارجي غير موثوقة حتى إن لم تتطابق مع النمط. |
+| DB pool release | Runtime يحرر اتصال DB قبل MCP/provider/tool waits | `tests/test_agent_runtime.py::test_runtime_releases_database_pool_during_mcp_provider_and_tool_waits` | اختبار موجود؛ لا تعاد إصلاحات QueuePool السابقة دون telemetry جديدة. |
+
+### MCP — فجوة تفويض حالية
+
+- في main، `AgentRuntime.run()` ينفذ `self.mcp_discoverer()` بعد بناء registry دون فحص دور المستخدم.
+- `MCP_ENABLED` افتراضياً `False`، وعند تعطيله ترجع discovery قائمة فارغة؛ لكن عند تفعيله، لا يوجد في main gate حسب الدور قبل الاتصال بخوادم MCP.
+- توجد طبقتا allowlist: `AGENT_ALLOWED_TOOLS_JSON` العامة و`allowed_tools` لكل MCP server، إضافة إلى HTTPS في production. هذه الطبقات لا تعوض تفويض المستخدم.
+- `get_agent_tool_policy_snapshot()` في main يقرأ إعدادات MCP العالمية ويعرض أسماء الخوادم وقوائم الأدوات ضمن snapshot دون redaction بحسب الدور.
+- اختبارات main في `tests/test_mcp_client.py` تغطي default-disabled، إعداد JSON، per-server allowlist، وHTTPS في production؛ لا يظهر اختبار يثبت أن المستخدم العادي لا يبدأ MCP discovery.
+- **Issue مفتوحة:** [AI Chat App #719 — restrict globally configured MCP tools to authorized users](https://github.com/HVA09/ai-chat-app/issues/719).
+- **مرشح غير مدمج:** PR #665 على الفرع `ai/embedding-provider-separation-20261025` يضيف gate لدور `UserRole.admin`، ويخفي معلومات MCP من snapshots للمستخدمين غير المخولين، ويضيف اختباراً يمنع discovery للمستخدم العادي. PR #665 ما زال Open/Draft/Unmerged؛ هذه التغييرات ليست في main ولا تعد إصلاحاً منجزاً.
+
+### أدوات ملفات المشاريع — إعادة تحقق ACL غير موجودة في main
+
+- `services/tools/registry.py` في main يحتوي `_list_project_files` و`_read_project_file` و`_search_project_files` و`_edit_project_file` و`_create_project_archive`.
+- handlers تعتمد على `conversation.project_id` وبيانات المشروع، لكن لا يظهر في main فحص داخل handler عبر `can_read_project()` أو `can_edit_project()` قبل القراءة/التعديل.
+- يوجد في المنتج service منفصل `services/project_access.py` يوفر `can_read_project` و`can_edit_project`; استخدامه في هذه الحدود مطلوب لضمان إعادة التحقق بعد إلغاء صلاحية المستخدم أو مشاركة المشروع.
+- **Issue مفتوحة:** [AI Chat App #720 — recheck project ACLs inside Agent project-file tools](https://github.com/HVA09/ai-chat-app/issues/720).
+- **مرشح غير مدمج:** PR #665 يضيف `_project_permission_denial()` إلى handlers ويضيف اختبار viewer: يمكنه القراءة والبحث، ولا يستطيع تعديل الملف أو استبداله عبر archive tool. لا تحتسب هذه الحماية ضمن main قبل PR مستقل واختبارات CI ناجحة.
+
+### جدولة المهام — كتالوج RBAC لا يطابق المسارات
+
+- `services/workspace_rbac.py` يعرف `scheduled_tasks.manage`، و`routers/workspace_rbac.py` يصفها بأنها إدارة المهام المجدولة.
+- `routers/scheduled_tasks.py` في main يتحقق من العضوية أو ملكية سجل المهمة، لكن لا يظهر استدعاء `has_workspace_permission` أو `require_workspace_permission` عبر مسارات create/update/delete/run/retry.
+- اختبارات `tests/test_scheduled_tasks.py` تغطي CRUD والتحقق من وقت المستقبل ورفض غير العضو وتفرد run slot؛ ولا تغطي عضواً يملك custom RBAC role لا يتضمن `scheduled_tasks.manage`.
+- **Issue مفتوحة:** [AI Chat App #718 — enforce workspace RBAC for scheduled-task operations](https://github.com/HVA09/ai-chat-app/issues/718).
+- هذا تعارض بين permission catalog وسلوك المسارات بحسب مراجعة المصدر؛ يلزم حسم ما إذا كانت المهام workspace-governed أو user-owned ثم جعل العقد والاختبارات متوافقة. لا نعلن exploit مثبتاً ولا نغير الكود ضمن هذه الجولة.
+
+### مفاتيح API وWebhooks — دلالات الملكية تحتاج قراراً
+
+- `RBAC_PERMISSIONS` يحتوي `api_keys.manage` و`webhooks.manage`، مع وصفهما بأنهما صلاحيات مرتبطة بمساحة العمل.
+- routers الحالية في `api_keys.py` و`webhooks.py` تستخدم سجلات `user_id` وملكية المستخدم، ولا يظهر استدعاء لهاتين الصلاحيتين في المسارات التي تمت مراجعتها.
+- توجد اختبارات owner-scoping لمفاتيح API وWebhooks، وفحص URL يمنع العناوين الخاصة في Webhooks، وتوقيع HMAC-SHA256.
+- لم تُسجل هذه الملاحظة كفجوة استغلال مؤكدة: قد يكون السلوك الحالي مقصوداً كنطاق user-owned. يلزم قرار واضح: إما إزالة/إعادة توصيف صلاحيات Workspace غير المستخدمة، أو اعتماد ملكية workspace وإضافة authorization tests. لا تحولها إلى صلاحيات مشتركة تلقائياً.
+
+### Python execution — حد العزل بدقة
+
+- `services/tools/code_execution.py` ينفذ كوداً محدوداً بعد AST validation داخل subprocess مستقلة بخيارات Python isolated، ومهلة 2 ثانية، وقيود موارد Linux على CPU/memory/file size/open files/processes، ويحد الكود والناتج.
+- اختبارات `tests/test_code_execution.py` تغطي منع import/attribute access/builtins/dynamic evaluation، والمهلة وحجم الناتج.
+- **لا توصف هذه الآلية بأنها OS/container sandbox أو عزلاً كاملاً عن kernel/host.** إنها مفسر مقيد + عملية منفصلة + حدود موارد؛ إذا احتاجت منتجات المنظومة تنفيذ كود غير موثوق على نطاق أوسع، فيلزم sandbox مستقل متعدد الطبقات مع عزل filesystem/network/identity قبل التفعيل.
+
+### الوظائف التي ثبت أنها مدمجة بالفعل — لا تكررها من PR #665
+
+وفق سجل التفكيك المدمج في main، section 52، وسجل PRs:
+- RAG authorization: PR #694 merged؛ تحقق ملكية conversation وworkspace membership وproject/assistant share. لا تفتح نسخة مكررة.
+- Embedding provider configuration: PR #692 merged.
+- File-index fingerprints/schema: PR #695 merged (migration `0082_file_index_fingerprints`، بعد 0081 الحالي).
+- Safe single-file reindex behavior: PR #696 merged؛ تجهيز embeddings قبل استبدال الفهرس المحفوظ.
+- إصلاح تحرير DB connection قبل external waits في المسارات التي سبق إصلاحها موجود في main؛ لا تكرر إصلاح QueuePool دون دليل telemetry جديد.
+- PR #665 يبقى Open/Draft/Unmerged كمصدر تاريخي لاستخراج تغييرات محددة فقط؛ لا دمج جماعي ولا cherry-pick عشوائي.
+
+**الاستنتاج:** AI Chat App يوفر بالفعل Runtime وأدوات وMCP وjobs وscheduler وRAG وRBAC. أولويات التدقيق ليست بناء بدائل داخل AI Core، بل معالجة حدود التفويض الفعلية (Issues #718–#720) وتوثيق عقود آمنة قابلة لإعادة الاستخدام.
