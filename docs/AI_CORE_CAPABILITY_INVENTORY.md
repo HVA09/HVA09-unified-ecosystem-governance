@@ -169,3 +169,20 @@
 - **Issue #719:** أُغلقت بعد الدمج والتحقق.
 - **قيود النطاق:** لم يتم تشغيل أو تفعيل MCP server، ولم تتغير إعدادات الإنتاج؛ الوصول يقتصر على application admins ما دام إعداد MCP مفعلاً، إلى أن يوجد عقد connector grants لكل مستخدم/Workspace.
 - **المتبقي:** Issue #718 لصلاحية المهام المجدولة لا تزال مفتوحة. Issue #720 لها PR مستقل #722 لإعادة فحص Project ACLs؛ لا تحتسب منجزة قبل انتهاء فحوصه ومراجعته ودمجه.
+
+
+## 10. نتيجة إصلاح إعادة تحقق صلاحيات المشروع — 2026-11-17
+
+- **تم الدمج:** [AI Chat App PR #722](https://github.com/HVA09/ai-chat-app/pull/722)، الفرع `security/project-agent-acl-20261117`، head `5ae8595a05dc411901ec0e9a53b4a5670183c624`، merge commit `25a9958efd48de06b96157d47d0e6304d1c71878`.
+- **الفحوص على head المدمج:** CI run `43974707209` نجح، وCodeQL run `43974707148` نجح.
+- أصبحت إعادة التحقق داخل `_list_project_files` و`_read_project_file` و`_search_project_files` و`_edit_project_file` و`_create_project_archive` باستخدام `can_read_project` و`can_edit_project`.
+- اختبارات regression تثبت أن viewer يستطيع القراءة والبحث ولا يستطيع التعديل أو archive overwrite، وأن سحب المشاركة يمنع الاستدعاءات اللاحقة، وأن سحبها أثناء رفع الأرشيف يمنع حفظه في شجرة المشروع ويؤدي إلى تنظيف الملف الذي تم رفعه.
+- **Issue #720:** أُغلقت بعد الدمج والتحقق.
+- لا migration، ولا نقل بيانات، ولا تغيير إعدادات الإنتاج أو التخزين.
+
+### الحالة الأمنية المتبقية من هذا التدقيق
+
+- #719 / MCP global role gate: PR #721 merged وIssue مغلقة.
+- #720 / Project tool ACL rechecks: PR #722 merged وIssue مغلقة.
+- #718 / scheduled-task RBAC: لا تزال مفتوحة؛ تحتاج قرار ملكية الموارد واختبارات custom roles ثم PR منفصل.
+- لا تُعتبر بقية منظومة الصلاحيات مقبولة بالكامل بسبب إغلاق هذه المسائل الثلاث؛ يظل تدقيق Lumen وERP وعقود AI Core مطلوباً.
