@@ -4,6 +4,11 @@
 
 ## Lumen
 
+### PR #6 — حزمة وثائق معمارية مقترحة
+[PR #6](https://github.com/HVA09/lumen-learning-platform/pull/6)
+
+هذا PR مفتوح وفي حالة Draft وغير مدمج، ويحتوي خمس وثائق معمارية وتطويرية. حُفظت نسخته في `archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-6-open-docs/`. تُستخدم الوثائق للمقارنة مع `main`، ولا تُعامل كخطة نافذة قبل مراجعة الفروق.
+
 ### PR #154 — LTI 1.3 / AGS
 [PR #154](https://github.com/HVA09/lumen-learning-platform/pull/154)
 
