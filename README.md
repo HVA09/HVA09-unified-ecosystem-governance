@@ -16,8 +16,10 @@
 10. [خطة التنفيذ المتوازي — 50 مهمة، 10 لكل مرحلة](docs/UNIFIED_50_TASK_EXECUTION_PLAN.md)
 11. [جرد قدرات AI الحالية قبل بناء AI Core](docs/AI_CORE_CAPABILITY_INVENTORY.md)
 12. [متطلبات الوكلاء المتخصصين في AI Core — S4-02](docs/AI_CORE_SPECIALIZED_AGENT_REQUIREMENTS.md)
-13. [سجل ملكية المنتجات وحدود التكامل](docs/PRODUCT_OWNERSHIP_AND_INTERFACE_CATALOG.md)
-14. [السجل التاريخي لمقترح دفعة 15 مهمة — مستبدل](docs/UNIFIED_BATCH_EXECUTION_PLAN.md)
+13. [مصفوفة أدوات وصلاحيات الوكلاء — S4-06](docs/AI_CORE_AGENT_TOOL_MATRIX.md)
+14. [سجل ملكية المنتجات وحدود التكامل](docs/PRODUCT_OWNERSHIP_AND_INTERFACE_CATALOG.md)
+15. [كتالوج عقود API بين المنتجات — S5-02](docs/PRODUCT_API_CONTRACT_CATALOG.md)
+16. [السجل التاريخي لمقترح دفعة 15 مهمة — مستبدل](docs/UNIFIED_BATCH_EXECUTION_PLAN.md)
 
 ## قاعدة مصدر الحقيقة
 
