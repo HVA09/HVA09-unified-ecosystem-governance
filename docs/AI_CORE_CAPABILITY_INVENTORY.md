@@ -323,3 +323,54 @@
 - لا تفتح MCP لمستخدمين عاديين حتى يوجد connector ownership/grants قابلة للتدقيق.
 
 هذا القسم يثبت inventory والتصميم فقط؛ لا يعلن اكتمال S4-06 أو تفعيل أي أداة جديدة.
+
+
+## 15. جرد RAG والذاكرة ودورة حياة المعرفة — 2026-11-17
+
+**خط الأساس:** AI Chat App main `6645b0502daa6922040ee4c6bb5c281ed59ef366`.  
+**مصادر RAG:** `services/rag.py` SHA `a4f219258c4734de8a6d71044180530fbb99d144`، `services/embeddings.py` SHA `857f7c873c27800d11d148cb23864f1985422449`.  
+**نماذج المعرفة:** `FileAttachment` SHA `6e4e2205b19c22427cb6aa8e41ae079d794378e7`، `FileChunk` SHA `274575769b439425dbe883cc189ec5384e1b33c9`.
+
+### 15.1 RAG — الموجود في main
+
+- تقطيع النص الحالي: `CHUNK_SIZE=1400` حرف و`CHUNK_OVERLAP=200`، افتراضي `TOP_K=6`، سقف الاسترجاع 12 مقطعاً، وسقف سياق المقاطع `18,000` حرف.
+- تخزين embeddings في pgvector ببعد ثابت 768؛ المزوّد المستقل يقبل Gemini وOpenAI وOpenAI-compatible مع التحقق من الأبعاد والقيم الرقمية finite ورفض المتجه الصفري.
+- فضاء الفهرسة يُعرّف ببصمة لا تتضمن الأسرار: provider/model/normalized endpoint/vector dimensions. مفاتيح API لا تدخل في fingerprint.
+- إعدادات embeddings مستقلة عن إعدادات المحادثة مع توافق رجعي عند عدم تحديد مزود مستقل. لا تُرسل credentials لمزود مختلف عن مزود المحادثة دون مفتاح embeddings صريح.
+- `prepare_file_index` يولّد replacement chunks/embeddings دون تعديل الفهرس المحفوظ؛ `persist_file_index` يعيد مطابقة بصمة النص قبل الحفظ ثم يستبدل المقاطع داخل transaction واحدة. فشل provider قبل persistence لا يحذف الفهرس السابق؛ والنص الفارغ يزيل المقاطع وبصمة الفهرس.
+- قبل طلب query embedding، يفحص وجود candidate chunk ضمن النطاق المصرح؛ لا يستدعي provider إذا لم توجد مقاطع مؤهلة. يحرر DB connection أثناء انتظار مزود embeddings، ثم يعيد التحقق من التفويض قبل تسليم أي نتيجة.
+- التحقق المستقل للخدمة يطابق هوية المحادثة ومالكها وعدم حذفها، scope workspace/project/assistant المحفوظ، عضوية workspace الحالية، project ACL عبر `can_read_project`، وassistant owner/share الحالية.
+- نطاق الاسترجاع يفصل personal files المرتبطة بالمحادثة، وworkspace files غير المرتبطة بمشروع، وproject files للمشروع المحدد، وassistant-linked files. لا يُعامل كل ملف في الحساب كمعرفة عامة للمحادثة.
+- مخرجات الاسترجاع تُعلّم بوضوح على أنها untrusted reference data، مع source IDs ثابتة [S1..] وبيانات اسم الملف ورقم المقطع؛ تعليمات الملف لا تتجاوز system/safety.
+- اختبارات main في `tests/test_rag.py` تغطي chunk overlap، index metadata، retrieval context/citations، workspace/project isolation، رفض محادثة مستخدم آخر، سحب membership/project access/assistant share، no-provider-call عند غياب النطاق، وسحب الصلاحية أثناء انتظار embedding. اختبارات `test_chat.py` تغطي تمرير سياق الملفات/الذاكرة.
+
+### 15.2 إعادة الفهرسة والحذف والاحتفاظ
+
+- `POST /files/{file_id}/reindex` يعيد فحص الوصول والصلاحية قبل provider wait، يحرر DB checkout، يجهز replacement embeddings، ثم يعمل `expire_all` وrow lock/refresh، ويعيد فحص ACL وبصمة النص قبل commit. عند فشل provider أو تغير المصدر يحتفظ بالفهرس السابق.
+- فهرسة الصور صريحة عبر `/index-image` ولا تُنفذ Vision خفية في كل رسالة.
+- حذف ملف عبر `DELETE /files/{file_id}` يحذف object storage أولاً بعد تحرير DB connection، ثم يحذف سجل المرفق؛ نموذج `FileAttachment` يملك cascade على `FileChunk` و`ConversationFileLink` و`AssistantFileLink`، كما أن FileChunk FK يحدد on-delete cascade. لم أجد ضمن اختبارات الحذف التي تمت مراجعتها اختبار regression مستقلاً يثبت غياب جميع المقاطع بعد حذف ملف؛ يستحق إضافة تأكيد صريح قبل نقل سياسة الاحتفاظ إلى AI Core.
+- نقل المحادثة إلى Trash يضع `deleted_at`; خدمة RAG تستبعدها. حذف المحادثة نهائياً يحذف ConversationFileLink التابع، لكنه لا يعني حذف ملف المستخدم المستقل أو workspace/project file. بقاء المرفق ليس بحد ذاته تسريباً: نطاق personal retrieval يشترط link للمحادثة، بينما الملفات المشتركة تتبع owner scope الخاص بـworkspace/project.
+- حذف المشروع حالياً يفصل `Conversation.project_id` و`FileAttachment.project_id` ويحتفظ بـ`workspace_id` للملفات. وRAG يصنف الملف الذي أصبح `project_id IS NULL` ضمن workspace scope؛ لذلك قد تتسع دائرة من يستطيع listing/download/retrieval من أعضاء المشروع إلى أعضاء مساحة العمل.
+- **مسألة مفتوحة:** AI Chat App [Issue #724](https://github.com/HVA09/ai-chat-app/issues/724) تطلب سياسة صريحة عند حذف المشروع: حذف الملفات، أو الاحتفاظ بها في نطاق خاص، أو ترقيتها إلى workspace files بموافقة واضحة. لا توجد في تأكيد الواجهة الحالي رسالة توضح هذا التحول؛ لا يُعلن هذا المسار آمناً قبل معالجة #724 واختبار عدم التسريب.
+
+### 15.3 الذاكرة — قدرات main الفعلية
+
+| النوع | التخزين والمالك | القراءة والكتابة | دورة الاستخدام |
+|---|---|---|---|
+| User Memory | `UserMemory.user_id` | CRUD مقصور على المالك؛ سقف list الحالي 50؛ schema للمحتوى حتى 500 حرف | المستخدم يختار رسالة من رسائله ويحفظها صراحةً من واجهة المحادثة، أو يديرها من Account Settings. تُحقن حتى 20 ذاكرة شخصية في سياق المساعد ضمن `MAX_MEMORY_CONTEXT_CHARS=6000`. |
+| Project Memory | `ProjectMemory.project_id` مع `created_by_user_id` | القراءة تتطلب workspace membership و`can_read_project`; الإنشاء/التعديل/الحذف تتطلب `can_edit_project`; سقف 50 ذاكرة للمشروع، حتى 1000 حرف للعنصر | تُشارك مع سياق المشروع المحدد فقط، ويُحقن حتى 30 عنصر ذاكرة. اختبار main يثبت عدم تحميل ذاكرة مشروع B داخل محادثة مشروع A أو محادثة عامة. |
+
+- `_augment_message` يضيف summary + user/project memory + project instructions + assistant instructions + file context إلى طلب المحادثة العادي والبث وإعادة التوليد وتحرير الرسالة. لا يقتصر استخدام الذاكرة على Model Compare.
+- user memory مستقلة عن project memory؛ لا تُستخدم الذاكرة الشخصية كذاكرة مشروع، والعكس صحيح. project memory تُحذف مع حذف المشروع (FK cascade)، وuser memory تُحذف مع حذف حساب مالكها (FK cascade).
+- **ما ليس في main:** endpoint اقتراح الذكريات من آخر رسائل المحادثة مع اقتباس داعم وفحص الخصوصية ثم موافقة المستخدم على الحفظ لم يثبت في main. هذه وظيفة موصوفة في PR #665 المفتوح Draft وغير المدمج؛ فلا تُحتسب كقدرة منشورة. لا يوجد استخراج تلقائي في الخلفية أو fine-tuning تلقائي بموجب نطاق main الذي تمت مراجعته.
+
+### 15.4 نتائج العمل التي ينبغي أن يعيد AI Core استخدامها
+
+1. أعد استخدام embeddings provider abstraction وfingerprint وRAG authorization وfile indexing/reindexing الحالي، ولا تنشئ vector store أو chunking stack آخر قبل تحديد فجوة قابلة للقياس.
+2. حافظ على مصادر المعرفة منفصلة: personal/workspace/project/assistant، وعلى ملكية الملف والصلاحية الحالية عند ingestion وretrieval وdeletion.
+3. استخدم UserMemory وProjectMemory الحاليين عبر API/adapter يلتزم بنطاق المالك؛ لا تجمع الذاكرتين في حقل عام أو مخزن موحد بلا scope.
+4. لا تعتبر memory-suggestion API أو RAG evaluation benchmark من PR #665 منشورة؛ PR #665 ما زال Draft.
+5. لا يُنقل محتوى Lumen أو ERP إلى هذا RAG قبل عقود service-to-service وتفويض المنتج المالك وتصنيف retention/deletion واختبارات عدم تسرب tenant.
+6. قبل إعلان S4-08 Verified، أغلق #724 أو اعتمد سياسة واضحة لا توسّع نطاق الملفات بصمت، وأضف اختبار FileChunk cascade بعد حذف المرفق، ثم حدد سياسة retention/export/deletion على مستوى المنتج.
+
+**حالة S4-08:** جرد capabilities والحدود الحالية مكتمل توثيقياً، لكن المهمة تبقى In Progress؛ Issue #724 وغياب اختبار cascade deletion شامل، واستكمال retention contracts عبر المنتجات، تمنع تحويلها إلى Done. لم تُرسل أي طلبات embeddings حقيقية ولم تُعد فهرسة ملفات إنتاج ولم تُحذف بيانات.
