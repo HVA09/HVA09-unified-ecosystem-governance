@@ -49,7 +49,8 @@
 | CORE-001 | AI Core | جرد قدرات الذكاء الاصطناعي الموجودة في المنتجات الثلاثة | In Progress | P1 | أُنشئت `docs/AI_CORE_CAPABILITY_INVENTORY.md` كجرد وثائقي أولي؛ يلزم تدقيق الكود والاختبارات وواجهة كل قدرة قبل تثبيت قرار reuse/extract/build؛ لا تنشئ بدائل أولاً |
 | CORE-002 | AI Core | تحديد نموذج وRuntime مفتوح الأوزان ومتطلبات الموارد | Proposed | P2 | يعتمد على CORE-001 ومتطلبات الخصوصية والتكلفة والأجهزة |
 | CORE-003 | AI Core/Architecture | تحديد حالات الاستخدام ومتطلبات الوكلاء المتخصصين | In Progress | P1 | S4-02؛ `docs/AI_CORE_SPECIALIZED_AGENT_REQUIREMENTS.md` خط أساس للمتطلبات؛ يلزم ربط كل تخصص بعقود الأدوات والاختبارات ومعايير التقييم قبل التنفيذ |
-| ECO-001 | Unified Ecosystem | وضع عقود API وإصداراتها بين المنتجات | Proposed | P2 | تعريف المستهلك والمالك ونطاق البيانات والمصادقة والتوافق |
+| CORE-004 | AI Core/Security | إعداد مصفوفة أدوات وصلاحيات الوكلاء المتخصصين | In Progress | P1 | S4-06؛ `docs/AI_CORE_AGENT_TOOL_MATRIX.md` يحدد مستويات الصلاحية وعقد الموافقة؛ يلزم تدقيق أدوات المنتج والـallowlists والاختبارات قبل أي تفعيل |
+| ECO-001 | Unified Ecosystem | وضع عقود API وإصداراتها بين المنتجات | In Progress | P1 | S5-02؛ `docs/PRODUCT_API_CONTRACT_CATALOG.md` يحدد قالب العقد وسياسة الإصدار والهوية والتفويض والأخطاء والاختبارات؛ يلزم جرد الواجهات الفعلية داخل كل منتج |
 | ECO-002 | Unified Ecosystem | تصميم هوية/تفويض مشترك عند الحاجة | Proposed | P2 | لا SSO أو مشاركة مفاتيح قبل threat model وقرار مستقل |
 | ECO-003 | Unified Ecosystem | توثيق ملكية المنتجات ومصادر الحقيقة وحدود الواجهات | Done | P1 | `docs/PRODUCT_OWNERSHIP_AND_INTERFACE_CATALOG.md` يحدد المستودع والمالك ومصدر البيانات والحدود وعقود التكامل المرشحة؛ لا يعني تنفيذ API أو هوية موحدة |
 | INNO-001 | Innovation | المختبرات والمحاكيات وInnovation Studio وأدوات البناء | Deferred | P3 | لا يبدأ قبل استقرار المسارات الخمسة وقرار بدء مستقل |
