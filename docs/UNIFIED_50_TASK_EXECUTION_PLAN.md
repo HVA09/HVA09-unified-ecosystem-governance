@@ -90,7 +90,7 @@
 | المعرّف | حزمة العمل | الحالة الأولية | الاعتماديات / معيار القبول |
 |---|---|---|---|
 | S4-01 | جرد قدرات AI الحالية ومنع التكرار | **In Progress — source paths verified** | `AI_CORE_CAPABILITY_INVENTORY.md` يربط قدرات Agent/MCP/Tools/Jobs/Scheduler/RAG/Workspace/SDK بمسارات main واختباراتها؛ تبقى مراجعة العقود والصلاحيات والـPRs والـCI قبل اعتماد إعادة الاستخدام. |
-| S4-02 | حالات الاستخدام ومتطلبات الوكلاء المتخصصين | Start in parallel | معايير قبول للبرمجة وLinux والشبكات وCloud/DevOps والأمن وتحليل الملفات؛ فصل المتطلبات عن اختيار النموذج. |
+| S4-02 | حالات الاستخدام ومتطلبات الوكلاء المتخصصين | **In Progress — requirements baseline documented** | `docs/AI_CORE_SPECIALIZED_AGENT_REQUIREMENTS.md` يحدد ملفات وكلاء البرمجة وLinux والشبكات وCloud/DevOps والأمن، وتحليل الملفات المشترك، وعقود المدخلات/المخرجات والحدود والاختبارات؛ تبقى مراجعة المتطلبات وربطها بعقود الأدوات والـbenchmark. |
 | S4-03 | تقييم نماذج مفتوحة الأوزان منخفضة التكلفة | Design / No paid GPU | مقارنة الجودة والسياق والخصوصية والسرعة والترخيص والعتاد؛ benchmark على موارد متاحة قبل الاختيار. |
 | S4-04 | عقد Model Gateway وسجل النماذج والمزودين | Design in parallel | API موحد وregistry وtimeouts/retries/fallback وversioning وحدود استخدام؛ لا اعتماد إلزامي على مزود واحد. |
 | S4-05 | Orchestrator ودورة حياة المهمة والوكيل | Design in parallel | job states/checkpoints/cancel/resume/queues/idempotency/time-cost limits؛ لا تكرار runtime الموجود دون مبرر. |
