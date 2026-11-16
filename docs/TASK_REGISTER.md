@@ -26,19 +26,19 @@
 | GOV-007 | Governance | دمج التفاصيل المعمارية الفريدة من نسخة Library v0.11 في المرجع المركزي ومنع ازدواج المصدر | In Progress | P1 | خطة v1.5 تجمع الابتكار والمختبرات والتقنية والتوسع؛ يظل المرجع المركزي هو المصدر الحاكم، والنسخة المحلية لقطة غير حية |
 | GOV-008 | Governance | إنشاء وإدارة الدفعة الموحدة UB-2026-11-16-01 (15 مهمة، خمس لكل منتج) | In Progress | P0 | `docs/UNIFIED_BATCH_EXECUTION_PLAN.md`؛ LUM-001/002/005/006/007 + CHAT-001/002/003/005/006 + ERP-001/002/003/004/005؛ التحديث بعد كل متابعة بأدلة المستودعات |
 | LUM-001 | Lumen | مواصلة تحسين الوظائف التعليمية الأساسية دون انتظار LMS Sandbox | Ready | P0 | خطة عمل مفصلة من main واختبارات على الفرع المستهدف |
-| LUM-002 | Lumen | مراجعة التداخل الدلالي واختبارات PRs #16–#23 مع PR #154 وIssue #150 | Ready | P1 | مصفوفة المسارات في سجل المصالحة؛ قارن السيناريوهات الفريدة خصوصاً test_lti_ags.py، ولا تغلق issue قبل دمج آمن واختبار Sandbox |
+| LUM-002 | Lumen/LTI | مصالحة ربط AGS بالمورد الأصلي والتحقق من سلسلة PRs #16–#23 | In Progress | P1 | PR #154 يحتوي ربطاً دقيقاً واختبارات regression لـresource A/B وnon-LTI؛ تبقى مزامنة main وMoodle/Canvas Sandbox والخصوصية والساعة/العمال قبل إغلاق Issue #150 |
 | LUM-003 | Lumen/LTI | اختبار Moodle ثم Canvas Sandbox | Deferred | P1 | بيئة Sandbox مستقلة، HTTPS، حسابات اختبار، نتائج موثقة لكل منصة |
 | LUM-004 | Lumen/Docs | مصالحة وثائق PR #6 المعمارية مع وثائق main الحالية وتحديد النقاط الفريدة فقط | Ready | P2 | PR #6 يبقى Draft؛ مقارنة الملفات الخمسة مع main، ثم اقتراح تحديث صغير داخل Lumen إذا بقي محتوى صالح غير موثق |
-| LUM-005 | Lumen/Docs | تحديث رؤوس وخلاصات الحالة في وثائق Lumen القديمة | In Progress | P1 | PR #157 مفتوح لتحديث PROJECT_STATUS وCONTINUITY وPR_STACK_TRIAGE؛ يُغلق بعد الدمج والتحقق من عدم محو السجل التاريخي |
+| LUM-005 | Lumen/Docs | مزامنة الحالة وتوضيح نقطة الاستئناف التاريخية | Done | P1 | PR #157 مدمج عند `9d766cc30525c706bd867d9736b15f74dc2acac7`؛ CI #43949038511 نجح 4/4 على HEAD `7529266`؛ تم وسم نقطة 7 نوفمبر تاريخية دون حذفها |
 | LUM-006 | Lumen/Security | مراجعة PR #5 لإنشاء أول مدير بأمان | Ready | P1 | الفرع مبني على Base قديم؛ افحص الفرق وrebase والاختبارات وDocker build على HEAD الحالي قبل تقرير الدمج |
 | LUM-007 | Lumen/Security | استكمال قبول Issue #134 لمختبر Python | Ready | P1 | تحقق من opaque-origin/CSP/message bridge/worker وقابلية الإلغاء؛ وثّق حد الذاكرة وعدم كونه OS sandbox، ولا تغلق issue قبل قبول المتصفح |
 | CHAT-001 | AI Chat App | مطابقة خارطة الطريق القديمة مع main والـPRs الحديثة | Ready | P1 | تحويل كل بند إلى موجود/ناقص/متقادم/مؤجل مع دليل |
 | CHAT-002 | AI Chat App | تفكيك العمل المتبقي في PR #665 إلى PRs صغيرة | In Progress | P1 | اتباع tracker المدمج عبر #714؛ لا دمج #665 ككتلة |
 | CHAT-003 | AI Chat App | حسم PR #671 القديم | Ready | P2 | مقارنة الوثائق بـmain الحالي، ثم تحديثه أو إغلاقه مع حفظ الأدلة |
-| CHAT-004 | AI Chat App/Docs | مصالحة PR-665 split tracker بعد دمج PR #714 | In Progress | P1 | PR #716 مفتوح؛ يثبت دمج #714 و#715 ويحدّث main إلى `88f835...`؛ لا يُغلق قبل الدمج |
+| CHAT-004 | AI Chat App/Docs | مصالحة سجل تفكيك PR #665 بعد دمج #714/#715 | Done | P1 | PR #716 مدمج عند `7a3289ca43070bc8fdff925dbe98fcbbbbade3df`؛ CI #43933542371 وCodeQL #43933542202 نجحا على HEAD `beb9d79` |
 | CHAT-005 | AI Chat App/UX | فرز Issue #683 إلى بنود منجزة ومتأخرة | Ready | P0 | لا تكرر #687/#664/#676؛ اربط sidebar/mobile/actions/provider/tool rendering بعمل main/PR واختبارات قبول |
 | CHAT-006 | AI Chat App/SRE | إكمال بوابات Issue #674 بعد دمج #664/#676 | Ready | P1 | تحقق من QueuePool telemetry على بيئة Stage مستقلة، Android، ودورة الملفات؛ لا تكرر تغييرات تحرير الاتصال المدمجة |
-| ERP-001 | ERP | تحديث README وContinuity وGovernance التي تحمل SHA قديم | In Progress | P1 | PR #13 مفتوح على main `67d16f...`؛ لا يُغلق قبل الدمج والتحقق من النسخة النهائية |
+| ERP-001 | ERP/Docs | مزامنة README وContinuity وGovernance مع main وStage25C | Done | P1 | PR #13 مدمج عند `7bb01d23328a68aae67c659fd6c32b6db033637d`؛ ERP backend quality #43933811836 نجح على HEAD `d4ada44`؛ Stage25C الفعلي ما زال Blocked في ERP-002 |
 | ERP-002 | ERP | تنفيذ Stage25C على نسخة SQLite v8 محلية مستعادة | Blocked | P1 | يحتاج نسخة محلية مستعادة على جهاز المستخدم؛ التقرير المنقح فقط يُراجع |
 | ERP-003 | ERP | تجربة PostgreSQL control plane/ETL على قاعدة disposable | Deferred | P1 | لا تبدأ حتى مراجعة Stage25C ووجود reconciliation/rollback tests |
 | ERP-004 | ERP | إبقاء multi-company مغلقاً حتى اكتمال اختبارات العزل | In Progress | P0 | `TENANT_DATA_SCOPING_ENABLED=False` يستمر حتى الموافقة على جميع البوابات |
