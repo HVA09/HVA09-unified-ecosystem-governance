@@ -3,7 +3,7 @@
 - **تاريخ الجرد:** 16 نوفمبر 2026
 - **الغرض:** حفظ نسخ مرجعية قابلة للتتبع للخطط والمواثيق وسجلات الاستمرارية والقرارات والتشغيل والتحقق.
 - **موقع الأرشيف:** `archive/source-snapshots/2026-11-16/`
-- **الإجمالي المرفوع:** **163 ملفاً**: 156 وثيقة Markdown/نصية + 7 تقارير JSON تقنية.
+- **الإجمالي المرفوع:** **168 ملفاً**: 161 وثيقة Markdown/نصية + 7 تقارير JSON تقنية.
 
 ## قواعد قراءة الفهرس
 
@@ -17,12 +17,12 @@
 | المشروع | الفرع/المصدر | عدد النسخ | المصدر |
 |---|---|---:|---|
 | Lumen | `main` عند `5a065c00ff739c21cad06d551c7e3aa51a3d604b` | 16 | [الأرشيف](../archive/source-snapshots/2026-11-16/lumen-learning-platform/main/) |
-| Lumen | PR #154 Draft، HEAD `6c93b49c976245b778800ed63046a2aef321fbb9` | 3 | [لقطة المسودة](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-154-draft/) |
+| Lumen | PR #154 Draft، HEAD `6c93b49c976245b778800ed63046a2aef321fbb9` | 3 | [لقطة المسودة](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-154-draft/) |\n| Lumen | PR #6 Open + Draft، HEAD `ec44daec83b5c42d20cc91c0cd738d7307fccb24` | 5 | [لقطة الوثائق المقترحة](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-6-open-docs/) |
 | AI Chat App | `main` عند `5d4c46af18838f7cbcebd3063f30279fd6146ad5` | 19 | [الأرشيف](../archive/source-snapshots/2026-11-16/ai-chat-app/main/) |
 | AI Chat App | PR #665 Draft، HEAD `4792285440511833b66e1045bc235143a5a302a5` | 8 | [لقطة المسودة](../archive/source-snapshots/2026-11-16/ai-chat-app/pr-665-draft/) |
 | AI Chat App | PR #671 مفتوح وغير Draft، HEAD `5bbdd5a6ab6e9dbc1c82c4db4ed238ba68d924b6` | 2 | [لقطة PR](../archive/source-snapshots/2026-11-16/ai-chat-app/pr-671-open-docs/) |
 | ERP | `main` عند `946b8c3bfa684143f233df519f075253a15ca621` | 115 | [الأرشيف](../archive/source-snapshots/2026-11-16/erp-global-pro/main/) |
-| **الإجمالي** |  | **163** |  |
+| **الإجمالي** |  | **168** |  |
 
 ## أبرز محتويات Lumen
 

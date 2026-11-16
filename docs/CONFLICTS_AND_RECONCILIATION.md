@@ -38,7 +38,7 @@ CI #43779761820 نجح 4/4 على Head PR #154، لكن لا توجد أدلة M
 
 بعض ملفات الخطة والحالة والاستمرارية على main تحتوي رؤوساً وتواريخ ونتائج قديمة مقارنة بفرع PR #154. لا تعتمد أرقام الاختبارات أو SHA الواردة في ملحق قديم دون الرجوع إلى Actions/PR الحالي.
 
-## 3. AI Chat App
+### 2.5 PR #6 — وثائق معمارية مقترحة غير مدمجة\n\n- [PR #6](https://github.com/HVA09/lumen-learning-platform/pull/6) ما زال **Open + Draft + Unmerged** عند المراجعة.\n- Head branch: `docs/architecture-roadmap`، HEAD `ec44daec83b5c42d20cc91c0cd738d7307fccb24`، Base `main` عند `da33265617b61baaccdea05de5015f73bd1b5d56`.\n- التغيير توثيقي ويضم خمس وثائق: architecture baseline/roadmap، development status، domain boundaries proposal، وPR4 technical review.\n- هذه الوثائق أُرشفت منفصلة تحت `pr-6-open-docs/`؛ لا تمثل حالة `main` ولا تعني أن PR #6 معتمد أو مدمج.\n- بعض موضوعاتها تتقاطع مع `docs/ARCHITECTURE_PLAN.md` و`docs/PROJECT_STATUS.md` و`docs/DECISIONS.md` الحالية؛ يجب مقارنة كل نقطة فريدة مع آخر `main` قبل نقلها. لا cherry-pick أو نسخ شامل أو إغلاق تلقائي.\n\n**المصالحة:** إبقاء اللقطة كمصدر تاريخي للعرض والمقارنة، وإضافة مهمة `LUM-004` لمراجعة النقاط الفريدة. أي تحديث لاحق يذهب إلى وثائق Lumen الأصلية عبر PR توثيقي مستقل.\n\n## 3. AI Chat App
 
 ### 3.1 خارطة الطريق ليست حالة تنفيذ حيّة
 
