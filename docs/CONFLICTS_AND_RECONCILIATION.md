@@ -65,6 +65,26 @@ CI #43779761820 نجح 4/4 على Head PR #154، لكن لا توجد أدلة M
 - التعليقات وثقت مشكلة احتفاظ معاملة DB أثناء OAuth/HTTP، ثم مراجعة lease/owner-token وعمليات DB القصيرة واختبارات التزامن والجلسات المستقلة.
 - هذا سجل مراجعة ذاتية/صيانة من مالك المستودع، وليس موافقة من مراجع خارجي. لا تعتبر عدد التعليقات إغلاقاً لبوابة Moodle/Canvas.
 
+### 2.7 PR #5 — إنشاء أول مدير بأمان
+
+- [PR #5](https://github.com/HVA09/lumen-learning-platform/pull/5) مفتوح وDraft وغير مدمج.
+- HEAD عند المراجعة: `96f2b6117d5c86abeb6a53e8b4259a8692a34bcb` على `security/secure-first-admin-bootstrap`؛ Base المسجل: `f15c8270110b90bc18f9d814c2e07c5285063b22`، وهو أقدم من `main` الذي كان عند `5a065c00...`.
+- النطاق يتضمن منع تسجيل أول مستخدم كمدير تلقائياً، وأداة operator-side لترقية حساب نشط ومؤكد مرة واحدة، وقفل PostgreSQL advisory، واختبارات ووثائق تشغيل.
+- ملف التوثيق الوحيد المتغير هو `backend/README.md`، وحُفظت نسخة الفرع منفصلة في `pr-5-open-admin-bootstrap/`.
+- وصف PR وقت الفحص يقول إن الاختبارات الآلية وDocker build لم يكونا قد شُغّلا بعد؛ لا تعتمد ذلك كحالة نهائية دون فحص Actions الحالي. لا تدمج هذا الفرع القديم قبل rebase/review وCI على HEAD الجديد.
+
+### 2.8 Issues أمنية وتعليمية مفتوحة
+
+**Issue #150 — ربط AGS بالمورد الذي أطلقه المتعلم**
+- [Issue #150](https://github.com/HVA09/lumen-learning-platform/issues/150) ما زالت مفتوحة، بلا تعليقات عند الفحص.
+- مضمونها يطابق المشكلة الأساسية في PR #154: لا يجوز إنشاء أحداث درجة لكل mappings اعتماداً على platform-level user link؛ يجب ربط submission بسياق platform + deployment + resource_link الذي بدأ منه.
+- توجد اختبارات وإصلاحات لهذه الفكرة في PR #154، لكنه غير مدمج؛ لذلك تبقى Issue #150 مفتوحة ولا تعتبر المشكلة محلولة على `main`.
+
+**Issue #134 — عزل تنفيذ Python**
+- [Issue #134](https://github.com/HVA09/lumen-learning-platform/issues/134) ما زالت مفتوحة، بلا تعليقات عند الفحص.
+- `main` يحتوي بالفعل على iframe sandboxed opaque-origin وCSP وجسر رسائل محدد وWorker وفق PR #146 وتوثيق `docs/PYTHON_LAB_SECURITY.md`.
+- ما زالت القيود الموثقة مهمة: هذا عزل browser-origin وليس OS/container sandbox، ولا يفرض حداً صلباً لذاكرة Worker. لا تغلق Issue #134 قبل مراجعة معايير قبولها المتبقية وتجربة browser/phone وتوثيق قرار الإطلاق.
+
 ## 3. AI Chat App
 
 ### 3.1 خارطة الطريق ليست حالة تنفيذ حيّة
@@ -90,13 +110,13 @@ PR #671 Open وغير Draft، ومبني على Base `b690c149610a704f78d7f4ee9e
 
 AI Chat App يحتوي بالفعل على Agent Runtime، MCP/tool permissions، scheduled/long-running jobs، Workspaces، Projects، RAG/knowledge، APIs وSDKs. يجب إعداد capability inventory قبل بناء أي مكوّن في AI Core، مع تحديد: يُعاد استخدامه عبر API، يُستخرج لخدمة مستقلة، أو يبقى خاصاً بالتطبيق. لا تبدأ إعادة كتابة هذه الأنظمة لمجرد توحيد الاسم.
 
-### 3.6 ملاحظات CodeQL القديمة على PR #665
+### 3.5 ملاحظات CodeQL القديمة على PR #665
 
 - سجل PR #665 يحتوي ملاحظتي CodeQL بعنوان Incomplete URL substring sanitization في `ai-backend/app/services/embeddings.py` و`ai-backend/tests/test_web_search.py`.
 - كلتا الـinline threads معلّمتان `resolved` و`outdated` على فرع #665 القديم.
 - لا نستنتج من ذلك أن `main` لديه ثغرة أو أنه خالٍ منها؛ يجب فحص CodeQL على HEAD الحالي لأي PR جديد أو على `main` الحالي عند قرار الإطلاق.
 
-### 3.5 تعارض ملحقات PR-665 tracker مع حالة الدمج الحالية
+### 3.6 تعارض ملحقات PR-665 tracker مع حالة الدمج الحالية
 
 - رأس `main` الحالي وقت المراجعة: `5d4c46af18838f7cbcebd3063f30279fd6146ad5`.
 - PR #714 مغلق ومُدمج في 15 نوفمبر 2026، وMerge commit يساوي رأس `main` الحالي.
@@ -105,6 +125,18 @@ AI Chat App يحتوي بالفعل على Agent Runtime، MCP/tool permissions�
 
 **المصالحة:** أضف ملحق ما بعد الدمج في مستودع AI Chat App عبر PR توثيقي صغير: أثبت دمج #714، حدّث SHA المرجعي إلى `5d4c46...`، واصلح ترقيم الأقسام. أبقِ #665 Open + Draft حسب حالة GitHub ولا تخلط Merge #714 بدمج #665.
  
+### 3.7 Issues التشغيل والاعتمادية المفتوحة
+
+**Issue #683 — تجربة الاستخدام وثبات الأدوات والمزود**
+- [Issue #683](https://github.com/HVA09/ai-chat-app/issues/683) مفتوحة، وبها 82 تعليقاً حتى آخر نشاط ظاهر في 12 نوفمبر 2026.
+- من النقاط التي دخلت إلى `main`: PR #687 منع إعادة تنفيذ الآثار الجانبية عند retry غير المؤكد، و#664 و#676 حسّنا تحرير DB connections قبل SSE وعمليات provider/search/storage/embedding الخارجية.
+- آخر ملاحظة إنتاجية موثقة في 12 نوفمبر سجلت استجابة Gemini 503 على instance قديم، مع عدم توفر failover صالح لذلك الطلب. لا نعرف من هذا الدليل وحده هل السبب fallback config أو سياسة المزوّد، ولا يجوز تعديل أسرار الإنتاج بناءً عليه.
+- لا تغلق Issue #683 اعتماداً على دمج #687/#664/#676؛ ما زالت تحتاج mapping بند-بند لمشكلات sidebar/mobile/RTL/message actions/tool structured dispatch/provider reliability مع PRs الحديثة واختبار قبول فعلي.
+
+**Issue #674 — وقت حجز DB connections قبل الانتظار الخارجي**
+- [Issue #674](https://github.com/HVA09/ai-chat-app/issues/674) ما زالت مفتوحة، رغم دمج PR #664 و#676 في 12 نوفمبر.
+- أُغلق الجزء البرمجي الأساسي في main؛ لكن سجل issue يذكر أن Stage QueuePool telemetry وقبول Android/دورة الملفات الفعلية تبقى بوابات تشغيلية. يجب مراجعة آخر سجلات التشغيل الحالية قبل إغلاقها، لا تكرار helper أو التغيير البرمجي المدمج.
+
 ## 4. ERP
 
 ### 4.1 تعارض SHA داخل وثائق الحالة
@@ -155,7 +187,7 @@ AI Chat App يحتوي بالفعل على Agent Runtime، MCP/tool permissions�
 
 لا تُستنتج حالة نشر أو backup أو branch protection أو بيانات إنتاج من ملف قديم فقط. يجب تدوين المصدر والتاريخ وطريقة التحقق.
 
-## 5.5 ميثاق الجودة المشترك والملاحق المحلية
+### 5.5 ميثاق الجودة المشترك والملاحق المحلية
 
 - الجزء المشترك من مواثيق `ENGINEERING_QUALITY_COVENANT_AR.md` في المنتجات الثلاثة متطابق: القسم المشترك قبل ملحق المشروع (الأقسام التمهيدية و1–12) والقسمان 13 و14 بعد الملاحق.
 - الملاحق الوسطى تختلف حسب المنتج وتحتوي ضوابط إضافية مهمة: LTI وبيانات الطلاب في Lumen؛ مزودات الذكاء وRAG وstreaming والأدوات في AI Chat App؛ دقة المحاسبة وعزل الشركات في ERP.
@@ -174,6 +206,11 @@ AI Chat App يحتوي بالفعل على Agent Runtime، MCP/tool permissions�
 | REC-007 | تعريف حدود AI Core | لم يُحسم | Capability inventory قبل اختيار التقنية |
 | REC-008 | عقود الهوية والتكامل بين المنتجات | لم تُعتمد | تصميم threat model وAPI contracts أولاً |
 | REC-009 | ملحقات PR-665 tracker المتأخرة بعد دمج #714 | مطلوب | تحديث توثيقي في AI Chat App مع Head SHA الحالي وإصلاح ترقيم القسم 51 |
+| REC-010 | PR #5 في Lumen — first-admin bootstrap | مفتوح | rebase/review/CI قبل أي قرار دمج؛ الاحتفاظ بلقطة README فقط |
+| REC-011 | Issue #134 — Python Lab isolation | مفتوح جزئياً | مراجعة القبول المتبقي وحد ذاكرة/تجربة المتصفح قبل الإغلاق |
+| REC-012 | Issue #150 — resource-scoped AGS | مربوط بـ#154 | لا يعتبر مغلقاً على main قبل دمج آمن واختبارات Sandbox |
+| REC-013 | Issue #683 — AI Chat UX/provider/tools | مفتوح | ربط كل بند بعمل main/PR حديث واختبار قبول |
+| REC-014 | Issue #674 — QueuePool external waits | مفتوح/قبول تشغيل | لا تكرر #664/#676؛ تحقق من telemetry وAndroid/file lifecycle |
 
 
 ## 7. ما الذي لم تفعله هذه المراجعة
