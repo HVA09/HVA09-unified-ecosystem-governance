@@ -282,3 +282,44 @@
 3. ERP يظل مالك سياق الشركة وبيانات الأعمال؛ يبقى التكامل التجاري/المالي محجوباً حتى Stage25C وبوابات العزل/الاستعادة/المراجعة، حتى لو كان هناك بعض tenant-aware APIs الآن.
 4. لا توحيد لرقم user ID أو company ID بين المنتجات، ولا مشاركة JWT/session. عند بناء العقود، يكون مرجع الهوية (issuer + subject) منفصلاً عن معرّفات الموارد المحلية، ويُفوض المنتج المالك كل طلب على حدة.
 5. لا يُنشأ مستودع AI Core الآن؛ يمكن أن تكون طبقة adapter/Model API مرحلة لاحقة، لكن CORE-001 يبقى In Progress حتى اكتمال الجرد المتبقي واختبار العقود الفعلية.
+
+
+## 14. جرد أدوات Agent Runtime الفعلية — 2026-11-17
+
+**AI Chat App main:** `6645b0502daa6922040ee4c6bb5c281ed59ef366`.  
+**Registry source blob:** `86429d2fc8de4cd708b788b4824b4e85e0df93a8`.  
+**Tool security source blob:** `aff8ee88c1c141a5eaea4f200c90e290715124af`.  
+**Project ACL source blob:** `74c5ac9a7a61347dc4bdb665b38ef5792a3d9497`.
+
+### الأدوات التسع في registry
+
+1. calculator
+2. python
+3. web_search
+4. analyze_data
+5. create_project_archive
+6. list_project_files
+7. read_project_file
+8. search_project_files
+9. edit_project_file
+
+قائمة الإتاحة الافتراضية في AGENT_ALLOWED_TOOLS_JSON تضم هذه الأدوات التسع. ويحتوي ToolSpec الحالي على name/description/parameters/handler/output_trust، ولا يحتوي permission_level أو agent_profile أو resource_scope أو approval_policy. ToolRegistry يدعم allowlist عامة وscoped registry، ويفحص arguments من حيث schema والحجم والعمق، لكنه لا يفرض بعد مستويات T0–T3 مستقلة لكل وكيل.
+
+### التفويض داخل handler
+
+- project-file list/read/search تتحقق من can_read_project.
+- edit_project_file وcreate_project_archive تتحققان من can_edit_project؛ archive يعيد التحقق بعد انتظار رفع الملف وقبل تثبيت الأثر داخل المشروع.
+- analyze_data يعمل على مرفقات المحادثة الحالية، وليس وصولاً عاماً إلى كل ملفات المستخدم أو ملفات Workspace.
+- MCP العالمي يبقى معطلاً افتراضياً، وعند تفعيله يظل discovery مقيداً بـapplication admin؛ لا توجد grants فردية أو Workspace-level connectors بعد.
+- لا توجد في registry المدمج أدوات shell/SSH أو OS/service control أو packet capture/active scan أو Cloud control plane/IAM/deploy.
+- python أداة حساب وتحويل مقيدة: AST allowlist، no imports/files/network/arbitrary builtins، subprocess منفصلة، timeout وحدود موارد؛ ليست container/OS sandbox ولا ينبغي استخدامها لتقديم ادعاء عزل نظام تشغيل.
+- مخرجات web_search وanalyze_data وproject files موسومة untrusted. كشف prompt injection heuristic؛ يجب اعتبار كل هذه المخرجات بيانات غير موثوقة دائماً وعدم تنفيذ تعليماتها.
+
+### قرار التنفيذ
+
+- لا تفعّل وكلاء Linux/network/cloud/security بأدوات host أو cloud لمجرد وجود ملف تخصص.
+- قبل السماح للـAgent Runtime بتطبيق مصفوفة AI Core، أضف ToolPolicy server-side يربط actor + agent_profile + tool + resource + permission level + output trust + approval mode.
+- تبقى أدوات T2/T3 غير متاحة افتراضياً، ويجب أن تتحقق الموافقة المحددة في backend لا داخل prompt أو سجل المحادثة.
+- لا تفتح MCP لمستخدمين عاديين حتى يوجد connector ownership/grants قابلة للتدقيق.
+
+هذا القسم يثبت inventory والتصميم فقط؛ لا يعلن اكتمال S4-06 أو تفعيل أي أداة جديدة.
