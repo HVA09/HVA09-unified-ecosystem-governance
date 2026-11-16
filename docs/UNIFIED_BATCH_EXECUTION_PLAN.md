@@ -22,9 +22,9 @@
 
 | المنتج | رأس main المتحقق منه | العمل المفتوح المؤثر |
 |---|---|---|
-| Lumen | `9d766cc30525c706bd867d9736b15f74dc2acac7` | PR #154 Draft، PR #157 مفتوح لتحديث الوثائق، Issue #134 و#150 مفتوحان |
-| AI Chat App | `7a3289ca43070bc8fdff925dbe98fcbbbbade3df` | PR #665 Draft، PR #671 مفتوح على Base قديم، PR #716 توثيقي مفتوح، Issue #683 و#674 مفتوحان |
-| ERP Global Pro | `7bb01d23328a68aae67c659fd6c32b6db033637d` | PR #13 توثيقي مفتوح؛ Stage25C على نسخة SQLite v8 فعلية مستعادة لم يثبت تنفيذه |
+| Lumen | `108c2eabdc4a180bc5efd5469c368ab3c3f15199` | PR #154 Open + Draft (46 ahead / 3 behind)؛ PR #160 توثيقي Open؛ PR #161 لإزالة CLI المدير القديم Open (CI #43967362902 قيد التنفيذ)؛ Issues #134 و#150 مفتوحتان؛ PR #158 مدمج |
+| AI Chat App | `17c9868fc17a37a1743c4a49cdb378d93160650c` | PR #665 Open + Draft؛ PR #671 مغلق دون دمج؛ PRs #716 و#717 مدمجان؛ Issues #683 و#674 مفتوحتان |
+| ERP Global Pro | `7bb01d23328a68aae67c659fd6c32b6db033637d` | PR #13 مدمج؛ Stage25C على نسخة SQLite v8 فعلية مستعادة لم يثبت تنفيذه؛ `TENANT_DATA_SCOPING_ENABLED=False` إلزامي |
 
 هذه الرؤوس هي نقاط بدء مؤرخة وليست تصريحاً بتجاهل أي حركة لاحقة. قبل كل مهمة، يُقرأ SHA الحالي من GitHub وتُراجع الفروع والـPRs ونتائج CI مرة أخرى.
 
@@ -226,3 +226,43 @@
 - **LUM-006:** PR #158 مفتوح على فرع `fix/first-admin-bootstrap-20261116`، Base `9d766cc30525c706bd867d9736b15f74dc2acac7`, Head `9d96128890821e3f9ebe0d80732aa85fa3b2927d`. Browser E2E وFrontend tests/build وfull-history secret scan نجحت في CI #43954238447؛ Backend لا يزال قيد التنفيذ. لا دمج قبل نجاحه.
 - **LUM-006:** PR #5 القديم أغلق دون دمج؛ فرعه متباعد 138 commit خلف main. البديل لا يغيّر route التسجيل أو Dockerfile، لأن main يمنح user عند التسجيل، والأداة الجديدة داخل app package التي تنسخها صورة Docker الحالية.
 - لا تشغيل لأمر bootstrap أو ترقية حساب فعلي ضمن هذه المتابعة.
+
+## 12. إعادة المطابقة والتقدم — 17 نوفمبر 2026
+
+### 12.1 رؤوس المستودعات الحالية
+
+| المشروع | `main` الحالي | التحقق |
+|---|---|---|
+| Lumen | `108c2eabdc4a180bc5efd5469c368ab3c3f15199` | PR #158 مدمج؛ PR #154 Open + Draft (46 ahead / 3 behind)؛ #160 توثيقي Open؛ #161 لمعالجة CLI المدير القديم Open وCI قيد التنفيذ. |
+| AI Chat App | `17c9868fc17a37a1743c4a49cdb378d93160650c` | PR #717 مدمج؛ PR #665 Draft؛ Issue #683 و#674 مفتوحتان؛ PR #671 أُغلق دون دمج. |
+| ERP Global Pro | `7bb01d23328a68aae67c659fd6c32b6db033637d` | PR #13 مدمج؛ Stage25C الواقعي ما زال Blocked لعدم توفر نسخة SQLite v8 مستعادة يمكن التحقق منها. |
+
+### 12.2 تقدم المهام المختارة
+
+| المهمة | الحالة في 17 نوفمبر | الدليل أو العائق |
+|---|---|---|
+| LUM-005 | Done | PR #157 مدمج؛ نقطة 7 نوفمبر موسومة كسجل تاريخي. |
+| LUM-006 | In Progress | PR #158 مدمج عند `108c2eabdc4a180bc5efd5469c368ab3c3f15199`؛ CI #43957299993 نجح 4/4. اكتُشف بقاء `backend/app/create_admin.py` وتعليمته القديمة في README؛ PR #161 يحذف المسار المتجاوز ويصحح التعليمات. لا تُشغّل أداة الترقية ولا تُرقَّ حسابات قبل تفويض منفصل. |
+| LUM-001 | In Progress | بدأت مراجعة قراءة فقط على main `108c2eab...`: تمت مراجعة auth/session/dependencies، class access، assignments، content، curriculum، quiz، reports، واختبارات auth/classes/assignments/content/quiz. لم يظهر عيب مؤكد في العينة الأولى؛ تبقى مراجعة الهاتف/RTL وBrowser E2E. |
+| LUM-002 | In Progress | PR #154 Draft ويقارن 46 ahead / 3 behind main الحالي؛ Issue #150 مفتوحة، وبوابات Moodle/Canvas والخصوصية/الساعة/العمال لا تزال غير مغلقة. |
+| LUM-007 | In Progress | Issue #134 ما زالت مفتوحة لقبول المتصفح المستهدف وقيود Worker memory؛ لا يوصف التنفيذ بأنه OS sandbox. |
+| CHAT-001 | Done | PR #717 مدمج؛ CI #43952642164 وCodeQL #43952642232 ناجحان على HEAD النهائي قبل الدمج. |
+| CHAT-002 | In Progress | PR #665 يظل Draft؛ لا دمج جماعي ولا إعادة عمل ما دخل main بالفعل. |
+| CHAT-003 | Done | PR #671 مغلق دون دمج وحُفظ محتواه التاريخي في الأرشيف المركزي. |
+| CHAT-005 | In Progress | Issue #683: المتبقي Sidebar/actions/composer/mobile/RTL وتحليل provider failures؛ لا تكرار لإصلاحات #687. |
+| CHAT-006 | In Progress | Issue #674: يلزم Stage telemetry لتحديد سبب ضغط QueuePool؛ لا تعديل عشوائي لحجم الاتصالات. |
+| ERP-001 | Done | PR #13 مدمج عند `7bb01d23328a68aae67c659fd6c32b6db033637d`. |
+| ERP-002 | Blocked | يحتاج نسخة فعلية مستعادة ومصرح بها من SQLite v8؛ لا يُستعاض عنها ببيانات اصطناعية. |
+| ERP-003 | Deferred | يبدأ فقط بعد نجاح ERP-002 وحسم التناقضات وخطة rollback؛ PostgreSQL يبقى disposable. |
+| ERP-004 | In Progress | تأكيد بقاء `TENANT_DATA_SCOPING_ENABLED=False`؛ لا multi-company enablement ولا cutover. |
+| ERP-005 | Deferred | ينتظر trusted signer وPostgreSQL disposable؛ لا ربط بالتطبيق قبل اختبارات cleanup/rollback/pool reuse ومراجعة الأمن. |
+
+### 12.3 ما نُفّذ في هذه المتابعة
+
+- في Lumen: أنشئ الفرع `fix/remove-legacy-admin-bootstrap-20261117` من main `108c2eab...`، وأُنشئ PR #161 بحذف `backend/app/create_admin.py` وتصحيح مرجع README القديم. PR #161 ما زال Open؛ CI #43967362902 قيد التنفيذ عند آخر تحقق.
+- في Lumen: المراجعة الأولية لـLUM-001 للقراءة فقط؛ لم تُغيّر ملفات المنتج أو قاعدة البيانات أو إعدادات التشغيل.
+- لا تغيير مباشر على `main`، ولا merge أو deployment أو ترحيل قاعدة بيانات في هذه المتابعة.
+
+### 12.4 المهمة التالية
+
+استكمال LUM-001 بفحص واجهة المتعلم والمعلم على أحجام الهاتف وRTL وتحديد اختبار Browser E2E ناقص، مع انتظار اكتمال CI ومراجعة PR #161. تبقى المهام الأخرى محكومة بتبعياتها وبوابات السلامة كما في الأقسام السابقة.
