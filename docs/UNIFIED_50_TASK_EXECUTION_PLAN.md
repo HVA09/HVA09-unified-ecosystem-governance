@@ -94,7 +94,7 @@
 | S4-03 | تقييم نماذج مفتوحة الأوزان منخفضة التكلفة | Design / No paid GPU | مقارنة الجودة والسياق والخصوصية والسرعة والترخيص والعتاد؛ benchmark على موارد متاحة قبل الاختيار. |
 | S4-04 | عقد Model Gateway وسجل النماذج والمزودين | Design in parallel | API موحد وregistry وtimeouts/retries/fallback وversioning وحدود استخدام؛ لا اعتماد إلزامي على مزود واحد. |
 | S4-05 | Orchestrator ودورة حياة المهمة والوكيل | Design in parallel | job states/checkpoints/cancel/resume/queues/idempotency/time-cost limits؛ لا تكرار runtime الموجود دون مبرر. |
-| S4-06 | ملفات الوكلاء المتخصصين ومصفوفة الأدوات | Design in parallel | صلاحيات وأدوات ومعرفة واختبارات لكل تخصص؛ least privilege وعدم مشاركة السياق افتراضياً. |
+| S4-06 | ملفات الوكلاء المتخصصين ومصفوفة الأدوات | **In Progress — tool matrix documented** | `docs/AI_CORE_AGENT_TOOL_MATRIX.md` يحدد مستويات T0–T3 ومصفوفة الأدوات والتخصصات وعقد الموافقة واختبارات منع تصعيد الصلاحيات؛ يلزم ربطها بأدوات AI Chat App الفعلية ومالكي التفويض. |
 | S4-07 | تكامل MCP/Tools وطبقة الموافقات | Requires S4-01 | محولات مع allowlists/scopes/approvals للأفعال الحساسة وسجل تدقيق؛ إعادة استخدام MCP الحالي حيث يصلح. |
 | S4-08 | RAG والذاكرة والمعرفة وعزل النطاقات | Design / data map required | ingestion/retrieval/deletion/retention عبر user/project/company؛ اختبارات منع تسرب البيانات. |
 | S4-09 | Benchmark وتقييم الجودة والسلامة والحقائق | Design in parallel | مهام قابلة للتكرار وgrounding/tool-use/security red-team/latency/cost؛ معايير قبول لكل نسخة. |
@@ -105,7 +105,7 @@
 | المعرّف | حزمة العمل | الحالة الأولية | الاعتماديات / معيار القبول |
 |---|---|---|---|
 | S5-01 | سجل ملكية المنتجات ومصادر الحقيقة وحدود البيانات | **Done — architecture register** | `docs/PRODUCT_OWNERSHIP_AND_INTERFACE_CATALOG.md` يوثق المالك والمستودع ومصدر بيانات كل منتج وحدود الهوية والبيانات وعقود التكامل المرشحة؛ التنفيذ البرمجي للعقود يبقى ضمن S5-02 وما بعدها. |
-| S5-02 | كتالوج عقود API وإصداراتها | Design in parallel | OpenAPI/JSON schemas/versioning/compatibility/deprecation/errors/owners؛ لا استيراد كود أو اتصال DB مباشر. |
+| S5-02 | كتالوج عقود API وإصداراتها | **In Progress — contract catalog drafted** | `docs/PRODUCT_API_CONTRACT_CATALOG.md` يحدد بطاقة العقد والإصدار والمصادقة والتفويض والأخطاء والأحداث والاختبارات؛ تبقى مطابقة endpoints وschemas الفعلية في كل منتج. |
 | S5-03 | هوية الخدمات والثقة بين المنتجات | Design only | threat model لخدمة-إلى-خدمة وtoken audience/scopes/rotation؛ لا SSO شامل أو نقل مفاتيح جلسات. |
 | S5-04 | نموذج التفويض RBAC/ABAC ونطاق الموارد | Design in parallel | مصفوفة actor/action/resource/tenant وleast privilege/delegation/revocation/negative tests. |
 | S5-05 | تصنيف البيانات وتدفقها والاحتفاظ والخصوصية | Design in parallel | data inventory/flow وpurpose/minimization/consent/retention/deletion؛ منع نقل بيانات بلا غرض مصرح. |
