@@ -8,9 +8,10 @@
 2. [فهرس الوثائق والنسخ المؤرشفة ومصادرها](docs/SOURCE_DOCUMENT_CATALOG.md)
 3. [التعارضات المكتشفة وكيفية التعامل معها](docs/CONFLICTS_AND_RECONCILIATION.md)
 4. [سجل المهام والتبعيات وحالات الإنجاز](docs/TASK_REGISTER.md)
-5. [سجل القرارات المعتمدة](docs/DECISION_REGISTER.md)
-6. [ملاحظات PRs والنقاشات الهندسية المهمة](docs/EXTERNAL_DISCUSSION_REGISTER.md)
-7. [شرح الأرشيف وقواعد النسخ](archive/README.md)
+5. [المعايير الهندسية المشتركة](docs/UNIFIED_ENGINEERING_STANDARDS.md)
+6. [سجل القرارات المعتمدة](docs/DECISION_REGISTER.md)
+7. [ملاحظات PRs والنقاشات الهندسية المهمة](docs/EXTERNAL_DISCUSSION_REGISTER.md)
+8. [شرح الأرشيف وقواعد النسخ](archive/README.md)
 
 ## قاعدة مصدر الحقيقة
 
