@@ -17,7 +17,8 @@
 | المشروع | الفرع/المصدر | عدد النسخ | المصدر |
 |---|---|---:|---|
 | Lumen | `main` عند `5a065c00ff739c21cad06d551c7e3aa51a3d604b` | 16 | [الأرشيف](../archive/source-snapshots/2026-11-16/lumen-learning-platform/main/) |
-| Lumen | PR #5 Open + Draft، HEAD `96f2b6117d5c86abeb6a53e8b4259a8692a34bcb` | 1 | [لقطة توثيق bootstrap](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-5-open-admin-bootstrap/) |\n| Lumen | PR #154 Draft، HEAD `6c93b49c976245b778800ed63046a2aef321fbb9` | 3 | [لقطة المسودة](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-154-draft/) |
+| Lumen | PR #5 Open + Draft، HEAD `96f2b6117d5c86abeb6a53e8b4259a8692a34bcb` | 1 | [لقطة توثيق bootstrap](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-5-open-admin-bootstrap/) |
+| Lumen | PR #154 Draft، HEAD `6c93b49c976245b778800ed63046a2aef321fbb9` | 3 | [لقطة المسودة](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-154-draft/) |
 | Lumen | PR #6 Open + Draft، HEAD `ec44daec83b5c42d20cc91c0cd738d7307fccb24` | 5 | [لقطة الوثائق المقترحة](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-6-open-docs/) |
 | AI Chat App | `main` عند `5d4c46af18838f7cbcebd3063f30279fd6146ad5` | 19 | [الأرشيف](../archive/source-snapshots/2026-11-16/ai-chat-app/main/) |
 | AI Chat App | PR #665 Draft، HEAD `4792285440511833b66e1045bc235143a5a302a5` | 8 | [لقطة المسودة](../archive/source-snapshots/2026-11-16/ai-chat-app/pr-665-draft/) |
@@ -39,7 +40,13 @@
 - `docs/QUALITY_BASELINE.md` و`docs/PR_STACK_TRIAGE.md`.
 - `docs/FRONTEND_ARCHITECTURE.md` و`docs/HOSTING_FEASIBILITY.md` و`docs/PYTHON_LAB_SECURITY.md` و`imports/README.md`.
 
-### PR #5 Open + Draft (ملف واحد)\n\n- `backend/README.md` — تعليمات تشغيل ‏`promote_initial_admin.py` لإنشاء أول مدير بعد إنشاء حساب مؤكد.\n\nهذه لقطة توثيقية من فرع قديم، وليست دليلاً على أن bootstrap script أو PR اجتاز CI أو دُمج.\n\n## PR #154 Draft (3 ملفات)
+### PR #5 Open + Draft (ملف واحد)
+
+- `backend/README.md` — تعليمات تشغيل ‏`promote_initial_admin.py` لإنشاء أول مدير بعد إنشاء حساب مؤكد.
+
+هذه لقطة توثيقية من فرع قديم، وليست دليلاً على أن bootstrap script أو PR اجتاز CI أو دُمج.
+
+## PR #154 Draft (3 ملفات)
 
 - `backend/LTI_AGS_SANDBOX_RUNBOOK.md`
 - `backend/README.md`
