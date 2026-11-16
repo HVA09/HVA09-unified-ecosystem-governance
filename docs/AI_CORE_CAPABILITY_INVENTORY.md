@@ -218,3 +218,67 @@
 - #720 / Project tool ACL rechecks: PR #722 مدمج، Issue مغلقة.
 - #718 / Scheduled task RBAC: PR #723 مدمج، Issue مغلقة.
 - هذه النتيجة تغلق قضايا التدقيق الثلاث المحددة فقط؛ ولا تعني اكتمال تدقيق Lumen أو ERP أو كل الصلاحيات في AI Chat App.
+
+
+## 13. تدقيق حدود Lumen وERP — 2026-11-17
+
+هذا تدقيق مصدر موجه لحدود الهوية والبيانات وواجهات الخدمة، وليس فحصاً شاملاً لكل endpoint أو كل استعلام. تمت قراءة الملفات المشار إليها على main؛ لا اختبارات محلية أو نشر أو فحص قواعد إنتاج ضمن هذه الجولة.
+
+### Lumen — هوية تعليمية وواجهات تعلم مستقلة
+
+**خط الأساس:** أحدث main commit surfaced في GitHub وقت الفحص: `ed162b0e0af497abc5710d185fa357357baa6ecc`.
+
+- `backend/app/main.py` يجمع routers مستقلة: auth، two-factor، users، curriculum، quiz، content، classes، SRS، assignments، gamification، reports، LTI، files، billing، notifications، admin.
+- `backend/app/dependencies.py` يدعم Bearer token أو session cookie، ويتحقق من CSRF لطلبات cookie غير الآمنة، مع `require_admin` و`require_teacher`.
+- `backend/app/models/user.py` يستخدم أدواراً عامة على حساب المنصة: `user` و`teacher` و`admin`. هذا ليس نموذج شركة متعدد المستأجرين.
+- نطاق الصفوف التعليمية واضح في `ClassSection.teacher_user_id` و`ClassEnrollment.student_user_id`؛ ملكية الفصل للمعلم وتسجيل الطلاب لا تعادل tenant school/company-wide boundary.
+- `backend/app/routers/files.py` يقيّد الملف بصاحبه عبر `FileAttachment.user_id`، مع أنواع ملفات وتواقيع محددة، حدود حجم وحصص، وفحص ClamAV عند الإعداد التشغيلي اللازم.
+- main يحتوي LTI 1.3 login/launch ومنصات مسجلة تحت `/lti`، وإدارة تسجيل المنصة محمية بـ`require_admin`. لا تُحسب واجهات AGS resource-scoped الجديدة الموجودة في PR #154 ضمن main.
+- لم يظهر في مسارات المنتج التي تمت مراجعتها Model Gateway أو Agent Runtime عام مماثل لما هو موجود في AI Chat App؛ لا ينبغي افتراض أن Lumen يملك واجهة AI Core جاهزة دون جرد services إضافي.
+- **PR #154:** ما زال Open/Draft/Unmerged، HEAD `6c93b49c976245b778800ed63046a2aef321fbb9`، وBase المسجل `5a065c00ff739c21cad06d551c7e3aa51a3d604b`. مقارنة HEAD الفرع بـmain الحالي: **46 commits ahead / 4 behind**، و`mergeable=false`. CI run `43779761820` نجح 4/4 على ذلك HEAD، لكن هذا لا يغطي تغييرات main اللاحقة ولا يثبت تكاملاً فعلياً مع Moodle/Canvas. البوابات المفتوحة كما يسجل PR: at-least-once/uncertain delivery، clock skew بين العمال، retention/encryption لـ`lti_subject` الخام، إثبات same-origin، وMoodle وCanvas Sandbox كل على حدة.
+- **قرار reuse:** احتفظ بملكية Lumen للبيانات التعليمية وLTI؛ أي Agent أو خدمة AI مستقبلية تتلقى فقط سياقاً تعليمياً محدوداً عبر عقد يوافق عليه Lumen، ولا تستخدم اتصالاً مباشراً بقاعدة البيانات أو صلاحيات admin الخاصة بالمنصة.
+
+**مراجع المصدر:**
+- [main.py](https://github.com/HVA09/lumen-learning-platform/blob/ed162b0e0af497abc5710d185fa357357baa6ecc/backend/app/main.py)
+- [dependencies.py](https://github.com/HVA09/lumen-learning-platform/blob/ed162b0e0af497abc5710d185fa357357baa6ecc/backend/app/dependencies.py)
+- [user.py](https://github.com/HVA09/lumen-learning-platform/blob/ed162b0e0af497abc5710d185fa357357baa6ecc/backend/app/models/user.py)
+- [class_section.py](https://github.com/HVA09/lumen-learning-platform/blob/ed162b0e0af497abc5710d185fa357357baa6ecc/backend/app/models/class_section.py)
+- [lti.py on main](https://github.com/HVA09/lumen-learning-platform/blob/ed162b0e0af497abc5710d185fa357357baa6ecc/backend/app/routers/lti.py)
+- [files.py](https://github.com/HVA09/lumen-learning-platform/blob/ed162b0e0af497abc5710d185fa357357baa6ecc/backend/app/routers/files.py)
+- [PR #154](https://github.com/HVA09/lumen-learning-platform/pull/154)
+
+### ERP Global Pro — سياق شركة موثوق، لكن تشغيل تعدد الشركات محجوب
+
+**خط الأساس:** أحدث main commit surfaced في GitHub وقت الفحص: `7bb01d23328a68aae67c659fd6c32b6db033637d`. التطبيق الحالي Flask + SQLite v8؛ PostgreSQL هو هدف انتقال مستقبلي وليس قاعدة التشغيل الحالية.
+
+- `backend/erp/config.py` يثبت `TENANT_DATA_SCOPING_ENABLED=False`.
+- `backend/erp/__init__.py` يضع `g.company` من هوية موثقة، ويمنع المسارات التشغيلية عندما يزيد عدد الشركات عن واحدة والحاجز مغلقاً؛ يرجع 503 برسالة `tenant_isolation_pending`. هذا fail-closed مقصود وليس دليلاً على جاهزية multi-company.
+- `backend/erp/security.py` يضمّن `cid` و`mid` في JWT عند اختيار شركة، ويعيد التحقق من العضوية النشطة والشركة في كل طلب؛ الدور الفعال والصلاحيات يؤخذان من العضوية، لا من الدور العالمي القديم وحده.
+- `backend/erp/services/tenancy.py` يوفر `current_company_id()`، ويطابق أي company context صريح مع `g.company` في HTTP requests؛ خارج الطلب يحتاج سياقاً صريحاً أو حالة شركة واحدة فقط.
+- محرك CRUD العام في `backend/erp/crud.py` يفرض `company_id` في list/get/update/delete، يحقنه من الخادم عند create، ويرفض client-supplied company_id ويقيد التحقق من المراجع بالشركة نفسها.
+- تمت مراجعة عينات من custom APIs: `api/reports.py` يمرر الشركة إلى خدمات التقارير، و`api/data.py` يمررها إلى export/import، و`api/file_objects.py` يستخدم file storage منفصلاً لكل شركة ويقيد list/download/delete بالـcompany context. هذه عينات إيجابية وليست تغطية لكل مسارات SQL والخدمات.
+- لا يزال `roles` catalog مشتركاً/عالمياً وفق `ERP_SECURITY_BASELINE.md` و`ERP_MULTI_TENANT_ARCHITECTURE.md`؛ ويجب جعله tenant-aware قبل تعدد الشركات. كما يلزم تدقيق جميع الخدمات والتقارير وjobs وimports/exports وwebhooks والعمليات المالية والقيود المركبة وRLS. وجود generic CRUD scoped لا يثبت أن كل custom SQL scoped.
+- `backend/scripts/runtime_preflight.py` يسجل صراحة أن multi-company production غير معتمد وأن `TENANT_DATA_SCOPING_ENABLED` يجب أن يبقى False.
+- لم يثبت بعد تشغيل Stage25C preflight على نسخة SQLite v8 فعلية مستعادة من المستخدم؛ لا ETL ولا cutover ولا dual-write ولا تغيير PostgreSQL في هذه الجولة.
+- لم يظهر في البحث الموجه لمسارات main AI Model Gateway أو Agent Runtime داخل ERP. لذلك يظل ERP مالك البيانات المالية والتجارية، ويكون أي استدعاء AI من خلال adapter محدود بعد موافقة عقد الخدمة وعزل الشركة، لا عبر وصول مباشر إلى SQLite.
+
+**مراجع المصدر:**
+- [application factory](https://github.com/HVA09/erp-global-pro/blob/7bb01d23328a68aae67c659fd6c32b6db033637d/backend/erp/__init__.py)
+- [config.py](https://github.com/HVA09/erp-global-pro/blob/7bb01d23328a68aae67c659fd6c32b6db033637d/backend/erp/config.py)
+- [security.py](https://github.com/HVA09/erp-global-pro/blob/7bb01d23328a68aae67c659fd6c32b6db033637d/backend/erp/security.py)
+- [services/tenancy.py](https://github.com/HVA09/erp-global-pro/blob/7bb01d23328a68aae67c659fd6c32b6db033637d/backend/erp/services/tenancy.py)
+- [crud.py](https://github.com/HVA09/erp-global-pro/blob/7bb01d23328a68aae67c659fd6c32b6db033637d/backend/erp/crud.py)
+- [api/reports.py](https://github.com/HVA09/erp-global-pro/blob/7bb01d23328a68aae67c659fd6c32b6db033637d/backend/erp/api/reports.py)
+- [api/data.py](https://github.com/HVA09/erp-global-pro/blob/7bb01d23328a68aae67c659fd6c32b6db033637d/backend/erp/api/data.py)
+- [api/file_objects.py](https://github.com/HVA09/erp-global-pro/blob/7bb01d23328a68aae67c659fd6c32b6db033637d/backend/erp/api/file_objects.py)
+- [runtime_preflight.py](https://github.com/HVA09/erp-global-pro/blob/7bb01d23328a68aae67c659fd6c32b6db033637d/backend/scripts/runtime_preflight.py)
+- [ERP Security Baseline](https://github.com/HVA09/erp-global-pro/blob/7bb01d23328a68aae67c659fd6c32b6db033637d/docs/ERP_SECURITY_BASELINE.md)
+- [ERP Multi-Tenant Architecture](https://github.com/HVA09/erp-global-pro/blob/7bb01d23328a68aae67c659fd6c32b6db033637d/docs/ERP_MULTI_TENANT_ARCHITECTURE.md)
+
+### قرار معماري لاستخدام النتائج
+
+1. AI Chat App هو المنتج الوحيد من الثلاثة الذي ثبت في هذا التدقيق أن main لديه Agent Runtime وTool Registry وMCP وJobs وRAG جاهزة لإعادة الاستخدام بعد تفويض مالك المورد.
+2. Lumen يظل مالك الهوية التعليمية والبيانات الدراسية؛ واجهته التعليمية وLTI الحالية لا تُستبدل بـAI Core.
+3. ERP يظل مالك سياق الشركة وبيانات الأعمال؛ يبقى التكامل التجاري/المالي محجوباً حتى Stage25C وبوابات العزل/الاستعادة/المراجعة، حتى لو كان هناك بعض tenant-aware APIs الآن.
+4. لا توحيد لرقم user ID أو company ID بين المنتجات، ولا مشاركة JWT/session. عند بناء العقود، يكون مرجع الهوية (issuer + subject) منفصلاً عن معرّفات الموارد المحلية، ويُفوض المنتج المالك كل طلب على حدة.
+5. لا يُنشأ مستودع AI Core الآن؛ يمكن أن تكون طبقة adapter/Model API مرحلة لاحقة، لكن CORE-001 يبقى In Progress حتى اكتمال الجرد المتبقي واختبار العقود الفعلية.
