@@ -48,6 +48,7 @@
 | ERP-005 | ERP/Security | استكمال عقد سياق الشركة الموقّع في معاملة PostgreSQL المجمّعة واختبارات cleanup/rollback/pool reuse | Deferred | P1 | من Stage25A backlog؛ بعد trusted signer وPostgreSQL disposable؛ اختبارات success/exception/rollback/reuse/tampering/replay وRLS؛ لا ربط بالتطبيق قبل المراجعة الأمنية |
 | CORE-001 | AI Core | جرد قدرات الذكاء الاصطناعي الموجودة في المنتجات الثلاثة | In Progress | P1 | أُنشئت `docs/AI_CORE_CAPABILITY_INVENTORY.md` كجرد وثائقي أولي؛ يلزم تدقيق الكود والاختبارات وواجهة كل قدرة قبل تثبيت قرار reuse/extract/build؛ لا تنشئ بدائل أولاً |
 | CORE-002 | AI Core | تحديد نموذج وRuntime مفتوح الأوزان ومتطلبات الموارد | Proposed | P2 | يعتمد على CORE-001 ومتطلبات الخصوصية والتكلفة والأجهزة |
+| CORE-003 | AI Core/Architecture | تحديد حالات الاستخدام ومتطلبات الوكلاء المتخصصين | In Progress | P1 | S4-02؛ `docs/AI_CORE_SPECIALIZED_AGENT_REQUIREMENTS.md` خط أساس للمتطلبات؛ يلزم ربط كل تخصص بعقود الأدوات والاختبارات ومعايير التقييم قبل التنفيذ |
 | ECO-001 | Unified Ecosystem | وضع عقود API وإصداراتها بين المنتجات | Proposed | P2 | تعريف المستهلك والمالك ونطاق البيانات والمصادقة والتوافق |
 | ECO-002 | Unified Ecosystem | تصميم هوية/تفويض مشترك عند الحاجة | Proposed | P2 | لا SSO أو مشاركة مفاتيح قبل threat model وقرار مستقل |
 | ECO-003 | Unified Ecosystem | توثيق ملكية المنتجات ومصادر الحقيقة وحدود الواجهات | Done | P1 | `docs/PRODUCT_OWNERSHIP_AND_INTERFACE_CATALOG.md` يحدد المستودع والمالك ومصدر البيانات والحدود وعقود التكامل المرشحة؛ لا يعني تنفيذ API أو هوية موحدة |
