@@ -33,7 +33,7 @@
 | LUM-003 | Lumen/LTI | اختبار Moodle ثم Canvas Sandbox | Deferred | P1 | بيئة Sandbox مستقلة، HTTPS، حسابات اختبار، نتائج موثقة لكل منصة |
 | LUM-004 | Lumen/Docs | مصالحة وثائق PR #6 المعمارية مع وثائق main الحالية وتحديد النقاط الفريدة فقط | Ready | P2 | PR #6 يبقى Draft؛ مقارنة الملفات الخمسة مع main، ثم اقتراح تحديث صغير داخل Lumen إذا بقي محتوى صالح غير موثق |
 | LUM-005 | Lumen/Docs | مزامنة الحالة وتوضيح نقطة الاستئناف التاريخية | Done | P1 | PR #157 مدمج عند `9d766cc30525c706bd867d9736b15f74dc2acac7`؛ CI #43949038511 نجح 4/4 على HEAD `7529266`؛ تم وسم نقطة 7 نوفمبر تاريخية دون حذفها |
-| LUM-006 | Lumen/Security | تهيئة أول مدير بأمان عبر أمر تشغيل مستقل | In Progress | P1 | PR #5 أُغلق دون دمج لتباعد 138 commit خلف main؛ البديل النظيف PR #158 على فرع `fix/first-admin-bootstrap-20261116` من main `9d766cc`; CI #43954238447: Browser E2E وFrontend build وsecret scan نجحت؛ Backend قيد التنفيذ؛ لا تشغيل على DB فعلية قبل قبول PR ومراجعة بيئة التنفيذ |
+| LUM-006 | Lumen/Security | تهيئة أول مدير بأمان عبر أمر تشغيل مستقل | Done | P1 | PR #158 مدمج في main عند `108c2eabdc4a180bc5efd5469c368ab3c3f15199`؛ CI #43957299993 نجح 4/4 على رأس PR `10e4a726`؛ لم يُشغّل أمر الترقية على حساب حقيقي أو قاعدة إنتاج |
 | LUM-007 | Lumen/Security | استكمال قبول عزل مختبر Python وحدود الذاكرة والمتصفح | In Progress | P1 | PR #146 مدمج؛ CI #42405345735 أثبت opaque origin وCSP/DOM/storage؛ Issue #134 ما زالت مفتوحة لقبول المتصفح المستهدف وتأكيد قيود Worker memory وعدم كونه OS sandbox |
 | CHAT-001 | AI Chat App/Docs | مصالحة خارطتي A–G وH–T مع main والـPRs/Issues | Done | P1 | PR #717 مدمج عند `17c9868fc17a37a1743c4a49cdb378d93160650c`؛ CI #43952642164 (Backend/Frontend/SDK/Preview Builder/Production Compose) وCodeQL #43952642232 نجحا على HEAD `d5ccb16` |
 | CHAT-002 | AI Chat App | تفكيك العمل المتبقي في PR #665 إلى PRs صغيرة | In Progress | P1 | اتباع tracker المدمج عبر #714؛ لا دمج #665 ككتلة |
@@ -46,10 +46,11 @@
 | ERP-003 | ERP | تجربة PostgreSQL control plane/ETL على قاعدة disposable | Deferred | P1 | لا تبدأ حتى مراجعة Stage25C ووجود reconciliation/rollback tests |
 | ERP-004 | ERP | إبقاء multi-company مغلقاً حتى اكتمال اختبارات العزل | In Progress | P0 | `TENANT_DATA_SCOPING_ENABLED=False` يستمر حتى الموافقة على جميع البوابات |
 | ERP-005 | ERP/Security | استكمال عقد سياق الشركة الموقّع في معاملة PostgreSQL المجمّعة واختبارات cleanup/rollback/pool reuse | Deferred | P1 | من Stage25A backlog؛ بعد trusted signer وPostgreSQL disposable؛ اختبارات success/exception/rollback/reuse/tampering/replay وRLS؛ لا ربط بالتطبيق قبل المراجعة الأمنية |
-| CORE-001 | AI Core | جرد قدرات الذكاء الاصطناعي الموجودة في المنتجات الثلاثة | Ready | P1 | جرد Agent/MCP/Tools/Jobs/Workspace/Project Builder/RAG/SDK مع مالك وواجهة وصلاحيات ومقاييس وقابلية إعادة استخدام؛ لا تنشئ بدائل أولاً |
+| CORE-001 | AI Core | جرد قدرات الذكاء الاصطناعي الموجودة في المنتجات الثلاثة | In Progress | P1 | أُنشئت `docs/AI_CORE_CAPABILITY_INVENTORY.md` كجرد وثائقي أولي؛ يلزم تدقيق الكود والاختبارات وواجهة كل قدرة قبل تثبيت قرار reuse/extract/build؛ لا تنشئ بدائل أولاً |
 | CORE-002 | AI Core | تحديد نموذج وRuntime مفتوح الأوزان ومتطلبات الموارد | Proposed | P2 | يعتمد على CORE-001 ومتطلبات الخصوصية والتكلفة والأجهزة |
 | ECO-001 | Unified Ecosystem | وضع عقود API وإصداراتها بين المنتجات | Proposed | P2 | تعريف المستهلك والمالك ونطاق البيانات والمصادقة والتوافق |
 | ECO-002 | Unified Ecosystem | تصميم هوية/تفويض مشترك عند الحاجة | Proposed | P2 | لا SSO أو مشاركة مفاتيح قبل threat model وقرار مستقل |
+| ECO-003 | Unified Ecosystem | توثيق ملكية المنتجات ومصادر الحقيقة وحدود الواجهات | Done | P1 | `docs/PRODUCT_OWNERSHIP_AND_INTERFACE_CATALOG.md` يحدد المستودع والمالك ومصدر البيانات والحدود وعقود التكامل المرشحة؛ لا يعني تنفيذ API أو هوية موحدة |
 | INNO-001 | Innovation | المختبرات والمحاكيات وInnovation Studio وأدوات البناء | Deferred | P3 | لا يبدأ قبل استقرار المسارات الخمسة وقرار بدء مستقل |
 
 ## قاعدة التنفيذ
