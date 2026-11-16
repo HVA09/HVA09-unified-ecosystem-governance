@@ -87,7 +87,7 @@ CI #43779761820 نجح 4/4 على Head PR #154، لكن لا توجد أدلة M
 - `main` يحتوي بالفعل على iframe sandboxed opaque-origin وCSP وجسر رسائل محدد وWorker وفق PR #146 وتوثيق `docs/PYTHON_LAB_SECURITY.md`.
 - ما زالت القيود الموثقة مهمة: هذا عزل browser-origin وليس OS/container sandbox، ولا يفرض حداً صلباً لذاكرة Worker. لا تغلق Issue #134 قبل مراجعة معايير قبولها المتبقية وتجربة browser/phone وتوثيق قرار الإطلاق.
 
-### 2.3 وثائق الحالة والاستمرارية القديمة
+### 2.4 وثائق الحالة والاستمرارية القديمة
 
 - رأس `main` بعد دمج PR #156: `be630c51c4fc90e7c5534e05bd187ce831ad4321`.
 - وثائق `PROJECT_STATUS.md` و`CONTINUITY.md` و`PR_STACK_TRIAGE.md` كانت تحمل تاريخ تحقق 7 نوفمبر ورأساً قديماً `362aac61...`.
