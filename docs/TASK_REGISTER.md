@@ -30,7 +30,7 @@
 | LUM-003 | Lumen/LTI | اختبار Moodle ثم Canvas Sandbox | Deferred | P1 | بيئة Sandbox مستقلة، HTTPS، حسابات اختبار، نتائج موثقة لكل منصة |
 | LUM-004 | Lumen/Docs | مصالحة وثائق PR #6 المعمارية مع وثائق main الحالية وتحديد النقاط الفريدة فقط | Ready | P2 | PR #6 يبقى Draft؛ مقارنة الملفات الخمسة مع main، ثم اقتراح تحديث صغير داخل Lumen إذا بقي محتوى صالح غير موثق |
 | LUM-005 | Lumen/Docs | مزامنة الحالة وتوضيح نقطة الاستئناف التاريخية | Done | P1 | PR #157 مدمج عند `9d766cc30525c706bd867d9736b15f74dc2acac7`؛ CI #43949038511 نجح 4/4 على HEAD `7529266`؛ تم وسم نقطة 7 نوفمبر تاريخية دون حذفها |
-| LUM-006 | Lumen/Security | مراجعة PR #5 لإنشاء أول مدير بأمان | Ready | P1 | الفرع مبني على Base قديم؛ افحص الفرق وrebase والاختبارات وDocker build على HEAD الحالي قبل تقرير الدمج |
+| LUM-006 | Lumen/Security | تهيئة أول مدير بأمان عبر أمر تشغيل مستقل | In Progress | P1 | PR #5 أُغلق دون دمج لتباعد 138 commit خلف main؛ البديل النظيف PR #158 على فرع `fix/first-admin-bootstrap-20261116` من main `9d766cc`; CI #43954238447 قيد الانتظار؛ لا تشغيل على DB فعلية قبل قبول PR ومراجعة بيئة التنفيذ |
 | LUM-007 | Lumen/Security | استكمال قبول عزل مختبر Python وحدود الذاكرة والمتصفح | In Progress | P1 | PR #146 مدمج؛ CI #42405345735 أثبت opaque origin وCSP/DOM/storage؛ Issue #134 ما زالت مفتوحة لقبول المتصفح المستهدف وتأكيد قيود Worker memory وعدم كونه OS sandbox |
 | CHAT-001 | AI Chat App/Docs | مصالحة خارطتي A–G وH–T مع main والـPRs/Issues | In Progress | P1 | PR #717 مفتوح يضيف مصفوفة الحالة المؤرخة 16 نوفمبر؛ لا يسجل Done قبل نجاح CI وCodeQL والدمج |
 | CHAT-002 | AI Chat App | تفكيك العمل المتبقي في PR #665 إلى PRs صغيرة | In Progress | P1 | اتباع tracker المدمج عبر #714؛ لا دمج #665 ككتلة |
