@@ -154,8 +154,8 @@
 ## 8. متابعة إصلاح MCP داخل المستودع المالك — 2026-11-17
 
 - تم فتح PR [HVA09/ai-chat-app #721](https://github.com/HVA09/ai-chat-app/pull/721) من الفرع `security/mcp-role-gate-20261117` على `main` عند base SHA `17c9868fc17a37a1743c4a49cdb378d93160650c`.
-- Head SHA وقت التسجيل: `6f2d4f54db095b4359834ac859334ad22e59c129`.
+- Head SHA الحالي وقت هذا التحديث: `45cfab03669093511397619f6ac33d31fa536454`.
 - النطاق: gate لاكتشاف MCP بحسب `UserRole.admin` مع اشتراط `MCP_ENABLED`، redaction لبيانات خوادم MCP في snapshots القديمة والجديدة للمستخدمين غير المخولين، وتمرير الدور عند إنشاء snapshots للمهام المجدولة.
 - أضيفت اختبارات للمستخدم العادي والإداري، ولقطع discovery للمستخدم العادي، وإخفاء metadata القديمة في استجابات Agent Jobs.
-- **الحالة:** PR مفتوح وغير مدمج؛ CodeQL مكتمل بنجاح لوظيفتي Python وJavaScript/TypeScript، بينما backend CI ما زال قيد التنفيذ عند آخر تحقق. نجحت حتى ذلك الوقت وظائف frontend وSDK وpreview-builder وproduction-compose.
+- **حالة الفحوص على الرأس الحالي:** CI run `43972899224` وCodeQL run `43972899294`؛ backend وCodeQL كانا قيد التنفيذ عند آخر تحقق، وSDK نجح. وظائف frontend وpreview-builder وproduction-compose لم تكن قد اكتملت بعد في هذا التشغيل. التشغيل الأسبق `43972151077` أصبح قديماً بعد تحديث الرأس، ولا يُستخدم لقبول الإصدار الحالي.
 - لا يُغلق Issue #719 ولا توصف الفجوة بأنها معالجة قبل نجاح كل الفحوص المطلوبة ومراجعة التغيير ودمجه. لم يُتصل بأي MCP server ولم تُغيّر إعدادات الإنتاج.
