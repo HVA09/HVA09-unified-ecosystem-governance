@@ -374,3 +374,62 @@
 6. قبل إعلان S4-08 Verified، أغلق #724 أو اعتمد سياسة واضحة لا توسّع نطاق الملفات بصمت، وأضف اختبار FileChunk cascade بعد حذف المرفق، ثم حدد سياسة retention/export/deletion على مستوى المنتج.
 
 **حالة S4-08:** جرد capabilities والحدود الحالية مكتمل توثيقياً، لكن المهمة تبقى In Progress؛ Issue #724 وغياب اختبار cascade deletion شامل، واستكمال retention contracts عبر المنتجات، تمنع تحويلها إلى Done. لم تُرسل أي طلبات embeddings حقيقية ولم تُعد فهرسة ملفات إنتاج ولم تُحذف بيانات.
+
+
+## 16. تدقيق Benchmark الاسترجاع وتقييم الوكلاء — 2026-11-17
+
+**مصدر المرشح:** AI Chat App PR #665، الفرع `ai/embedding-provider-separation-20261025`، HEAD `4792285440511833b66e1045bc235143a5a302a5`.  
+**حالة PR عند التدقيق:** Open / Draft / Unmerged / `mergeable=false`، base SHA `509e58368ee679b80c9bba2a3afe0a457fa2ae34` وليس main الحالي `6645b0502daa6922040ee4c6bb5c281ed59ef366`. لم تظهر workflow runs مرتبطة بـHEAD هذا في فحص GitHub الحالي. لذلك كل ملفات benchmark التالية candidate على فرع المسودة وليست capabilities في main، ولا توجد نتائج CI أو baseline معتمدة لهذا الرأس.
+
+### 16.1 مجموعة RAG Retrieval candidate
+
+- الملف `ai-backend/tests/fixtures/rag_retrieval_eval_cases.json` عند SHA `a570204ab61e6ee21ece422e664c30fdba8dd5f6`.
+- 20 سؤالاً اصطناعياً، 100 وثيقة مرشحة (5 لكل سؤال)، في 7 مجالات: networking (2)، Linux (3)، programming (3)، cloud (3)، security (3)، database (3)، teaching (3).
+- لكل حالة درجتا صلة إيجابيتان 2 و1، وثلاثة مشتتات درجة 0. توزيع الدرجات على المجموعة: 20 وثيقة درجة 2، 20 درجة 1، و60 درجة 0.
+- يوجد سؤال عربي واحد على الأقل في كل مجال؛ وباقي الأسئلة بالإنجليزية. هذا يضيف اختبار multilingual مبدئياً، لكنه لا يثبت robustness عربي واسعاً أو لهجات/صياغات متعددة.
+- لكل حالة `critical_failure` نصي يصف خطأً مهماً، لكنه لا يقيّم تلقائياً هل إجابة النموذج ارتكبت هذا الخطأ؛ يبقى إرشاداً لمراجعة بشرية.
+
+### 16.2 محرك المقاييس
+
+- `ai-backend/app/services/rag_evaluation.py` SHA `a797dbf0ba2ed29d7a1d1ea2dc792a9beb794145` يقدم cosine similarity مع فحوص vectors، ترتيباً مستقراً مع كسر التعادل حسب ترتيب الإدخال، ثم Recall@k وPrecision@k وnDCG@k وReciprocal Rank.
+- الدرجتان 1 و2 تعدان ذات صلة في Recall/Precision/MRR؛ nDCG يحافظ على الفرق المتدرج باستخدام gain `2^rel - 1`. متوسط Reciprocal Rank عبر الحالات يمثل MRR.
+- `score_ranked_results` يقبل درجات 0/1/2 ويرفض IDs المكررة أو labels المفقودة. Runner يرفض top_k المساوي لأصغر candidate pool.
+- المقاييس صحيحة لترتيب المرشحين المحددين في كل حالة، لكنها لا تقيس وحدها اختيار المرشحين من جميع ملفات المنتج أو segmentation الفعلي إلى chunks.
+
+### 16.3 Runner — حد الفرق بين validate-only وlive
+
+- `ai-backend/scripts/evaluate_rag_retrieval.py` SHA `b01a1c178cb54fc7f81dc3f3a797ef910ef925e2`.
+- الوضع الافتراضي و`--validate-only` لا يرسلان طلب embeddings: يقرآن fixture محلياً ويتحققان من structure/schema/IDs/labels ويصدران summary فيه case_count/document_count/domain_counts/relevance counts وdataset SHA.
+- هذا المسار **لا ينتج Recall/Precision/nDCG/MRR**؛ إنه preflight للبيانات فقط.
+- حساب المقاييس الفعلية يتم فقط مع `--run-live`: runner يحسب embeddings للـ100 وثيقة والأسئلة الـ20 من مزود embeddings الفعلي ثم يقارن cosine ranking؛ لا يستدعي chat model ولا يقرأ/يعدل database. قد يستهلك quota أو تكلفة لذلك لا يُشغّل تلقائياً، ويلزم قرار صريح وبيئة مزود مصرح بها.
+- تقرير القياس يسجل dataset SHA وembedding provider/model/fingerprint، المتوسط العام، النتائج لكل مجال ولكل حالة، top1 irrelevant rate وموضع أول نتيجة ذات صلة. لا يوجد baseline حي مسجل حتى تاريخ هذا التدقيق.
+
+### 16.4 مقارنة التقارير
+
+- `ai-backend/scripts/compare_rag_reports.py` SHA `c27abda9afa9b292b0dbf7df089faba7b584e81a` يقارن ملفي تقارير محليين دون مزود أو قاعدة بيانات.
+- يتحقق من تطابق dataset SHA وcase IDs وdomain وtop_k ومجموعة الوثائق المصنفة وlabels والعناوين، ويعيد حساب المقاييس من ترتيب الوثائق بدلاً من الثقة بالقيم المسجلة.
+- يوضح baseline/candidate embedding provider/model/fingerprint ويحدد تغير fingerprint، ويقارن macro/domain/case level، ويكشف الحالات التي تراجع فيها أول نتيجة حتى لو تحسن المتوسط العام.
+- لا يوجد اختبار دلالة إحصائية أو فاصل ثقة؛ ومع حالتين أو ثلاث لكل مجال فإن النتائج الوصفية شديدة الحساسية لعينة صغيرة. يجب عدم اتخاذ قرار إطلاق من delta وحده.
+
+### 16.5 فحص الاستشهادات candidate
+
+- `ai-backend/app/services/citation_evaluation.py` SHA `3f22925c82770e113b4a37bbf89c27619e01e0b0` يعدّ معرفات `[S#]` و`[W#]` و`[D#]` في نص الإجابة، ويتجاهل مراجع الشيفرات inline/fenced، ثم يقارنها بقائمة المصادر المتاحة.
+- يخرج citation_precision وsource_coverage وunsupported IDs. لا يثبت أن المصدر يدعم الادعاء دلالياً، ولا يقيس صحة الحقائق أو grounding أو hallucination.
+- المكوّن واختباراته موجودان في PR #665 فقط؛ مراجعة `ai-backend/app/routers/chat.py` على نفس الفرع لم تظهر استدعاءً له في مسار المحادثة، لذلك يعامل كأداة تقييم مساعدة غير موصولة بقرار الإنتاج حتى يثبت دمجه في pipeline.
+
+### 16.6 تقييم الوكلاء المتخصصين candidate
+
+- `ai-backend/tests/fixtures/ai_specialist_eval_cases.json` SHA `77b6a0c78930c9e6030dcfeda9673edbf0c679d4` يحتوي 37 حالة: 5 لكل من networking/Linux/programming/cybersecurity/cloud/teaching، و7 حالات cross-domain. كل حالة تملك prompt ومعايير تقييم وcritical failures وأدلة متوقعة.
+- `ai-backend/docs/AI_SPECIALIST_EVALUATION.md` SHA `753a0a37208dc88a7b216618be8e89e65a866452` يقترح سلم 0–4 لمعايير الصحة والاكتمال والأدلة والتعليم/المستوى والسلامة وصدق استخدام الأدوات، وعتبة مقترحة 3/4 لكل مجال بلا أخطاء حرجة.
+- `test_ai_specialist_eval_dataset.py` يتحقق من بنية fixture وتفرد IDs وتغطية المجالات وعدد الحالات؛ لا يشغّل نموذجاً ولا يصحح الإجابات. لا يوجد في هذه الحزمة baseline output أو scorer آلي مُثبت.
+- هذه مواصفة مجموعة تقييم وrubric أولي، وليست دليلاً على قدرات الوكلاء أو على أن كل مهمة جرى حلها بنجاح.
+
+### 16.7 نتائج التقييم على main وحدود القبول
+
+- main الحالي يحتوي اختبارات RAG وظيفية/أمنية في `tests/test_rag.py` (18 test functions)، لكنها لا تشكل benchmark relevance-labelled ولا تنتج baseline جودة embeddings.
+- ملفات `rag_evaluation.py` وrunner والfixture وcitation evaluation وspecialist dataset غير موجودة في main؛ هي تغييرات PR #665 غير المدمج.
+- توجد في الفرع 25 اختباراً لمجموعة/مقاييس RAG، و8 اختبارات لاتساق citation IDs، واختباران بنيويان لمجموعة specialist. هذه أعداد الاختبارات المكتوبة في candidate وليست نتائج CI.
+- لم يظهر تشغيل workflow على exact PR #665 head `4792285...`; كما أن PR Draft وmergeable=false وقاعدته قديمة مقارنة بـmain. لا يوجد ما يثبت أن candidate قد اجتاز CI الحالي أو أنه متوافق مع main.
+- لم نشغّل `--run-live`، ولم نستخدم مفاتيح API أو استهلكنا quota، ولم ننتج baseline أو نتائج model quality.
+
+**التقييم:** تصميم benchmark واعد كبداية: corpus ثابت، labels متدرجة، preflight آمن، metrics واضحة، مقارنة case-level، وrubric متخصص. لكنه لا يصبح S4-09 Verified قبل فصل candidate عن PR #665، مزامنته على main، اجتياز CI/CodeQL، اعتماد rubric من مراجع بشري، إجراء baseline حي مصرح به عند توفر البيئة، وإضافة اختبارات تغطي end-to-end RAG/chunk retrieval وcitation semantic support وsecurity/critical failures. أبقِ التقييم المباشر opt-in، ولا تعتمد درجات اصطناعية كدليل على أداء الإنتاج.
