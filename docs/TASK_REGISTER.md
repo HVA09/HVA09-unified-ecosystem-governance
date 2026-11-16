@@ -32,9 +32,9 @@
 | LUM-005 | Lumen/Docs | مزامنة الحالة وتوضيح نقطة الاستئناف التاريخية | Done | P1 | PR #157 مدمج عند `9d766cc30525c706bd867d9736b15f74dc2acac7`؛ CI #43949038511 نجح 4/4 على HEAD `7529266`؛ تم وسم نقطة 7 نوفمبر تاريخية دون حذفها |
 | LUM-006 | Lumen/Security | مراجعة PR #5 لإنشاء أول مدير بأمان | Ready | P1 | الفرع مبني على Base قديم؛ افحص الفرق وrebase والاختبارات وDocker build على HEAD الحالي قبل تقرير الدمج |
 | LUM-007 | Lumen/Security | استكمال قبول عزل مختبر Python وحدود الذاكرة والمتصفح | In Progress | P1 | PR #146 مدمج؛ CI #42405345735 أثبت opaque origin وCSP/DOM/storage؛ Issue #134 ما زالت مفتوحة لقبول المتصفح المستهدف وتأكيد قيود Worker memory وعدم كونه OS sandbox |
-| CHAT-001 | AI Chat App | مطابقة خارطة الطريق القديمة مع main والـPRs الحديثة | Ready | P1 | تحويل كل بند إلى موجود/ناقص/متقادم/مؤجل مع دليل |
+| CHAT-001 | AI Chat App/Docs | مصالحة خارطتي A–G وH–T مع main والـPRs/Issues | In Progress | P1 | PR #717 مفتوح يضيف مصفوفة الحالة المؤرخة 16 نوفمبر؛ لا يسجل Done قبل نجاح CI وCodeQL والدمج |
 | CHAT-002 | AI Chat App | تفكيك العمل المتبقي في PR #665 إلى PRs صغيرة | In Progress | P1 | اتباع tracker المدمج عبر #714؛ لا دمج #665 ككتلة |
-| CHAT-003 | AI Chat App | حسم PR #671 القديم | Ready | P2 | مقارنة الوثائق بـmain الحالي، ثم تحديثه أو إغلاقه مع حفظ الأدلة |
+| CHAT-003 | AI Chat App/Docs | حسم PR #671 القديم دون فقد أرشيفه | Done | P2 | PR #671 مغلق دون Merge بتاريخ 16 نوفمبر؛ ملفاه محفوظان في Snapshot المركزي، والسبب Base قديم وحالة تشغيل متقادمة |
 | CHAT-004 | AI Chat App/Docs | مصالحة سجل تفكيك PR #665 بعد دمج #714/#715 | Done | P1 | PR #716 مدمج عند `7a3289ca43070bc8fdff925dbe98fcbbbbade3df`؛ CI #43933542371 وCodeQL #43933542202 نجحا على HEAD `beb9d79` |
 | CHAT-005 | AI Chat App/UX | معالجة واجهة المحادثة وبقايا استقرار Issue #683 | In Progress | P0 | PR #687 مدمج ويعالج pseudo-tool-call وسلامة retry؛ تبقى sidebar/actions/composer/mobile/RTL وسبب provider failures وقبولها اليدوي؛ لا تكرر #664/#676 |
 | CHAT-006 | AI Chat App/SRE | التحقق التشغيلي من QueuePool بعد تحرير الاتصالات | In Progress | P1 | PR #664 مدمج `0fd0f7c`; PR #676 مدمج `35b1d3b`; Issue #674 ما زالت تتطلب Stage telemetry وتحديد مصدر ضغط pool؛ لا تغيّر سعة Render/Supabase عشوائياً |
