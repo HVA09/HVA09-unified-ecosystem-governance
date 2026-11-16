@@ -244,8 +244,8 @@
 | LUM-005 | Done | PR #157 مدمج؛ نقطة 7 نوفمبر موسومة كسجل تاريخي. |
 | LUM-006 | Done | PR #158 أضاف مسار الترقية المحمي واجتاز CI #43957299993 (4/4)، وPR #161 أزال CLI القديم وصحح README ودُمج عند `ed162b0e0af497abc5710d185fa357357baa6ecc` بعد نجاح CI #43967362902. لم يُشغّل أمر الترقية ولم يُرقَّ أي حساب؛ لا تُنفّذ العملية التشغيلية دون تفويض مستقل. |
 | LUM-001 | Done | مراجعة Backend للقراءة فقط شملت auth/session/dependencies/classes/assignments/content/curriculum/quiz/reports؛ لا عيب مؤكد في المسارات التي تمت مراجعتها. CI #43967362902 نجح في Backend وFrontend/production build وBrowser E2E وFull Git history secret scan؛ Browser E2E يعمل على 390×844 وlocale عربي، واختبار `useDirection.test.jsx` يثبت RTL/LTR. لا ادعاء باختبار جهاز فعلي أو نشر حي. |
-| LUM-002 | In Progress | PR #154 Draft ويقارن 46 ahead / 4 behind main الحالي؛ Issue #150 مفتوحة، وبوابات Moodle/Canvas والخصوصية/الساعة/العمال لا تزال غير مغلقة. |
-| LUM-007 | In Progress | Issue #134 ما زالت مفتوحة لقبول المتصفح المستهدف وقيود Worker memory؛ لا يوصف التنفيذ بأنه OS sandbox. |
+| LUM-002 | In Progress | مراجعة PR #154 أكدت ربط outbox بـ`submission.lti_assignment_link_id` واختبارات resource A/B وnon-LTI/re-grade. PR ما زال Draft (46 ahead / 4 behind)؛ Issue #150 تبقى مفتوحة حتى Moodle/Canvas Sandbox وتدقيق retention/encryption لـ`lti_subject` وclock skew/worker concurrency ومزامنة الفرع. |
+| LUM-007 | In Progress | PR #146 يوفر iframe opaque origin + CSP enforced + Blob Worker، مع حدود إدخال/إخراج 20,000 حرف و8 ثوانٍ وإلغاء؛ CI #43967362902 أعاد نجاح Browser E2E الذي يثبت منع DOM/storage وfetch إلى API. لا يوجد حد ذاكرة صلب، ولا قبول على المتصفح/الجهاز المستهدف؛ Issue #134 تبقى مفتوحة ولا يوصف التنفيذ بأنه OS sandbox. |
 | CHAT-001 | Done | PR #717 مدمج؛ CI #43952642164 وCodeQL #43952642232 ناجحان على HEAD النهائي قبل الدمج. |
 | CHAT-002 | In Progress | PR #665 يظل Draft؛ لا دمج جماعي ولا إعادة عمل ما دخل main بالفعل. |
 | CHAT-003 | Done | PR #671 مغلق دون دمج وحُفظ محتواه التاريخي في الأرشيف المركزي. |
@@ -261,8 +261,9 @@
 
 - في Lumen: أنشئ الفرع `fix/remove-legacy-admin-bootstrap-20261117` من main السابق `108c2eab...`، وأُنشئ PR #161 بحذف `backend/app/create_admin.py` وتصحيح مرجع README القديم. دُمج PR #161 عند `ed162b0e0af497abc5710d185fa357357baa6ecc` بعد نجاح CI #43967362902.
 - في Lumen: أُكملت مراجعة LUM-001 للمسارات الأساسية للمتعلم والمعلم والإدارة دون عيب مؤكد في النطاق المفحوص. توجد اختبارات أدوار للمصادقة والفصول والواجبات والمحتوى والاختبارات؛ واختبار `useDirection.test.jsx` للعربية/الإنجليزية وRTL/LTR؛ ويستخدم Browser E2E نافذة 390×844 وlocale عربي. نجحت وظائف CI الأربع في #43967362902. لا يمثل هذا اختبار جهاز فعلي أو نشر إنتاجي.
+- في Lumen: مراجعة LUM-007 أكدت أن PR #146 يعزل Pyodide داخل iframe بأصل opaque وعامل Blob Worker، وأن CSP تمنع API مع اختبارات CSP enforced؛ الحدود الصريحة 20,000 حرف و8 ثوانٍ مع الإلغاء. لا يوجد حد ذاكرة صلب، لذلك بقي Issue #134 مفتوحاً لقبول المتصفح المستهدف وتحديد حدود الاستخدام. مراجعة LUM-002 أكدت resource-bound passback واختبارات A/B، لكن #154 يبقى Draft حتى Sandbox/privacy/clock/worker gates.
 - لا تغيير مباشر على `main`، ولا merge أو deployment أو ترحيل قاعدة بيانات في هذه المتابعة.
 
 ### 12.4 المهمة التالية
 
-بدء LUM-007 بمراجعة حدود مختبر Python وما يثبته CI فعلياً، ثم فصل ما يمكن إغلاقه آلياً عما يتطلب متصفحاً/جهازاً مستهدفاً وقياس Worker memory؛ لا يُوصف Worker بأنه OS sandbox. تبقى PR #160 مفتوحة حتى تكتمل فحوص CI على الرأس المحدّث `e766245f0d293e330550804a161c96185cc91a8a`.
+بدء CHAT-005 بمراجعة للقراءة فقط لمسارات Sidebar/actions/composer/mobile/tool rendering وprovider failures في AI Chat App، مع عدم إعادة إصلاح ما دخل main عبر PRs السابقة. تبقى LUM-007 مفتوحة بسبب غياب حد ذاكرة صلب وقبول الجهاز، وتبقى LUM-002 مفتوحة حتى بيئتي Moodle/Canvas وبوابات الخصوصية والتوقيت والعمال. PR #160 التوثيقي في Lumen ما زالت فحوصه قيد التنفيذ على الرأس `26ef26751ee8adb1e625658f00509d4f8ab9a7b3`.
