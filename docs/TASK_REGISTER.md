@@ -39,17 +39,17 @@
 | ECO-001 | Unified Ecosystem | وضع عقود API وإصداراتها بين المنتجات | Proposed | P2 | تعريف المستهلك والمالك ونطاق البيانات والمصادقة والتوافق |
 | ECO-002 | Unified Ecosystem | تصميم هوية/تفويض مشترك عند الحاجة | Proposed | P2 | لا SSO أو مشاركة مفاتيح قبل threat model وقرار مستقل |
 | INNO-001 | Innovation | المختبرات والمحاكيات وInnovation Studio وأدوات البناء | Deferred | P3 | لا يبدأ قبل استقرار المسارات الخمسة وقرار بدء مستقل |
-
 | GOV-006 | Governance | اعتماد الميثاق الهندسي المشترك كمرجع واحد مع إبقاء ملاحق المشاريع | Done | P1 | `docs/UNIFIED_ENGINEERING_STANDARDS.md` يضم الأقسام المشتركة المتطابقة؛ الملاحق المحلية محفوظة في كل منتج |
 | GOV-007 | Governance | دمج التفاصيل المعمارية الفريدة من نسخة Library v0.11 في المرجع المركزي ومنع ازدواج المصدر | In Progress | P1 | خطة v1.5 تجمع الابتكار والمختبرات والتقنية والتوسع؛ يظل المرجع المركزي هو المصدر الحاكم، والنسخة المحلية لقطة غير حية |
 | LUM-005 | Lumen/Docs | تحديث رؤوس وخلاصات الحالة في وثائق Lumen القديمة | In Progress | P1 | PR #157 مفتوح لتحديث PROJECT_STATUS وCONTINUITY وPR_STACK_TRIAGE؛ يُغلق بعد الدمج والتحقق من عدم محو السجل التاريخي |
 | CHAT-004 | AI Chat App/Docs | مصالحة PR-665 split tracker بعد دمج PR #714 | In Progress | P1 | PR #716 مفتوح؛ يثبت دمج #714 و#715 ويحدّث main إلى `88f835...`؛ لا يُغلق قبل الدمج |
-
 | LUM-006 | Lumen/Security | مراجعة PR #5 لإنشاء أول مدير بأمان | Ready | P1 | الفرع مبني على Base قديم؛ افحص الفرق وrebase والاختبارات وDocker build على HEAD الحالي قبل تقرير الدمج |
 | LUM-007 | Lumen/Security | استكمال قبول Issue #134 لمختبر Python | Ready | P1 | تحقق من opaque-origin/CSP/message bridge/worker وقابلية الإلغاء؛ وثّق حد الذاكرة وعدم كونه OS sandbox، ولا تغلق issue قبل قبول المتصفح |
 | CHAT-005 | AI Chat App/UX | فرز Issue #683 إلى بنود منجزة ومتأخرة | Ready | P0 | لا تكرر #687/#664/#676؛ اربط sidebar/mobile/actions/provider/tool rendering بعمل main/PR واختبارات قبول |
 | CHAT-006 | AI Chat App/SRE | إكمال بوابات Issue #674 بعد دمج #664/#676 | Ready | P1 | تحقق من QueuePool telemetry على بيئة Stage مستقلة، Android، ودورة الملفات؛ لا تكرر تغييرات تحرير الاتصال المدمجة |
 
+| ERP-005 | ERP/Security | استكمال عقد سياق الشركة الموقّع في معاملة PostgreSQL المجمّعة واختبارات cleanup/rollback/pool reuse | Deferred | P1 | من Stage25A backlog؛ بعد trusted signer وPostgreSQL disposable؛ اختبارات success/exception/rollback/reuse/tampering/replay وRLS؛ لا ربط بالتطبيق قبل المراجعة الأمنية |
+| GOV-008 | Governance | إنشاء وإدارة الدفعة الموحدة UB-2026-11-16-01 (15 مهمة، خمس لكل منتج) | In Progress | P0 | `docs/UNIFIED_BATCH_EXECUTION_PLAN.md`؛ LUM-001/002/005/006/007 + CHAT-001/002/003/005/006 + ERP-001/002/003/004/005؛ التحديث بعد كل متابعة بأدلة المستودعات |
 
 ## قاعدة التنفيذ
 
