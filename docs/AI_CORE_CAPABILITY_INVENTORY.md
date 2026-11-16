@@ -23,6 +23,28 @@
 
 تصف خارطة `AI_PLATFORM_ROADMAP_AR.md` مراحل D1–D8 وE1–E8 وF1–F5 بأنها مكتملة أو متحققة في مواضع متعددة. هذه حالة وثائقية تاريخية يجب مطابقتها مع الكود والاختبارات الحالية، ولا تُستخدم وحدها كدليل قبول حي.
 
+
+
+## 2.1 فحص مسارات الكود في main
+
+تم فحص شجرة ملفات AI Chat App عند `main = 17c9868fc17a37a1743c4a49cdb378d93160650c`. وجود المسار يثبت وجود نقطة تنفيذ في المصدر، لكنه لا يثبت وحده صحة كل سلوك أو نتيجة CI أو نشر حي.
+
+| القدرة | مسارات المصدر المرصودة | اختبارات/مراجع مرتبطة | استنتاج الجرد |
+|---|---|---|---|
+| Agent Runtime | `ai-backend/app/services/agent_runtime.py`، `app/services/ai_agent.py` | `tests/test_agent_runtime.py`، `tests/test_agent.py` | Runtime موجود داخل المنتج؛ المرشح هو توثيق/استخراج عقد مشترك لا بناء runtime جديد. |
+| Tool Registry وdispatch | `app/services/tools/registry.py`، `tools/calculator.py`، `tools/code_execution.py`، `tools/data_analysis.py`، `tools/web_search.py` | `tests/test_agent.py`، `tests/test_agent_runtime.py` | registry مركزي وToolContext/ToolSpec موجودان؛ افحص حدود الصلاحيات قبل إعادة الاستخدام. |
+| Tool security | `app/services/tool_security.py`، `app/services/agent_runtime.py` | اختبارات runtime والأدوات | توجد دوال schema validation وفحص مخرجات غير موثوقة؛ يلزم مراجعة threat model وتغطية حالات الحقن. |
+| MCP | `app/services/mcp_client.py` | `tests/test_mcp_client.py` | تكامل MCP داخل AI Chat App؛ لا تنشئ اتصال MCP ثانياً داخل AI Core قبل فحص العقد الحالي. |
+| Agent jobs/checkpoints | `app/routers/agent_jobs.py`، `models/agent_job.py`، `models/agent_workflow_step.py` | `tests/test_agent_jobs.py`، migrations 0066 و0076 و0078 و0079 | واجهات job وpause/resume/cancel موجودة؛ التوافق والحدود والملكية تحتاج فحصاً. |
+| Scheduled agents | `app/routers/scheduled_tasks.py`، `models/scheduled_task.py`، `models/scheduled_task_run.py` | `tests/test_scheduled_tasks.py`، `test_scheduled_task_runs.py`، `test_scheduled_task_retry.py` | جدولة المهام موجودة في المنتج؛ لا تُكرر scheduler في النواة قبل تحديد الحاجة المشتركة. |
+| Knowledge/RAG/Embeddings | `app/services/rag.py`، `app/services/embeddings.py`، `app/services/image_rag.py`، `models/file_chunk.py` | اختبارات RAG/embeddings في المستودع؛ PR #665 وسجل التفكيك للمراحل المتبقية | خط المعالجة موجود ومملوك للمنتج؛ جودة retrieval والعزل والنسخ والاستعادة تبقى مهام قبول مستقلة. |
+| Project Builder/Preview | `app/services/project_preview_builder.py`، `services/project_archive.py`، `routers/projects.py`، `routers/project_files.py` | اختبارات project preview/archive ضمن مستودع AI Chat App | builder/preview موجودان؛ preview builder منفصل ويفشل مغلقاً إذا لم يُضبط endpoint آمن. |
+| Workspace/RBAC | `app/services/workspace_rbac.py`، `routers/workspaces.py`، `routers/workspace_rbac.py`، `routers/workspace_members.py` | `tests/test_workspace_usage.py` وملفات workspace access tests | RBAC وعضوية Workspace موجودة؛ لا تستبدل بنموذج صلاحيات مركزي قبل توافق المستهلكين. |
+| Webhooks/Developer API | `app/routers/webhooks.py`، `services/webhook_service.py`، `routers/api_keys.py`، `sdk/python/`، `sdk/javascript/` | `tests/test_api_keys.py`، SDK tests، webhook tests | مفاتيح API وWebhooks وSDKs موجودة؛ يجب الحفاظ على عقد API الحالي وإصداراته. |
+| Assistant versions/prompts | `models/assistant_version.py`، `models/saved_prompt_version.py`، `routers/assistants.py`، `routers/saved_prompts.py` | `tests/test_assistants.py`، `tests/test_saved_prompts.py` | إدارة المساعدين والموجهات موجودة داخل المنتج؛ لا تضف مخزناً عاماً قبل تحديد النطاق. |
+
+**حد التحقق:** هذا فحص مسارات وشواهد مصدرية على رأس `main`، وليس إعادة تشغيل للاختبارات أو مراجعة لكل ملف. يلزم في S4-01 ربط كل قدرة بتفاصيل API/permission/tests والـPRs المفتوحة وحالة النشر قبل اختيار ما يُستخرج. يجب ألا تُعامل عناوين roadmap بوصفها إثبات تنفيذ منفردة.
+
 ## 3. قدرات المنتجات الأخرى وحدودها
 
 ### Lumen
