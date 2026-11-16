@@ -12,6 +12,7 @@
 6. [سجل القرارات المعتمدة](docs/DECISION_REGISTER.md)
 7. [ملاحظات PRs والنقاشات الهندسية المهمة](docs/EXTERNAL_DISCUSSION_REGISTER.md)
 8. [شرح الأرشيف وقواعد النسخ](archive/README.md)
+9. [خطة الدفعة الموحدة — 15 مهمة](docs/UNIFIED_BATCH_EXECUTION_PLAN.md)
 
 ## قاعدة مصدر الحقيقة
 
