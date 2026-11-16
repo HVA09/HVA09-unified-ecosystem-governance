@@ -31,13 +31,13 @@
 | LUM-004 | Lumen/Docs | مصالحة وثائق PR #6 المعمارية مع وثائق main الحالية وتحديد النقاط الفريدة فقط | Ready | P2 | PR #6 يبقى Draft؛ مقارنة الملفات الخمسة مع main، ثم اقتراح تحديث صغير داخل Lumen إذا بقي محتوى صالح غير موثق |
 | LUM-005 | Lumen/Docs | مزامنة الحالة وتوضيح نقطة الاستئناف التاريخية | Done | P1 | PR #157 مدمج عند `9d766cc30525c706bd867d9736b15f74dc2acac7`؛ CI #43949038511 نجح 4/4 على HEAD `7529266`؛ تم وسم نقطة 7 نوفمبر تاريخية دون حذفها |
 | LUM-006 | Lumen/Security | مراجعة PR #5 لإنشاء أول مدير بأمان | Ready | P1 | الفرع مبني على Base قديم؛ افحص الفرق وrebase والاختبارات وDocker build على HEAD الحالي قبل تقرير الدمج |
-| LUM-007 | Lumen/Security | استكمال قبول Issue #134 لمختبر Python | Ready | P1 | تحقق من opaque-origin/CSP/message bridge/worker وقابلية الإلغاء؛ وثّق حد الذاكرة وعدم كونه OS sandbox، ولا تغلق issue قبل قبول المتصفح |
+| LUM-007 | Lumen/Security | استكمال قبول عزل مختبر Python وحدود الذاكرة والمتصفح | In Progress | P1 | PR #146 مدمج؛ CI #42405345735 أثبت opaque origin وCSP/DOM/storage؛ Issue #134 ما زالت مفتوحة لقبول المتصفح المستهدف وتأكيد قيود Worker memory وعدم كونه OS sandbox |
 | CHAT-001 | AI Chat App | مطابقة خارطة الطريق القديمة مع main والـPRs الحديثة | Ready | P1 | تحويل كل بند إلى موجود/ناقص/متقادم/مؤجل مع دليل |
 | CHAT-002 | AI Chat App | تفكيك العمل المتبقي في PR #665 إلى PRs صغيرة | In Progress | P1 | اتباع tracker المدمج عبر #714؛ لا دمج #665 ككتلة |
 | CHAT-003 | AI Chat App | حسم PR #671 القديم | Ready | P2 | مقارنة الوثائق بـmain الحالي، ثم تحديثه أو إغلاقه مع حفظ الأدلة |
 | CHAT-004 | AI Chat App/Docs | مصالحة سجل تفكيك PR #665 بعد دمج #714/#715 | Done | P1 | PR #716 مدمج عند `7a3289ca43070bc8fdff925dbe98fcbbbbade3df`؛ CI #43933542371 وCodeQL #43933542202 نجحا على HEAD `beb9d79` |
-| CHAT-005 | AI Chat App/UX | فرز Issue #683 إلى بنود منجزة ومتأخرة | Ready | P0 | لا تكرر #687/#664/#676؛ اربط sidebar/mobile/actions/provider/tool rendering بعمل main/PR واختبارات قبول |
-| CHAT-006 | AI Chat App/SRE | إكمال بوابات Issue #674 بعد دمج #664/#676 | Ready | P1 | تحقق من QueuePool telemetry على بيئة Stage مستقلة، Android، ودورة الملفات؛ لا تكرر تغييرات تحرير الاتصال المدمجة |
+| CHAT-005 | AI Chat App/UX | معالجة واجهة المحادثة وبقايا استقرار Issue #683 | In Progress | P0 | PR #687 مدمج ويعالج pseudo-tool-call وسلامة retry؛ تبقى sidebar/actions/composer/mobile/RTL وسبب provider failures وقبولها اليدوي؛ لا تكرر #664/#676 |
+| CHAT-006 | AI Chat App/SRE | التحقق التشغيلي من QueuePool بعد تحرير الاتصالات | In Progress | P1 | PR #664 مدمج `0fd0f7c`; PR #676 مدمج `35b1d3b`; Issue #674 ما زالت تتطلب Stage telemetry وتحديد مصدر ضغط pool؛ لا تغيّر سعة Render/Supabase عشوائياً |
 | ERP-001 | ERP/Docs | مزامنة README وContinuity وGovernance مع main وStage25C | Done | P1 | PR #13 مدمج عند `7bb01d23328a68aae67c659fd6c32b6db033637d`؛ ERP backend quality #43933811836 نجح على HEAD `d4ada44`؛ Stage25C الفعلي ما زال Blocked في ERP-002 |
 | ERP-002 | ERP | تنفيذ Stage25C على نسخة SQLite v8 محلية مستعادة | Blocked | P1 | يحتاج نسخة محلية مستعادة على جهاز المستخدم؛ التقرير المنقح فقط يُراجع |
 | ERP-003 | ERP | تجربة PostgreSQL control plane/ETL على قاعدة disposable | Deferred | P1 | لا تبدأ حتى مراجعة Stage25C ووجود reconciliation/rollback tests |
