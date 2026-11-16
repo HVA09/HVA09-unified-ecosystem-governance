@@ -18,8 +18,8 @@
 
 | ID | المسار | المهمة | الحالة | الأولوية | التبعية/معيار القبول |
 |---|---|---|---|---|---|
-| GOV-001 | Governance | اعتماد المرجع الرئيسي ذي المسارات الخمسة | Done | P0 | قرار المستخدم محفوظ؛ مرجع v1.1 في هذا المستودع |
-| GOV-002 | Governance | جرد وثائق المشاريع وحفظ نسخ مؤرخة قابلة للتتبع | Done | P0 | 168 ملفاً محفوظاً ومطابقاً 168/168 على Git Blob؛ 150 من main و18 من PRs غير المدمجة |
+| GOV-001 | Governance | اعتماد المرجع الرئيسي ذي المسارات الخمسة | Done | P0 | قرار المستخدم محفوظ؛ مرجع v1.3 في هذا المستودع |
+| GOV-002 | Governance | جرد وثائق المشاريع وحفظ نسخ مؤرخة قابلة للتتبع | Done | P0 | 169 ملفاً محفوظاً ومطابقاً 169/169 على Git Blob؛ 150 من main و19 من PRs غير المدمجة |
 | GOV-003 | Governance | بناء سجل التعارضات وسياسة أولوية المصدر | Done | P0 | `CONFLICTS_AND_RECONCILIATION.md` يبين الاختلافات المفتوحة وحدود الحسم |
 | GOV-004 | Governance | مزامنة الفهرس والحالة عند كل دفعة كبيرة أو تغير معماري | Ready | P1 | تحديث Snapshot جديد وSHA ودليل المصدر؛ لا تعديل اللقطات القديمة |
 | GOV-005 | Governance | مراجعة نقاشات Issues/PR comments كاملة عند الحاجة إلى قرار تاريخي | Proposed | P2 | حفظ الروابط والملخصات؛ لا تُنسخ التعليقات الشخصية عشوائياً |
@@ -43,6 +43,12 @@
 | GOV-006 | Governance | اعتماد الميثاق الهندسي المشترك كمرجع واحد مع إبقاء ملاحق المشاريع | Done | P1 | `docs/UNIFIED_ENGINEERING_STANDARDS.md` يضم الأقسام المشتركة المتطابقة؛ الملاحق المحلية محفوظة في كل منتج |
 | LUM-005 | Lumen/Docs | تحديث رؤوس وخلاصات الحالة في وثائق Lumen القديمة | Ready | P1 | مطابقة ARCHITECTURE_PLAN وPROJECT_STATUS وCONTINUITY وPR_STACK_TRIAGE مع main الحالي وPRs المفتوحة دون محو السجل التاريخي |
 | CHAT-004 | AI Chat App/Docs | مصالحة PR-665 split tracker بعد دمج PR #714 | Ready | P1 | تحديث Head SHA إلى 5d4c46...، إضافة إثبات الدمج، تصحيح تعليمات الانتظار القديمة وترقيم القسم 51 |
+
+| LUM-006 | Lumen/Security | مراجعة PR #5 لإنشاء أول مدير بأمان | Ready | P1 | الفرع مبني على Base قديم؛ افحص الفرق وrebase والاختبارات وDocker build على HEAD الحالي قبل تقرير الدمج |
+| LUM-007 | Lumen/Security | استكمال قبول Issue #134 لمختبر Python | Ready | P1 | تحقق من opaque-origin/CSP/message bridge/worker وقابلية الإلغاء؛ وثّق حد الذاكرة وعدم كونه OS sandbox، ولا تغلق issue قبل قبول المتصفح |
+| CHAT-005 | AI Chat App/UX | فرز Issue #683 إلى بنود منجزة ومتأخرة | Ready | P0 | لا تكرر #687/#664/#676؛ اربط sidebar/mobile/actions/provider/tool rendering بعمل main/PR واختبارات قبول |
+| CHAT-006 | AI Chat App/SRE | إكمال بوابات Issue #674 بعد دمج #664/#676 | Ready | P1 | تحقق من QueuePool telemetry على بيئة Stage مستقلة، Android، ودورة الملفات؛ لا تكرر تغييرات تحرير الاتصال المدمجة |
+| CHAT-007 | AI Chat App/AI Core | جرد القدرات الحالية قبل تصميم AI Core | Ready | P1 | اربط Agent/MCP/Tools/Jobs/Workspace/Project Builder/RAG/SDK بعقود ومالكين وصلاحيات ومقاييس؛ لا تنشئ بدائل أولاً |
 
 ## قاعدة التنفيذ
 
