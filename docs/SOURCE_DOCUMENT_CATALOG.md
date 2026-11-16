@@ -3,7 +3,7 @@
 - **تاريخ الجرد:** 16 نوفمبر 2026
 - **الغرض:** حفظ نسخ مرجعية قابلة للتتبع للخطط والمواثيق وسجلات الاستمرارية والقرارات والتشغيل والتحقق.
 - **موقع الأرشيف:** `archive/source-snapshots/2026-11-16/`
-- **الإجمالي المرفوع:** **168 ملفاً**: 161 وثيقة Markdown/نصية + 7 تقارير JSON تقنية.
+- **الإجمالي المرفوع:** **171 ملفاً**: 164 وثيقة Markdown/نصية + 7 تقارير JSON تقنية.
 
 ## قواعد قراءة الفهرس
 
@@ -23,7 +23,9 @@
 | AI Chat App | PR #665 Draft، HEAD `4792285440511833b66e1045bc235143a5a302a5` | 8 | [لقطة المسودة](../archive/source-snapshots/2026-11-16/ai-chat-app/pr-665-draft/) |
 | AI Chat App | PR #671 مفتوح وغير Draft، HEAD `5bbdd5a6ab6e9dbc1c82c4db4ed238ba68d924b6` | 2 | [لقطة PR](../archive/source-snapshots/2026-11-16/ai-chat-app/pr-671-open-docs/) |
 | ERP | `main` عند `946b8c3bfa684143f233df519f075253a15ca621` | 115 | [الأرشيف](../archive/source-snapshots/2026-11-16/erp-global-pro/main/) |
-| **الإجمالي** |  | **168** |  |
+| | Lumen | PR #5 Open + Draft، HEAD `96f2b6117d5c86abeb6a53e8b4259a8692a34bcb` | 1 | [لقطة PR](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-5-open-docs/) |
+| Lumen | PR #16 Open + Draft، HEAD `e125643f2bf75f0ede15cdbf6c68fb15eabc14e0` | 2 | [لقطة PR](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-16-draft/) |
+| **الإجمالي** |  | **171** |  |
 
 ## أبرز محتويات Lumen
 
@@ -44,6 +46,14 @@
 - `docs/CONTINUITY.md`
 
 هذه النسخة منفصلة عن main ولا تعني دمج PR #154.
+
+
+
+### PR #5 وPR #16 (3 ملفات إضافية)
+
+- PR #5 (Open + Draft): نسخة `backend/README.md` من فرع `security/secure-first-admin-bootstrap`.
+- PR #16 (Open + Draft): نسختا `backend/LTI_AGS_SANDBOX_RUNBOOK.md` و`backend/README.md` من فرع `feat/lti-ags-grade-passback`.
+- هذه نسخ تاريخية للمقارنة؛ لا تُعدّل ولا تحل محل ملفات main أو PR #154.
 
 ## أبرز محتويات AI Chat App
 
@@ -93,7 +103,7 @@
 - تمت مطابقة بصمات Git Blob لجميع الملفات المؤرشفة مع المصدر الأصلي: **168/168** تطابق (150 من `main` و18 من PRs غير المدمجة).
 - التوزيع: Lumen `main` 16، PR #154 ثلاثة، PR #6 خمسة؛ AI Chat App `main` 19، PR #665 ثمانية، PR #671 اثنان؛ ERP `main` 115. لم توجد فروقات بصمات أو مسارات بعد تصحيح مسارات أدلة ERP.
 - تقارير ERP JSON السبعة صالحة بنيوياً، ولم تظهر فيها أنماط مفاتيح/أسرار معروفة في الفحص الآلي المحدود. هذا ليس بديلاً عن فحص الأسرار الكامل أو ضماناً مطلقاً لعدم وجود بيانات حساسة.
-- إجمالي الأرشيف **168 ملفاً**: 161 Markdown/نص + 7 JSON. تم حفظ كل ملف تحت مساره الأصلي مع تمييز `main` عن الفروع المفتوحة.
+- إجمالي الأرشيف **171 ملفاً**: 164 Markdown/نص + 7 JSON. تم حفظ كل ملف تحت مساره الأصلي مع تمييز `main` عن الفروع المفتوحة.
 
 
 ## حدود اختيار الملفات
