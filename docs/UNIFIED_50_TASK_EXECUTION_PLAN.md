@@ -89,7 +89,7 @@
 
 | المعرّف | حزمة العمل | الحالة الأولية | الاعتماديات / معيار القبول |
 |---|---|---|---|
-| S4-01 | جرد قدرات AI الحالية ومنع التكرار | **In Progress — AI Chat App source and authorization audit completed; cross-product audit remains** | `AI_CORE_CAPABILITY_INVENTORY.md` يوثق قدرات main؛ على AI Chat App أُغلقت ملاحظات MCP global role وProject ACL وScheduled task RBAC عبر #721/#722/#723 مع CI وCodeQL ناجحين. يستمر الجرد حتى مراجعة Lumen وERP والعقود الفعلية وحالة النشر والاختبارات العابرة للمنتجات. |
+| S4-01 | جرد قدرات AI الحالية ومنع التكرار | **In Progress — AI Chat authorization fixes merged; Lumen/ERP service-boundary audit recorded** | `AI_CORE_CAPABILITY_INVENTORY.md` يوثق AI Chat App على main `6645b0502daa6922040ee4c6bb5c281ed59ef366` مع دمج #721/#722/#723 وفحوص CI/CodeQL الناجحة، ويضيف جرد الهوية والواجهات وحدود البيانات في Lumen main `ed162b0e0af497abc5710d185fa357357baa6ecc` وERP main `7bb01d23328a68aae67c659fd6c32b6db033637d`. يبقى تدقيق service/route الكامل والاختبارات وعقود إعادة الاستخدام قبل إغلاق CORE-001؛ لا إنشاء بدائل AI runtime. |
 | S4-02 | حالات الاستخدام ومتطلبات الوكلاء المتخصصين | **In Progress — requirements baseline documented** | `docs/AI_CORE_SPECIALIZED_AGENT_REQUIREMENTS.md` يحدد ملفات وكلاء البرمجة وLinux والشبكات وCloud/DevOps والأمن، وتحليل الملفات المشترك، وعقود المدخلات/المخرجات والحدود والاختبارات؛ تبقى مراجعة المتطلبات وربطها بعقود الأدوات والـbenchmark. |
 | S4-03 | تقييم نماذج مفتوحة الأوزان منخفضة التكلفة | Design / No paid GPU | مقارنة الجودة والسياق والخصوصية والسرعة والترخيص والعتاد؛ benchmark على موارد متاحة قبل الاختيار. |
 | S4-04 | عقد Model Gateway وسجل النماذج والمزودين | Design in parallel | API موحد وregistry وtimeouts/retries/fallback وversioning وحدود استخدام؛ لا اعتماد إلزامي على مزود واحد. |
@@ -105,7 +105,7 @@
 | المعرّف | حزمة العمل | الحالة الأولية | الاعتماديات / معيار القبول |
 |---|---|---|---|
 | S5-01 | سجل ملكية المنتجات ومصادر الحقيقة وحدود البيانات | **Done — architecture register** | `docs/PRODUCT_OWNERSHIP_AND_INTERFACE_CATALOG.md` يوثق المالك والمستودع ومصدر بيانات كل منتج وحدود الهوية والبيانات وعقود التكامل المرشحة؛ التنفيذ البرمجي للعقود يبقى ضمن S5-02 وما بعدها. |
-| S5-02 | كتالوج عقود API وإصداراتها | **In Progress — contract catalog drafted** | `docs/PRODUCT_API_CONTRACT_CATALOG.md` يحدد بطاقة العقد والإصدار والمصادقة والتفويض والأخطاء والأحداث والاختبارات؛ تبقى مطابقة endpoints وschemas الفعلية في كل منتج. |
+| S5-02 | كتالوج عقود API وإصداراتها | **In Progress — product API surfaces and trust boundaries mapped** | `PRODUCT_API_CONTRACT_CATALOG.md` يوثق مجموعات واجهات Lumen وAI Chat App وERP مع auth/role/company/resource boundaries على رؤوس main معلومة؛ تبقى مطابقة signatures وschemas لكل endpoint، تصنيف البيانات، service identity/audience/scopes، وconsumer/provider authorization tests قبل اعتماد أي تكامل. |
 | S5-03 | هوية الخدمات والثقة بين المنتجات | Design only | threat model لخدمة-إلى-خدمة وtoken audience/scopes/rotation؛ لا SSO شامل أو نقل مفاتيح جلسات. |
 | S5-04 | نموذج التفويض RBAC/ABAC ونطاق الموارد | Design in parallel | مصفوفة actor/action/resource/tenant وleast privilege/delegation/revocation/negative tests. |
 | S5-05 | تصنيف البيانات وتدفقها والاحتفاظ والخصوصية | Design in parallel | data inventory/flow وpurpose/minimization/consent/retention/deletion؛ منع نقل بيانات بلا غرض مصرح. |
