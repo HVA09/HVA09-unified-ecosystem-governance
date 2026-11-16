@@ -9,6 +9,29 @@
 
 هذا PR مفتوح وفي حالة Draft وغير مدمج، ويحتوي خمس وثائق معمارية وتطويرية. حُفظت نسخته في `archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-6-open-docs/`. تُستخدم الوثائق للمقارنة مع `main`، ولا تُعامل كخطة نافذة قبل مراجعة الفروق.
 
+### PR #5 — تأمين إنشاء أول مدير
+
+[PR #5](https://github.com/HVA09/lumen-learning-platform/pull/5)
+
+- الحالة عند الجرد: Open + Draft + Unmerged.
+- Head: `96f2b6117d5c86abeb6a53e8b4259a8692a34bcb`؛ Base: `f15c8270110b90bc18f9d814c2e07c5285063b22` (أقدم من main وقت الجرد).
+- الهدف: منع التسجيل العام من منح admin لأول مسجل، وتوفير أمر operator-side لترقية حساب مالك موجود ومؤكد مرة واحدة.
+- ملف الوثائق المتغير: `backend/README.md`، محفوظ تحت `pr-5-open-admin-bootstrap/`.
+- الوصف عند الفحص ذكر أن الاختبارات وDocker build لم يكونا قد شُغّلا في بيئته؛ يجب مراجعة Actions على HEAD الحالي قبل أي قرار. لا دمج قبل rebase/review وCI.
+
+### PR #16 — وثائق فرع LTI/AGS القديم
+
+[PR #16](https://github.com/HVA09/lumen-learning-platform/pull/16)
+
+- الحالة: Open + Draft + Unmerged، HEAD `e125643f2bf75f0ede15cdbf6c68fb15eabc14e0`، Base `7d3c6a71f72a9d59115a0c2aba0ee0ecd4a03d41`.
+- حُفظ ملفا `backend/README.md` و`backend/LTI_AGS_SANDBOX_RUNBOOK.md` في لقطة منفصلة.
+- يتقاطع معظم PR #16 مع PR #154 في الشيفرة؛ لا تعتمد نسخته أو تدمجها بجانب #154. راجع سجل المصالحة لاختبارات AGS الفريدة قبل أي إغلاق.
+
+### Issues مفتوحة في Lumen
+
+- [Issue #150 — resource-scoped AGS](https://github.com/HVA09/lumen-learning-platform/issues/150): لا تنشأ درجة لكل mapping بناءً على platform user link فقط؛ يجب ربط submission بمورد LTI الذي أطلقه الطالب. الفكرة موجودة في فرع #154 غير المدمج؛ issue بلا تعليقات عند الفحص.
+- [Issue #134 — Python Lab isolation](https://github.com/HVA09/lumen-learning-platform/issues/134): concern بشأن تشغيل كود المتعلم في أصل التطبيق. main يحتوي iframe opaque-origin/CSP/worker، لكن حدود الذاكرة وكونه ليس OS sandbox تتطلب توثيق قبول متبقٍ؛ issue بلا تعليقات عند الفحص.
+
 ### PR #154 — LTI 1.3 / AGS
 [PR #154](https://github.com/HVA09/lumen-learning-platform/pull/154)
 
@@ -54,6 +77,11 @@
 [PR #714](https://github.com/HVA09/ai-chat-app/pull/714) مغلق ومُدمج في 15 نوفمبر 2026، وMerge commit يساوي `main` الحالي وقت المراجعة: `5d4c46af18838f7cbcebd3063f30279fd6146ad5`.
 
 **ملاحظة تصالحية:** رغم دمج #714، ما زالت آخر كتلة في `docs/PR-665_SPLIT_TRACKER_AR.md` تصف #714 بأنها 7/8 checks وتطلب انتظار Backend ثم الدمج، كما تعرض Base SHA أقدم وتكرر أرقام القسم 51. لذلك هذا السجل يحتاج تحديث ما بعد الدمج؛ راجع `CHAT-004` وسجل التعارضات. PR #665 نفسه ما زال Open + Draft ولا يُدمج ككتلة.
+
+### Issues مفتوحة في AI Chat App
+
+- [Issue #683 — UX/stability](https://github.com/HVA09/ai-chat-app/issues/683): مفتوحة وبها 82 تعليقاً حتى آخر نشاط ظاهر في 12 نوفمبر. تشمل تنظيم sidebar والقائمة، contextual message actions، mobile/RTL، provider failures، وstructured tool invocation. PR #687 عالج سلامة retry والآثار الجانبية، و#664/#676 عالجا تحرير DB connections قبل SSE والانتظار الخارجي؛ لا يعني ذلك أن كل معايير القبول اليدوية في #683 أُغلقت. آخر evidence 503 من Gemini كان على instance قديم، ولا يحدد وحده سبب غياب fallback.
+- [Issue #674 — QueuePool external waits](https://github.com/HVA09/ai-chat-app/issues/674): مفتوحة رغم دمج #664 و#676. الإصلاح البرمجي موجود في main؛ لا يزال التحقق من Stage QueuePool telemetry وقبول Android/دورة الملفات بوابات تشغيلية مذكورة في سجل issue. لا تُكرر helper أو الحدود المدمجة.
 
 ## ERP
 
