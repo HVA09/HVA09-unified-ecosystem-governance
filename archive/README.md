@@ -8,7 +8,8 @@
 archive/source-snapshots/2026-11-16/
   lumen-learning-platform/
     main/
-    pr-154-draft/\n    pr-6-open-docs/
+    pr-154-draft/
+    pr-6-open-docs/
   ai-chat-app/
     main/
     pr-665-draft/
