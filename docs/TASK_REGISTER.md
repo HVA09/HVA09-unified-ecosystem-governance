@@ -15,7 +15,6 @@
 - **Rejected:** ألغيت مع سبب مسجل.
 
 ## سجل المهام
-
 | ID | المسار | المهمة | الحالة | الأولوية | التبعية/معيار القبول |
 |---|---|---|---|---|---|
 | GOV-001 | Governance | اعتماد المرجع الرئيسي ذي المسارات الخمسة | Done | P0 | قرار المستخدم محفوظ؛ مرجع v1.4 في هذا المستودع |
@@ -23,33 +22,32 @@
 | GOV-003 | Governance | بناء سجل التعارضات وسياسة أولوية المصدر | Done | P0 | `CONFLICTS_AND_RECONCILIATION.md` يبين الاختلافات المفتوحة وحدود الحسم |
 | GOV-004 | Governance | مزامنة الفهرس والحالة عند كل دفعة كبيرة أو تغير معماري | Ready | P1 | تحديث Snapshot جديد وSHA ودليل المصدر؛ لا تعديل اللقطات القديمة |
 | GOV-005 | Governance | مراجعة نقاشات Issues/PR comments كاملة عند الحاجة إلى قرار تاريخي | Proposed | P2 | حفظ الروابط والملخصات؛ لا تُنسخ التعليقات الشخصية عشوائياً |
+| GOV-006 | Governance | اعتماد الميثاق الهندسي المشترك كمرجع واحد مع إبقاء ملاحق المشاريع | Done | P1 | `docs/UNIFIED_ENGINEERING_STANDARDS.md` يضم الأقسام المشتركة المتطابقة؛ الملاحق المحلية محفوظة في كل منتج |
+| GOV-007 | Governance | دمج التفاصيل المعمارية الفريدة من نسخة Library v0.11 في المرجع المركزي ومنع ازدواج المصدر | In Progress | P1 | خطة v1.5 تجمع الابتكار والمختبرات والتقنية والتوسع؛ يظل المرجع المركزي هو المصدر الحاكم، والنسخة المحلية لقطة غير حية |
+| GOV-008 | Governance | إنشاء وإدارة الدفعة الموحدة UB-2026-11-16-01 (15 مهمة، خمس لكل منتج) | In Progress | P0 | `docs/UNIFIED_BATCH_EXECUTION_PLAN.md`؛ LUM-001/002/005/006/007 + CHAT-001/002/003/005/006 + ERP-001/002/003/004/005؛ التحديث بعد كل متابعة بأدلة المستودعات |
 | LUM-001 | Lumen | مواصلة تحسين الوظائف التعليمية الأساسية دون انتظار LMS Sandbox | Ready | P0 | خطة عمل مفصلة من main واختبارات على الفرع المستهدف |
 | LUM-002 | Lumen | مراجعة التداخل الدلالي واختبارات PRs #16–#23 مع PR #154 وIssue #150 | Ready | P1 | مصفوفة المسارات في سجل المصالحة؛ قارن السيناريوهات الفريدة خصوصاً test_lti_ags.py، ولا تغلق issue قبل دمج آمن واختبار Sandbox |
 | LUM-003 | Lumen/LTI | اختبار Moodle ثم Canvas Sandbox | Deferred | P1 | بيئة Sandbox مستقلة، HTTPS، حسابات اختبار، نتائج موثقة لكل منصة |
 | LUM-004 | Lumen/Docs | مصالحة وثائق PR #6 المعمارية مع وثائق main الحالية وتحديد النقاط الفريدة فقط | Ready | P2 | PR #6 يبقى Draft؛ مقارنة الملفات الخمسة مع main، ثم اقتراح تحديث صغير داخل Lumen إذا بقي محتوى صالح غير موثق |
+| LUM-005 | Lumen/Docs | تحديث رؤوس وخلاصات الحالة في وثائق Lumen القديمة | In Progress | P1 | PR #157 مفتوح لتحديث PROJECT_STATUS وCONTINUITY وPR_STACK_TRIAGE؛ يُغلق بعد الدمج والتحقق من عدم محو السجل التاريخي |
+| LUM-006 | Lumen/Security | مراجعة PR #5 لإنشاء أول مدير بأمان | Ready | P1 | الفرع مبني على Base قديم؛ افحص الفرق وrebase والاختبارات وDocker build على HEAD الحالي قبل تقرير الدمج |
+| LUM-007 | Lumen/Security | استكمال قبول Issue #134 لمختبر Python | Ready | P1 | تحقق من opaque-origin/CSP/message bridge/worker وقابلية الإلغاء؛ وثّق حد الذاكرة وعدم كونه OS sandbox، ولا تغلق issue قبل قبول المتصفح |
 | CHAT-001 | AI Chat App | مطابقة خارطة الطريق القديمة مع main والـPRs الحديثة | Ready | P1 | تحويل كل بند إلى موجود/ناقص/متقادم/مؤجل مع دليل |
 | CHAT-002 | AI Chat App | تفكيك العمل المتبقي في PR #665 إلى PRs صغيرة | In Progress | P1 | اتباع tracker المدمج عبر #714؛ لا دمج #665 ككتلة |
 | CHAT-003 | AI Chat App | حسم PR #671 القديم | Ready | P2 | مقارنة الوثائق بـmain الحالي، ثم تحديثه أو إغلاقه مع حفظ الأدلة |
+| CHAT-004 | AI Chat App/Docs | مصالحة PR-665 split tracker بعد دمج PR #714 | In Progress | P1 | PR #716 مفتوح؛ يثبت دمج #714 و#715 ويحدّث main إلى `88f835...`؛ لا يُغلق قبل الدمج |
+| CHAT-005 | AI Chat App/UX | فرز Issue #683 إلى بنود منجزة ومتأخرة | Ready | P0 | لا تكرر #687/#664/#676؛ اربط sidebar/mobile/actions/provider/tool rendering بعمل main/PR واختبارات قبول |
+| CHAT-006 | AI Chat App/SRE | إكمال بوابات Issue #674 بعد دمج #664/#676 | Ready | P1 | تحقق من QueuePool telemetry على بيئة Stage مستقلة، Android، ودورة الملفات؛ لا تكرر تغييرات تحرير الاتصال المدمجة |
 | ERP-001 | ERP | تحديث README وContinuity وGovernance التي تحمل SHA قديم | In Progress | P1 | PR #13 مفتوح على main `67d16f...`؛ لا يُغلق قبل الدمج والتحقق من النسخة النهائية |
 | ERP-002 | ERP | تنفيذ Stage25C على نسخة SQLite v8 محلية مستعادة | Blocked | P1 | يحتاج نسخة محلية مستعادة على جهاز المستخدم؛ التقرير المنقح فقط يُراجع |
 | ERP-003 | ERP | تجربة PostgreSQL control plane/ETL على قاعدة disposable | Deferred | P1 | لا تبدأ حتى مراجعة Stage25C ووجود reconciliation/rollback tests |
 | ERP-004 | ERP | إبقاء multi-company مغلقاً حتى اكتمال اختبارات العزل | In Progress | P0 | `TENANT_DATA_SCOPING_ENABLED=False` يستمر حتى الموافقة على جميع البوابات |
+| ERP-005 | ERP/Security | استكمال عقد سياق الشركة الموقّع في معاملة PostgreSQL المجمّعة واختبارات cleanup/rollback/pool reuse | Deferred | P1 | من Stage25A backlog؛ بعد trusted signer وPostgreSQL disposable؛ اختبارات success/exception/rollback/reuse/tampering/replay وRLS؛ لا ربط بالتطبيق قبل المراجعة الأمنية |
 | CORE-001 | AI Core | جرد قدرات الذكاء الاصطناعي الموجودة في المنتجات الثلاثة | Ready | P1 | جرد Agent/MCP/Tools/Jobs/Workspace/Project Builder/RAG/SDK مع مالك وواجهة وصلاحيات ومقاييس وقابلية إعادة استخدام؛ لا تنشئ بدائل أولاً |
 | CORE-002 | AI Core | تحديد نموذج وRuntime مفتوح الأوزان ومتطلبات الموارد | Proposed | P2 | يعتمد على CORE-001 ومتطلبات الخصوصية والتكلفة والأجهزة |
 | ECO-001 | Unified Ecosystem | وضع عقود API وإصداراتها بين المنتجات | Proposed | P2 | تعريف المستهلك والمالك ونطاق البيانات والمصادقة والتوافق |
 | ECO-002 | Unified Ecosystem | تصميم هوية/تفويض مشترك عند الحاجة | Proposed | P2 | لا SSO أو مشاركة مفاتيح قبل threat model وقرار مستقل |
 | INNO-001 | Innovation | المختبرات والمحاكيات وInnovation Studio وأدوات البناء | Deferred | P3 | لا يبدأ قبل استقرار المسارات الخمسة وقرار بدء مستقل |
-| GOV-006 | Governance | اعتماد الميثاق الهندسي المشترك كمرجع واحد مع إبقاء ملاحق المشاريع | Done | P1 | `docs/UNIFIED_ENGINEERING_STANDARDS.md` يضم الأقسام المشتركة المتطابقة؛ الملاحق المحلية محفوظة في كل منتج |
-| GOV-007 | Governance | دمج التفاصيل المعمارية الفريدة من نسخة Library v0.11 في المرجع المركزي ومنع ازدواج المصدر | In Progress | P1 | خطة v1.5 تجمع الابتكار والمختبرات والتقنية والتوسع؛ يظل المرجع المركزي هو المصدر الحاكم، والنسخة المحلية لقطة غير حية |
-| LUM-005 | Lumen/Docs | تحديث رؤوس وخلاصات الحالة في وثائق Lumen القديمة | In Progress | P1 | PR #157 مفتوح لتحديث PROJECT_STATUS وCONTINUITY وPR_STACK_TRIAGE؛ يُغلق بعد الدمج والتحقق من عدم محو السجل التاريخي |
-| CHAT-004 | AI Chat App/Docs | مصالحة PR-665 split tracker بعد دمج PR #714 | In Progress | P1 | PR #716 مفتوح؛ يثبت دمج #714 و#715 ويحدّث main إلى `88f835...`؛ لا يُغلق قبل الدمج |
-| LUM-006 | Lumen/Security | مراجعة PR #5 لإنشاء أول مدير بأمان | Ready | P1 | الفرع مبني على Base قديم؛ افحص الفرق وrebase والاختبارات وDocker build على HEAD الحالي قبل تقرير الدمج |
-| LUM-007 | Lumen/Security | استكمال قبول Issue #134 لمختبر Python | Ready | P1 | تحقق من opaque-origin/CSP/message bridge/worker وقابلية الإلغاء؛ وثّق حد الذاكرة وعدم كونه OS sandbox، ولا تغلق issue قبل قبول المتصفح |
-| CHAT-005 | AI Chat App/UX | فرز Issue #683 إلى بنود منجزة ومتأخرة | Ready | P0 | لا تكرر #687/#664/#676؛ اربط sidebar/mobile/actions/provider/tool rendering بعمل main/PR واختبارات قبول |
-| CHAT-006 | AI Chat App/SRE | إكمال بوابات Issue #674 بعد دمج #664/#676 | Ready | P1 | تحقق من QueuePool telemetry على بيئة Stage مستقلة، Android، ودورة الملفات؛ لا تكرر تغييرات تحرير الاتصال المدمجة |
-
-| ERP-005 | ERP/Security | استكمال عقد سياق الشركة الموقّع في معاملة PostgreSQL المجمّعة واختبارات cleanup/rollback/pool reuse | Deferred | P1 | من Stage25A backlog؛ بعد trusted signer وPostgreSQL disposable؛ اختبارات success/exception/rollback/reuse/tampering/replay وRLS؛ لا ربط بالتطبيق قبل المراجعة الأمنية |
-| GOV-008 | Governance | إنشاء وإدارة الدفعة الموحدة UB-2026-11-16-01 (15 مهمة، خمس لكل منتج) | In Progress | P0 | `docs/UNIFIED_BATCH_EXECUTION_PLAN.md`؛ LUM-001/002/005/006/007 + CHAT-001/002/003/005/006 + ERP-001/002/003/004/005؛ التحديث بعد كل متابعة بأدلة المستودعات |
 
 ## قاعدة التنفيذ
 
