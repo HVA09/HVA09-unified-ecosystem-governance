@@ -14,6 +14,8 @@
 8. [شرح الأرشيف وقواعد النسخ](archive/README.md)
 9. [خارطة الطريق الموحدة — المراحل الخمس والمرحلة السادسة المؤجلة](docs/UNIFIED_ROADMAP_5_STAGES.md)
 10. [خطة التنفيذ المتوازي — 50 مهمة، 10 لكل مرحلة](docs/UNIFIED_50_TASK_EXECUTION_PLAN.md)
+11. [جرد قدرات AI الحالية قبل بناء AI Core](docs/AI_CORE_CAPABILITY_INVENTORY.md)
+12. [سجل ملكية المنتجات وحدود التكامل](docs/PRODUCT_OWNERSHIP_AND_INTERFACE_CATALOG.md)
 11. [السجل التاريخي لمقترح دفعة 15 مهمة — مستبدل](docs/UNIFIED_BATCH_EXECUTION_PLAN.md)
 
 ## قاعدة مصدر الحقيقة
