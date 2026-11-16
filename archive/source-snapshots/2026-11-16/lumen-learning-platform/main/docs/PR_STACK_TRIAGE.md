@@ -1,0 +1,129 @@
+# خريطة طلبات الدمج ومسارات التكامل — Lumen
+
+آخر تحقق: **2026-11-07**.
+المرجع: المستودع `HVA09/lumen-learning-platform`، والفرع الأساسي `main`.
+
+## 1. الحالة الحالية
+
+- HEAD الحالي لـ `main`: `362aac61f3df486027eef014d3f6bc577cc2aa3d` بعد دمج PR #145 ثم #147 ثم #146؛ سجل الدمج التفصيلي وCI في القسم 8. تشغيل main CI بعد #146 [#42405775181](https://github.com/HVA09/lumen-learning-platform/actions/runs/42405775181) كان قيد التنفيذ عند آخر تحقق.
+- لا نعدّ أي PR مدمجًا إلا بعد التحقق من حالة GitHub والـ merge commit.
+- [CI #41745646366](https://github.com/HVA09/lumen-learning-platform/actions/runs/41745646366) نجح بالكامل على `main` بعد PR #46.
+- [CI #41754238271](https://github.com/HVA09/lumen-learning-platform/actions/runs/41754238271) نجح بالكامل على `main` بعد PR #49.
+- CI [#41757735260](https://github.com/HVA09/lumen-learning-platform/actions/runs/41757735260) نجح بالكامل على `main` بعد PR #53؛ Backend 423 passed و20 warnings، وFrontend 73 passed عبر 14 ملفًا، وGitleaks وbuild وmigrations وbackup/restore وRuff 0 diagnostics كلها ناجحة.
+- CI [#41759458975](https://github.com/HVA09/lumen-learning-platform/actions/runs/41759458975) نجح بالكامل على `main` بعد PR #54؛ Backend 423 passed و20 warnings، Ruff 0 diagnostics، Frontend tests/build وGitleaks وmigrations وCompose وRestic وPostgreSQL backup/restore ناجحة.
+- PR #56 دُمج في `main` عند `dc2f2267851837e724b015d9d4b8a710fd3b29cf` بعد نجاح PR CI #41760360217؛ CI بعد الدمج #41763352189 نجح بالكامل.
+- PR #57 دُمج توثيقيًا عند `96fff938fa5ec85b921de247bfe7a3dbe3300071`؛ PR CI #41766914355 وmain CI #41767787126 نجحا بالكامل.
+- PR #58 دُمج توثيقيًا عند `92315de7ee18acdd2b44f5d473b9c1eef0ff7683`؛ main CI #41850447579 نجح.
+- PR #59 دُمج عند `30d768932934fb7c57e5f18da673de169e1bb6f2`؛ PR CI #41850891816 وCI بعد الدمج #41851527075 نجحا بالكامل.
+- PR #62 (تحميل MathText وKaTeX عند الحاجة) دُمج عند `6b53686ae3824d020243dd33115cc0bf81bd3c03`؛ PR CI [#41855423230](https://github.com/HVA09/lumen-learning-platform/actions/runs/41855423230) وmain CI بعد الدمج [#41856247148](https://github.com/HVA09/lumen-learning-platform/actions/runs/41856247148) نجحا بالكامل: Backend **423 passed, 20 warnings**، Ruff **0 diagnostics**، Frontend **73 passed عبر 14 ملفًا**، production build وGitleaks وفحوص PostgreSQL/backup/restore ناجحة.
+- PR #64 (تحميل الاختبارات والمختبر والمحاكاة عند الطلب) دُمج عند `09d2a706236b4f9be55f3d8c66d461fee34f70c1`؛ PR CI [#41857581931](https://github.com/HVA09/lumen-learning-platform/actions/runs/41857581931) وmain CI بعد الدمج [#41858290575](https://github.com/HVA09/lumen-learning-platform/actions/runs/41858290575) نجحا بالكامل: Backend **423 passed, 20 warnings**، Ruff **0 diagnostics**، Frontend **74 passed عبر 14 ملفًا**، production build وGitleaks وmigrations وPostgreSQL backup/restore ناجحة.
+- [CI #41750390626](https://github.com/HVA09/lumen-learning-platform/actions/runs/41750390626) نجح على PR #49 قبل دمجه.
+- لا يوجد نشر إنتاجي مثبت.
+
+## 2. PRs المدمجة حديثًا
+
+| PR | التغيير | Merge commit | الحالة |
+|---|---|---|---|
+| #39 | تصحيح متغير فترة النسخ الخارجي في Compose وإضافة regression assertion | `b63574af78f20971563a0a8bc9df2f0a563515a7` | مدمج |
+| #40 | فصل Gamification scoring عن ORM/SQL | `2623727c13fa51c7eb1ffb54b2313aa3276ae6dc` | مدمج |
+| #41 | Hook لدورة WebSocket للإشعارات | `9481c7927cd06653c584f3b11faa4e1d842259b9` | مدمج |
+| #43 | Hook لدورة الجلسة | `9a2a23c071f31f8553b3b1eef9f67195f3b08f07` | مدمج |
+| #44 | Hook لحالة الإشعارات والقراءة الآمنة عبر تبدل الجلسة | `aec9584df78009b07c8bed35b48742d7b7a60ede` | مدمج |
+| #45 | خط أساس الجودة وتحديث سجلات الحالة والقرارات | `4445ddaf347bf97ae3e89450d7dce01a7bb65eb6` | مدمج |
+| #46 | نقل الإشعارات إلى `features/notifications` | `ee149a40b144883b0fea34232ae730574d5e5ed7` | مدمج |
+| #48 | تحديث نقطة الاستئناف بعد P5.4 | `462dcc3c0386afc42ead51225ccf7c3d28ca21f9` | مدمج |
+| #49 | إضافة Ruff report-only baseline | `42986e93060c09e00ffcf917a784390f35adb40f` | مدمج؛ CI #41750390626 و#41754238271 ناجحان |
+| #51 | تحديث الحالة والخطة وسجل الجودة بعد Ruff | `f8c3e9653028cc169c95c8dedcc23c364a315e4f` | مدمج؛ PR CI #41755785196 وmain CI #41756353787 ناجحان |
+| #52 | جعل إعادة التصدير في واجهات التوافق صريحة | `9b04b4e2154192a0214fe1b5024ae3cdf3dac792` | مدمج؛ PR CI #41756512842 وmain CI #41756990109 ناجحان |
+| #53 | معالجة ملاحظات Ruff المتبقية والوصول إلى صفر findings | `4f70cb904e7f92283af8e16a738caf283e5ae494` | مدمج؛ PR CI #41757169187 ناجح: Backend 423 passed وFrontend 73 passed، وRuff 0 diagnostics |
+| #54 | تحديث الحالة والخطة وخط أساس الجودة وسجل القرارات | `7f6953636241997156e478a5ec489159825a7d2f` | مدمج؛ CI PR #41758397435 وmain #41759458975 ناجحان |
+| #56 | تنظيف 3 findings مؤكدة في واجهة Frontend دون تغيير السلوك | `dc2f2267851837e724b015d9d4b8a710fd3b29cf` | مدمج؛ PR CI #41760360217 وmain CI #41763352189 نجحا |
+| #57 | مزامنة الحالة وخط أساس الجودة وتوثيق ESLint blocker | `96fff938fa5ec85b921de247bfe7a3dbe3300071` | مدمج؛ PR CI #41766914355 وmain CI #41767787126 ناجحان |
+| #58 | مزامنة الحالة وخط الأساس بعد PR #57 | `92315de7ee18acdd2b44f5d473b9c1eef0ff7683` | مدمج؛ main CI #41850447579 ناجح |
+| #59 | تحميل TopicPanel عند اختيار موضوع لخفض حجم entry الأولي | `30d768932934fb7c57e5f18da673de169e1bb6f2` | مدمج؛ PR CI #41850891816 وmain CI #41851527075 ناجحان: Backend 423/20 warnings، Frontend 73، Ruff 0 |
+| #62 | تحميل Markdown/KaTeX renderer وCSS عند ظهور MathText فقط | `6b53686ae3824d020243dd33115cc0bf81bd3c03` | مدمج؛ PR CI #41855423230 وmain CI #41856247148 ناجحان: Backend 423/20 warnings، Frontend 73/14 files، Ruff 0 |
+| #64 | تحميل QuizPanel وLabPanel وكل محاكاة عند الحاجة | `09d2a706236b4f9be55f3d8c66d461fee34f70c1` | مدمج؛ PR CI #41857581931 وmain CI #41858290575 ناجحان: Backend 423/20 warnings، Frontend 74/14 files، Ruff 0 |
+| #65 | استعادة أخطاء تحميل الوحدات المؤجلة وعرض حالة اتصال مفهومة | `ee74aaa1136c471fb4b22b61247528e1ad7478c3` | مدمج؛ PR CI #41860852718 ناجح: Backend 423/20 warnings، Frontend 80/16 files، Ruff 0؛ main CI #41861598602 ناجح بالكامل |
+| #67 | تقليل Workbox precache وتحميل ملفات الميزات JS/CSS عند أول طلب | `2453b9124fc4eaa617aa5bb5493ebc0cf1400c9a` | مدمج؛ PR CI #41876997024 ناجح: Backend 423/20 warnings، Frontend 80/16 files، Ruff 0، build وGitleaks؛ precache 8/378.63 KiB بدل 35/1328.16 KiB. main CI #41886648386 قيد التنفيذ عند آخر تحقق |
+
+P5.1–P5.4 دخلت `main`: WebSocket (#41)، Session (#43)، notification state (#44)، ثم نقل notifications (#46). PR #39 أصلح Compose، و#42 و#45 و#48 وثّقت مراحل الواجهة والجودة، و#49 أدخل Ruff، و#55 أُغلقت دون دمج، و#56 دمج الإصلاحات المؤكدة. PR #59/#62/#64 فصلت تحميل الوحدات، #65 أضافت preload recovery، و#67 خفّضت Workbox precache بنحو 71.5%. CI بعد #67 قيد التنفيذ؛ لا يوجد نشر إنتاجي مثبت.
+
+## 3. طلبات التوثيق والهيكلة المدمجة
+
+| PR | المجال | Merge commit | الحالة / الدليل |
+|---|---|---|---|
+| #42 | خريطة بنية Frontend وخطة Features/Shared | `aaeeb38e0b16c0ee2d2cea3664a6a3b6b00e1eac` | مدمج؛ CI #41743356088 ناجح |
+| #45 | خط أساس الجودة وخطة P6 وتحديث السجلات | `4445ddaf347bf97ae3e89450d7dce01a7bb65eb6` | مدمج؛ CI على `main` #41744675433 ناجح |
+| #46 | P5.4 نقل Notifications إلى `features/notifications` | `ee149a40b144883b0fea34232ae730574d5e5ed7` | مدمج؛ PR CI #41744744642 وmain CI #41745646366 ناجحان |
+| #48 | تحديث نقطة الاستئناف بعد PR #46 | `462dcc3c0386afc42ead51225ccf7c3d28ca21f9` | مدمج؛ main CI #41750270590 ناجح |
+| #49 | تثبيت Ruff report-only baseline | `42986e93060c09e00ffcf917a784390f35adb40f` | مدمج؛ PR CI #41750390626 وmain CI #41754238271 ناجحان |
+| #51 | تحديث سجلات المشروع بعد baseline | `f8c3e9653028cc169c95c8dedcc23c364a315e4f` | مدمج؛ PR/main CI ناجحان |
+| #52–#53 | إغلاق Ruff baseline من 62 إلى 0 diagnostics | `9b04b4e2154192a0214fe1b5024ae3cdf3dac792` / `4f70cb904e7f92283af8e16a738caf283e5ae494` | مدمج؛ فحوص PR وmain ناجحة |
+| #54 | مزامنة سجل الحالة وخطة الجودة بعد إغلاق Ruff | `7f6953636241997156e478a5ec489159825a7d2f` | مدمج؛ CI #41759458975 ناجح |
+
+أُغلق PR #50 دون دمج؛ كان يكرر تغيير Ruff الذي وصل إلى `main` عبر PR #49. أُغلقت دفعتا Ruff عبر PR #52 و#53 وأصبح baseline صفرًا. أُغلق PR #55 دون دمج كتجربة ESLint مؤقتة (CI #41759875976) وأُزيلت الحالات المؤكدة في PR #56. PR #57 و#58 حدّثا السجلات. PR #59 نفّذ تحسين code splitting: entry الأولي 830.50 kB إلى 362.86 kB (gzip 258.06 إلى 116.80)، مع ملفات مستقلة للوحة الدرس والمعادلات والإدارة. لا يوجد baseline ESLint رسمي؛ لا يمكن توليده في بيئة التنفيذ الحالية بسبب عدم الوصول إلى npm registry وعدم وجود حزم في cache. سلسلة LTI #16–#23 ما زالت منفصلة ومتراكبة على فروع قديمة.
+
+## 4. سلسلة LTI/AGS — PR #16 إلى #23
+
+هذه السلسلة ما زالت مسودات متراكبة على فروع قديمة، وليست جزءًا من `main`:
+
+| PR | التغيير | Base | Head |
+|---|---|---|---|
+| #16 | LTI AGS 2.0 grade passback وoutbox | `fix/backup-atomicity-and-restore-guards` | `feat/lti-ags-grade-passback` |
+| #17 | واجهة إدارة LTI | `feat/lti-ags-grade-passback` | `feat/lti-admin-console` |
+| #18 | upsert متزامن لـ resource-link discovery | `feat/lti-admin-console` | `fix/lti-resource-discovery-upsert` |
+| #19 | تقليل قفل DB حول OIDC verification | `fix/lti-resource-discovery-upsert` | `fix/lti-oidc-short-lock` |
+| #20 | حدود مدخلات تسجيل المنصة | `fix/lti-oidc-short-lock` | `fix/lti-platform-input-validation` |
+| #21 | التحقق من learner profile claims | `fix/lti-platform-input-validation` | `fix/lti-profile-claim-validation` |
+| #22 | منع سباقات ربط هوية الطالب | `fix/lti-profile-claim-validation` | `fix/lti-concurrent-identity-link` |
+| #23 | اختبارات retry وleases وخصوصية أحداث الدرجات | `fix/lti-concurrent-identity-link` | `test/lti-admin-grade-event-retry` |
+
+### خطة التكامل الآمنة
+
+1. لا تدمج #16–#23 مباشرة إلى main ولا تعتمد على CI تاريخي على رؤوس قديمة.
+2. أنشئ فرع تكامل جديدًا من أحدث main بعد إغلاق التوثيق الجاري.
+3. أعد تأسيس أو cherry-pick السلسلة بالترتيب من #16 إلى #23 بعد مراجعة commit graph.
+4. افحص تعارضات `backend/app/models/lti.py` وrouters وschemas وservices يدويًا؛ لا تستبدل ملفات كاملة.
+5. تحقق من ترتيب migration revision IDs واختبر upgrade/downgrade والحفاظ على البيانات على PostgreSQL.
+6. شغّل Backend وFrontend وGitleaks وCompose وbackup/restore على رأس التكامل الجديد.
+7. اختبر تكاملًا حيًا على Moodle أو Canvas Sandbox قبل أي تفعيل إنتاجي.
+
+## 5. الطلبات القديمة
+
+- PR #1 أرشيفات مصدر أولية؛ لا يدمج فوق خط الأساس الحالي.
+- PR #2 استيراد أولي مستبدل بدمج PR #4.
+- PR #3 تشديد أمان تاريخي مستبدل؛ لا يدمج دون وجود فرق فريد مثبت.
+- PR #5 تهيئة المسؤول الأول: توجد آلية CLI في main؛ قارن أي اختلاف فريد قبل الإغلاق.
+- PR #6 وثائق معمارية قديمة؛ لا تعتمد كما هي دون تحديث الوقائع على main الحالي.
+
+## 6. قواعد الدمج
+
+- ابدأ كل تغيير من أحدث SHA على `main`؛ لا تستند إلى فرع متأخر أو متباعد.
+- افحص الملفات المتغيرة والـ diff قبل الدمج، وتأكد من scope واضح.
+- اشترط CI ناجحًا على رأس PR الحالي، ثم تحقق من CI على main بعد الدمج.
+- لا تتجاوز branch protection أو الفحوص الإلزامية أو تزور مراجعة.
+- لا تخلط النجاح الآلي مع مراجعة بشرية أو اختبار LMS حي أو نشر إنتاجي.
+- حدّث `PROJECT_STATUS.md` و`DECISIONS.md` و`ARCHITECTURE_PLAN.md` بعد التغييرات ذات الصلة.
+
+
+## 7. تحقق حديث — 2026-11-06 بعد PR #141
+
+- HEAD الحالي لـ `main`: `1f76de769a224fb01c5ac66e9bccede331650dac` بعد PR #141.
+- PR #129/#133/#136/#137/#138/#140/#141 مغلقة بعد الدمج. PR #141 CI #42265153710 وmain CI بعد الدمج #42265976307 نجحا 4/4.
+- P6 Frontend baseline في CI PR #141: 187 passed عبر 28 ملفًا؛ statements 70.83%، branches 65.26%، functions 60.16%، lines 71.85%. Backend 480 passed، 21 warnings، 90% coverage.
+- طلبات LTI/AGS #16–#23 ما زالت مفتوحة ومتراكبة على فروع قديمة (bases ليست `main`). لا تدمجها مباشرة. أعد تأسيس سلسلة التكامل على رأس `main` الحالي بالترتيب، وافحص migration graph وOIDC/AGS security قبل أي دمج.
+- الطلبات القديمة #1/#2/#3/#5/#6 ما زالت ظاهرة مفتوحة في قائمة GitHub الأخيرة، لكن قواعدها التاريخية/قواعدها الأساسية قديمة. لا تدمجها كما هي؛ قارن كل فرق فريد مع `main` ثم أغلق المكرر أو أعد تأسيس الجزء المطلوب بعد مراجعته.
+- لا تظهر PRs #47 و#71 ضمن قائمة الطلبات المفتوحة في آخر تحقق؛ لا تفترض أنها مدمجة إلا بالرجوع إلى حالة GitHub الفعلية.
+- الخطوات الحالية: إكمال RUM/Core Web Vitals واختبار هاتف/اتصال بطيء؛ تقييم فحص JS ساكن تدريجي؛ ثم تحديد قرار P7 والاستضافة المجانية بلا بطاقة.
+- لا يوجد نشر إنتاجي مثبت. لا تجاوز للحماية، ولا موارد مدفوعة أو دفع إلكتروني.
+
+
+## 8. تحقق مباشر — 2026-11-07 بعد دمج PRs #145/#147/#146
+
+- رأس `main` الحالي بعد الدمج الثلاثي: `362aac61f3df486027eef014d3f6bc577cc2aa3d`.
+- PR #145: **مغلق ومُدمج** عند `11969f183d18d33028bc37ec53e7ecbf4ee4e11f`. CI على رأسه [#42295018064](https://github.com/HVA09/lumen-learning-platform/actions/runs/42295018064) وCI بعد الدمج [#42404350575](https://github.com/HVA09/lumen-learning-platform/actions/runs/42404350575) نجحا 4/4.
+- PR #147: **مغلق ومُدمج** عند `d5245af119bc5737fd0e1822b886648013394e14`. رأسه النهائي `6918ebf0ffa347057713a7da5620e5e59a429d29`؛ CI على الرأس [#42404937903](https://github.com/HVA09/lumen-learning-platform/actions/runs/42404937903) وmain CI بعد الدمج [#42405264997](https://github.com/HVA09/lumen-learning-platform/actions/runs/42405264997) نجحا 4/4.
+- PR #146: **مغلق ومُدمج** عند `362aac61f3df486027eef014d3f6bc577cc2aa3d`. رأس الفرع بعد إدخال main `4ea272d941d0a4042fdefb8f8a8c7267db2304b2`؛ CI على الرأس [#42405345735](https://github.com/HVA09/lumen-learning-platform/actions/runs/42405345735) نجح 4/4؛ Backend 481 passed و21 warnings و90% coverage؛ Frontend 199 passed عبر 29 ملفًا وتغطية 72.46% statements، 65.82% branches، 64.56% functions، 73.15% lines.
+- main CI بعد PR #146 [#42405775181](https://github.com/HVA09/lumen-learning-platform/actions/runs/42405775181) بدأ عند 19:21 UTC وكان قيد التنفيذ عند آخر تحقق؛ راجع النتيجة قبل اعتبار main CI أخضر.
+- لا توجد PRs #145/#146/#147 مفتوحة. لا تعيد فتحها أو تكرر تغييراتها. تبقى سلسلة LTI/AGS #16–#23 منفصلة ومتراكبة على bases قديمة؛ لا تدمجها مباشرة. أعد تأسيسها على main الحالي بعد تحليل commit graph ومراجعة الترحيلات والأمن والتكامل مع LMS sandbox.
+- متطلبات التشغيل الحقيقية لم تغلق: HTTPS/WSS حي، اختبار LTI على Moodle/Canvas Sandbox، SMTP خارجي، موارد ClamAV، ووجهة Restic خارجية مع استعادة فعلية. نجاح CI لا يثبت هذه الشروط ولا يوجد نشر إنتاجي مثبت.
