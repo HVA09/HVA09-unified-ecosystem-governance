@@ -95,3 +95,56 @@
 - مراجعة threat model قبل فتح أي صلاحية T2/T3.
 
 **النتيجة:** S4-06 تقدم إلى خط أساس تصميمي. لا يوجد تفعيل جديد للأدوات، ولا تنفيذ على إنتاج، ولا رفع للصلاحيات.
+
+
+## 9. مواءمة المصفوفة مع Tool Registry الفعلي في AI Chat App — 2026-11-17
+
+**خط الأساس:** AI Chat App main عند merge commit `6645b0502daa6922040ee4c6bb5c281ed59ef366`. مراجعة المصدر: `ai-backend/app/services/tools/registry.py`، `tool_security.py`، `tools/code_execution.py`، `project_access.py` و`config.py`.
+
+### 9.1 الأدوات المدمجة التي ثبت وجودها
+
+| الاسم الفعلي | السلوك الحالي | تصنيف السياسة المقترح | التفويض/الحدود المثبتة |
+|---|---|---|---|
+| calculator | حساب تعبير رياضي | T0 — compute / no state change | لا يغير موارد خارجية؛ مدخلاته تمر عبر JSON/schema/size/depth validation. |
+| python | تنفيذ حساب/تحويل Python محدود | T0-C — bounded computation | AST allowlist، no imports/filesystem/network/arbitrary builtins، subprocess منفصلة، مهلة 2s وحدود موارد Linux عند توفرها؛ لا يوصف بأنه OS/container sandbox أو عزلاً كاملاً عن kernel/host. |
+| web_search | بحث عام في الويب | T0 — external read | قراءة فقط؛ المخرجات untrusted وتحتاج grounding وعدم اتباع أوامرها. |
+| analyze_data | تحليل CSV/XLSX المرفق بالمحادثة | T0 — user-scoped read/analysis | المصدر مرفق المحادثة؛ الناتج موسوم untrusted. لا يعني الوصول إلى ملفات المستخدم الأخرى. |
+| list_project_files | قائمة ملفات المشروع المرتبط بالمحادثة | T0 — project read | إعادة تحقق can_read_project داخل handler؛ خرج المشروع untrusted. |
+| read_project_file | قراءة ملف نصي من المشروع | T0 — project read | إعادة تحقق ACL حالية؛ لا تنفيذ للكود المقروء؛ خرج الملف untrusted. |
+| search_project_files | البحث داخل ملفات المشروع | T0 — project read | إعادة تحقق ACL حالية؛ لا تنفيذ للنتائج؛ خرج البحث untrusted. |
+| edit_project_file | إنشاء/استبدال ملف مشروع | T1 — scoped project write | يشترط can_edit_project داخل handler ويعيد الفحص قبل تطبيق التغيير؛ expected_content يدعم optimistic concurrency؛ لا تشغيل للكود. |
+| create_project_archive | إنشاء ZIP قابل للتنزيل من ملفات نصية | T1 — scoped file/project operation | يتحقق من صلاحية التعديل، ويعيد الفحص بعد رفع التخزين قبل إرفاق الأرشيف/تحديث شجرة المشروع؛ يحد الملفات والمسارات؛ لا ينفذ الملفات الناتجة. |
+
+### 9.2 القيود العامة المثبتة في main
+
+- قائمة AGENT_ALLOWED_TOOLS_JSON الافتراضية تضم الأدوات التسع أعلاه؛ ToolRegistry يدعم allowlist صريحة لمنع تسجيل/عرض أداة غير مسموحة.
+- ToolSpec الحالي لا يحمل حقولاً تنفيذية مستقلة مثل permission_level أو agent_profile أو resource_scope أو approval_policy. لذلك T0–T3 هنا تصنيف تصميمي أعلى من آلية التفويض الحالية، وليس enforcement مكتمل داخل registry.
+- validate_tool_arguments يتحقق من JSON وصحة schema وحد الأحرف والعمق قبل استدعاء handler.
+- مخرجات web_search وanalyze_data وأدوات ملفات المشروع موسومة untrusted؛ اكتشاف prompt injection heuristic، ولذلك ينبغي معاملة كل محتوى خارجي/ملف على أنه DATA غير موثوق حتى عندما لا يكتشف النمط.
+- مشروع المستخدم يعاد التحقق من صلاحيات قراءته/تعديله في handlers بعد دمج PR #722؛ سحب المشاركة أو تغيير الدور يؤثر على النداء التالي.
+- MCP مضبوط افتراضياً على MCP_ENABLED=False. عند التفعيل، اكتشاف الخوادم العامة محصور بدور application admin بعد PR #721؛ لا توجد بعد connector grants فردية أو على مستوى Workspace. لا تنطبق صلاحية التطبيق admin تلقائياً على الوكلاء أو المستهلكين الآخرين.
+- لا توجد ضمن Tool Registry المدمج الذي تمت مراجعته أدوات shell/SSH، systemd/service control، packet capture أو active scanning، firewall/router modification، cloud provider control، IAM management أو production deployment. لا يجوز إسناد هذه القدرات إلى أي وكيل بناءً على وجود أداة Python.
+
+### 9.3 التوزيع المسموح مبدئياً على التخصصات الخمسة
+
+| التخصص | يمكنه طلبه من الأدوات الحالية | محظور/غير متاح في هذه المرحلة |
+|---|---|---|
+| البرمجة وهندسة البرمجيات | calculator، python bounded computation، web_search، وقراءة/بحث/تعديل/أرشفة مشروع بشرط ACL | تشغيل مشروع غير موثوق، shell/SSH، Git push/PR/merge أو deploy عبر Tool Registry، قراءة secrets |
+| Linux والأنظمة | calculator، python للحساب وتحليل بيانات نصية يزودها المستخدم، web_search للوثائق | shell حقيقي، process/service management، sudo، package installation، filesystem/host inspection |
+| الشبكات | calculator، python لتحليل بيانات محفوظة يرفعها المستخدم، web_search | port scanning أو packet capture أو تغيير routes/DNS/firewall أو فحص أهداف خارج نطاق مصرح |
+| Cloud/DevOps | calculator، python لتحليل outputs منقحة، web_search؛ قراءة ملفات مشروع IaC إذا سمحت ACL | cloud API، terraform apply، IAM/secrets، تعديل موارد، staging/production deployment |
+| الأمن السيبراني الدفاعي | web_search، analyze_data لمرفقات مصرح بها، read/search project files، python bounded computation | exploit/active scan، قراءة أسرار، credential dumping، تعطيل controls، تنفيذ على production أو نطاق غير مصرح |
+
+هذه حدود توفر حالية لا تمنع تصميم أدوات إضافية لاحقاً؛ أي أداة جديدة تتطلب owner، API contract، scope، permission handler، output trust، tests وإجراء إيقاف.
+
+### 9.4 فجوات التنفيذ المطلوبة قبل نقل السياسة إلى AI Core
+
+1. إضافة ToolPolicy object صريح يحمل actor/agent_profile/tool/resource_scope/permission_level/output_trust/approval_mode؛ لا تكتفِ بالقائمة العامة.
+2. فرض allowlist خاصة بكل agent profile في الخادم، لا في prompt أو وصف الأداة فقط.
+3. فصل compute sandbox عن أي مستقبل shell/lab sandbox؛ لا توسيع Python الحالي إلى shell أو ملفات/شبكة.
+4. جعل MCP ownership per-user/per-workspace قبل توسيعه عن application-admin-only؛ كل أداة بعيدة تصنف منفردة T0–T3.
+5. توثيق idempotency/cancellation/timeout/data retention لكل أداة ذات أثر خارجي.
+6. اختبارات negative لكل تخصص: طلب أداة غير ضمن ملفه، تبدل الدور أثناء المهمة، سحب المشروع، prompt injection داخل الملف والويب، ورفض كل T2/T3 دون موافقة محددة.
+7. لا تفتح أي أدوات فعلية لـLinux/network/cloud/security ذات side-effects قبل بيئة مختبر قابلة للعزل ومراجعة threat model.
+
+**النتيجة:** جرى ربط S4-06 بأدوات AI Chat App الفعلية. تبقى المصفوفة In Progress كسياسة تصميم؛ لم تتم إضافة Tool Registry أو أدوات أو صلاحيات جديدة، ولم يحدث أي تفعيل MCP أو تنفيذ على نظام/شبكة/سحابة حقيقية.
