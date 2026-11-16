@@ -61,3 +61,26 @@
 - وثائق كل منتج ومصدر الحقيقة الحي في GitHub
 
 أي تغيير في الملكية أو تدفق البيانات يجب أن يضيف قراراً جديداً وعقداً بإصدار واضح؛ لا تسوَّى التعارضات بالتخمين ولا تعدّل لقطات الأرشيف التاريخية.
+
+
+## 7. تدقيق حدود الخدمة الفعلية — 2026-11-17
+
+هذا تحديث لسجل الملكية استناداً إلى مراجعة source على رؤوس main surfaced في GitHub، وليس إعلاناً عن تكامل حي.
+
+| المنتج | واجهة التنفيذ المرصودة | هوية/نطاق التفويض المرصود | حد إعادة الاستخدام |
+|---|---|---|---|
+| Lumen | FastAPI routers مستقلة للمصادقة، المقررات، الاختبارات، المحتوى، الصفوف، SRS، الواجبات، التقارير، LTI، الملفات والإدارة | Bearer أو session cookie مع CSRF لطلبات cookie غير الآمنة؛ الأدوار User/Teacher/Admin؛ الصفوف مملوكة للمعلم والطلاب عبر enrollment؛ ملفات المستخدم مملوكة لـuser_id | لا يوجد إثبات لواجهة Agent Runtime/Model Gateway عامة في المسارات التي تمت مراجعتها. لا تُسحب بيانات طالب أو درجات أو محتوى مقرر إلى AI Core إلا عبر API يقرّه Lumen وبأقل scope. |
+| AI Chat App | Agent Runtime / Tool Registry / MCP / Agent Jobs / RAG / Workspace & Project ACL | ملكية المحادثة/المشروع ومساحات العمل مع RBAC؛ global MCP محصور في application admins حتى إضافة connector grants | المصدر الحالي لإعادة استخدام Runtime والأدوات؛ كل handler يعيد التحقق من صلاحية المورد، ولا تكفي صلاحية الأداة العامة. |
+| ERP | Flask app factory، generic CRUD Resources، /api/auth، تقارير وبيانات واستيراد/تصدير وملفات | JWT يحمل cid/mid بعد التحقق من membership، ويضبط g.company؛ صلاحيات role مرتبطة بالعضوية؛ CRUD والملفات وبعض custom APIs scoped إلى company_id | التطبيق ما زال SQLite v8 وTENANT_DATA_SCOPING_ENABLED=False؛ حاجز التشغيل يرفض العمليات عند وجود أكثر من شركة. لا يستهلكه AI Core قبل Stage25C والعزل الكامل. |
+
+### توضيح حالة LTI
+
+main في Lumen يملك LTI 1.3 login/launch وتسجيل المنصات. وظائف AGS resource-scoped grade passback المتقدمة موثقة في PR #154 غير المدمج فقط. الفرع Draft عند head 6c93b49c976245b778800ed63046a2aef321fbb9، متأخر 4 commits عن main الحالي، وmergeable=false. فحوص CI 4/4 على head لا تعني Moodle/Canvas Sandbox acceptance.
+
+### قواعد الحدود بين المنتجات
+
+1. معرفات users وstudents وcompanies محلية لكل منتج؛ لا تفترض تطابق الأرقام ولا تمررها كـprincipal identity.
+2. هوية الخدمة المستقبلية تحتاج issuer وaudience وscope وانتهاء صلاحية وإلغاء، مع token/service principal منفصل عن جلسة المستخدم.
+3. المنتج المالك وحده يحدد إن كان المستهلك يستطيع قراءة مورد أو تنفيذ فعل؛ أي company/user/resource ID في الطلب ليس authorization proof.
+4. لا direct database access بين Lumen وAI Chat App وERP.
+5. لا يشارك ERP بيانات الشركة مع AI Core قبل فتح multi-company release gate رسمياً؛ ولا تتجاوز حالة TENANT_DATA_SCOPING_ENABLED=False.
