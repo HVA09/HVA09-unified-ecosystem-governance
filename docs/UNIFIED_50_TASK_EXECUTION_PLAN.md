@@ -44,7 +44,7 @@
 
 | المعرّف | حزمة العمل | الحالة الأولية | الاعتماديات / معيار القبول |
 |---|---|---|---|
-| S1-01 | تهيئة أول مدير ومسار صلاحيات التشغيل المقيد | Merged — تحقق ما بعد الدمج | PR #158 مدمج عند 108c2eab؛ تحقق من عدم منح التسجيل العام admin، والتأكيد التفاعلي للهدف، والقفل وسجل التدقيق وCI بعد الدمج. |
+| S1-01 | تهيئة أول مدير ومسار صلاحيات التشغيل المقيد | **Done — merged + PR CI 4/4** | PR #158 مدمج في main عند 108c2eab؛ CI #43957299993 نجح 4/4 على رأس PR؛ لم يتم تشغيل أمر ترقية مدير فعلياً ولا الوصول إلى قاعدة إنتاج. |
 | S1-02 | مصفوفة الحسابات والجلسات وأدوار الطالب والمعلم والمدير | Audit / Ready | RBAC لكل API وواجهة، IDOR ورفض الوصول المتبادل وإبطال الجلسات؛ لا إعادة بناء auth الموجود. |
 | S1-03 | دورة المقرر والتسجيل وإدارة الصفوف | Audit / Ready | إنشاء/نشر/أرشفة وتسجيل/إلغاء التسجيل؛ المعلم يرى صفوفه فقط؛ Backend وBrowser E2E. |
 | S1-04 | دورة الدروس والمحتوى والتقدم | Audit / Ready | نشر وإخفاء الدرس، منع الطالب من رؤية غير المنشور، استمرار completion بعد reload. |
@@ -89,7 +89,7 @@
 
 | المعرّف | حزمة العمل | الحالة الأولية | الاعتماديات / معيار القبول |
 |---|---|---|---|
-| S4-01 | جرد قدرات AI الحالية ومنع التكرار | Start in parallel | جرد Agent Runtime/MCP/Tool Registry/Jobs/Workspace/Project Builder/RAG/SDKs في المنتجات وتحديد المالك وإعادة الاستخدام. |
+| S4-01 | جرد قدرات AI الحالية ومنع التكرار | **In Progress — initial inventory** | أُنشئ `docs/AI_CORE_CAPABILITY_INVENTORY.md` من خارطة AI Chat App الحالية والمراجع المركزية؛ يبقى تدقيق code-level لكل قدرة وربطها بملف/اختبار/PR قبل اعتماد إعادة الاستخدام. |
 | S4-02 | حالات الاستخدام ومتطلبات الوكلاء المتخصصين | Start in parallel | معايير قبول للبرمجة وLinux والشبكات وCloud/DevOps والأمن وتحليل الملفات؛ فصل المتطلبات عن اختيار النموذج. |
 | S4-03 | تقييم نماذج مفتوحة الأوزان منخفضة التكلفة | Design / No paid GPU | مقارنة الجودة والسياق والخصوصية والسرعة والترخيص والعتاد؛ benchmark على موارد متاحة قبل الاختيار. |
 | S4-04 | عقد Model Gateway وسجل النماذج والمزودين | Design in parallel | API موحد وregistry وtimeouts/retries/fallback وversioning وحدود استخدام؛ لا اعتماد إلزامي على مزود واحد. |
@@ -104,7 +104,7 @@
 
 | المعرّف | حزمة العمل | الحالة الأولية | الاعتماديات / معيار القبول |
 |---|---|---|---|
-| S5-01 | سجل ملكية المنتجات ومصادر الحقيقة وحدود البيانات | Start in parallel | مصفوفة المالك/المستودع/DB/الإصدار/المستهلك وما يبقى محلياً وما يجوز مشاركته. |
+| S5-01 | سجل ملكية المنتجات ومصادر الحقيقة وحدود البيانات | **Done — architecture register** | `docs/PRODUCT_OWNERSHIP_AND_INTERFACE_CATALOG.md` يوثق المالك والمستودع ومصدر بيانات كل منتج وحدود الهوية والبيانات وعقود التكامل المرشحة؛ التنفيذ البرمجي للعقود يبقى ضمن S5-02 وما بعدها. |
 | S5-02 | كتالوج عقود API وإصداراتها | Design in parallel | OpenAPI/JSON schemas/versioning/compatibility/deprecation/errors/owners؛ لا استيراد كود أو اتصال DB مباشر. |
 | S5-03 | هوية الخدمات والثقة بين المنتجات | Design only | threat model لخدمة-إلى-خدمة وtoken audience/scopes/rotation؛ لا SSO شامل أو نقل مفاتيح جلسات. |
 | S5-04 | نموذج التفويض RBAC/ABAC ونطاق الموارد | Design in parallel | مصفوفة actor/action/resource/tenant وleast privilege/delegation/revocation/negative tests. |
@@ -139,6 +139,6 @@
 - **Lumen:** `PROJECT_STATUS.md`، `PROJECT_CHARTER.md`، `ARCHITECTURE_PLAN.md`، `CONTINUITY.md`، PR #154، Issues #134/#150.
 - **AI Chat App:** `AI_PLATFORM_ROADMAP_AR.md`، `POST_RELEASE_ROADMAP_H_TO_T_AR.md`، `PR-665_SPLIT_TRACKER_AR.md`، Issues #683 و#674؛ راجع main الحي قبل أي تعديل.
 - **ERP:** `ERP_IMPLEMENTATION_BACKLOG.md`، `ERP_GLOBAL_PRO_CONTINUITY_AR.md`، `ERP_MULTI_TENANT_ARCHITECTURE.md`، Stage25C runbook.
-- **AI Core / Unified Ecosystem:** المخطط المعماري والقرارات المركزية؛ إنشاء مستودعات مستقلة بعد اعتماد التصميم والحدود فقط.
+- **AI Core / Unified Ecosystem:** `AI_CORE_CAPABILITY_INVENTORY.md` و`PRODUCT_OWNERSHIP_AND_INTERFACE_CATALOG.md` و`UNIFIED_ENGINEERING_STANDARDS.md` و`DECISION_REGISTER.md` و`CONFLICTS_AND_RECONCILIATION.md`؛ إنشاء مستودعات مستقلة بعد اعتماد التصميم والحدود فقط.
 
 هذه الخطة تنظّم 50 حزمة عمل، ولا تعلن أن المهام بدأت أو اكتملت. تتغير الحالة فقط مع تنفيذ العمل وتسجيل دليله.
