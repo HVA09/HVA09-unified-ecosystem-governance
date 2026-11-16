@@ -89,7 +89,7 @@
 
 | المعرّف | حزمة العمل | الحالة الأولية | الاعتماديات / معيار القبول |
 |---|---|---|---|
-| S4-01 | جرد قدرات AI الحالية ومنع التكرار | **In Progress — source/test audit; MCP and project ACL fixes merged** | `AI_CORE_CAPABILITY_INVENTORY.md` يربط main SHA `17c9868fc17a37a1743c4a49cdb378d93160650c` بمسارات runtime/tools/MCP/jobs/scheduler/RAG/RBAC والاختبارات. فجوتا MCP global role وproject-tool ACL عولجتا عبر #721/#722 وأُغلقت #719/#720؛ بقي #718 لصلاحيات المهام المجدولة، مع استكمال تدقيق Lumen وERP وعقود إعادة الاستخدام قبل إغلاق الجرد. |
+| S4-01 | جرد قدرات AI الحالية ومنع التكرار | **In Progress — source/test audit; PR #723 under validation** | `AI_CORE_CAPABILITY_INVENTORY.md` يربط main SHA `17c9868fc17a37a1743c4a49cdb378d93160650c` بمسارات runtime/tools/MCP/jobs/scheduler/RAG/RBAC والاختبارات. PR #721/#722 عالجا فجوتي MCP global role وProject ACL مع إغلاق #719/#720؛ PR #723 يعالج scheduled-task RBAC والـworker revocation، وفحوصه قيد التنفيذ. يبقى تدقيق Lumen وERP وعقود إعادة الاستخدام قبل إغلاق الجرد. |
 | S4-02 | حالات الاستخدام ومتطلبات الوكلاء المتخصصين | **In Progress — requirements baseline documented** | `docs/AI_CORE_SPECIALIZED_AGENT_REQUIREMENTS.md` يحدد ملفات وكلاء البرمجة وLinux والشبكات وCloud/DevOps والأمن، وتحليل الملفات المشترك، وعقود المدخلات/المخرجات والحدود والاختبارات؛ تبقى مراجعة المتطلبات وربطها بعقود الأدوات والـbenchmark. |
 | S4-03 | تقييم نماذج مفتوحة الأوزان منخفضة التكلفة | Design / No paid GPU | مقارنة الجودة والسياق والخصوصية والسرعة والترخيص والعتاد؛ benchmark على موارد متاحة قبل الاختيار. |
 | S4-04 | عقد Model Gateway وسجل النماذج والمزودين | Design in parallel | API موحد وregistry وtimeouts/retries/fallback وversioning وحدود استخدام؛ لا اعتماد إلزامي على مزود واحد. |
