@@ -89,7 +89,7 @@
 
 | المعرّف | حزمة العمل | الحالة الأولية | الاعتماديات / معيار القبول |
 |---|---|---|---|
-| S4-01 | جرد قدرات AI الحالية ومنع التكرار | **In Progress — AI Chat App audit fixes merged; cross-product audit remains** | `AI_CORE_CAPABILITY_INVENTORY.md` يربط قدرات AI Chat App بمسارات main واختبارات القبول؛ PRs #721/#722/#723 عالجت فجوات MCP وProject ACL وScheduled-task RBAC، وIssues #718/#719/#720 مغلقة بعد نجاح CI/CodeQL. يبقى تدقيق Lumen وERP وعقود إعادة الاستخدام وPRs المفتوحة قبل إغلاق الجرد. |
+| S4-01 | جرد قدرات AI الحالية ومنع التكرار | **In Progress — AI Chat App source and authorization audit completed; cross-product audit remains** | `AI_CORE_CAPABILITY_INVENTORY.md` يوثق قدرات main؛ على AI Chat App أُغلقت ملاحظات MCP global role وProject ACL وScheduled task RBAC عبر #721/#722/#723 مع CI وCodeQL ناجحين. يستمر الجرد حتى مراجعة Lumen وERP والعقود الفعلية وحالة النشر والاختبارات العابرة للمنتجات. |
 | S4-02 | حالات الاستخدام ومتطلبات الوكلاء المتخصصين | **In Progress — requirements baseline documented** | `docs/AI_CORE_SPECIALIZED_AGENT_REQUIREMENTS.md` يحدد ملفات وكلاء البرمجة وLinux والشبكات وCloud/DevOps والأمن، وتحليل الملفات المشترك، وعقود المدخلات/المخرجات والحدود والاختبارات؛ تبقى مراجعة المتطلبات وربطها بعقود الأدوات والـbenchmark. |
 | S4-03 | تقييم نماذج مفتوحة الأوزان منخفضة التكلفة | Design / No paid GPU | مقارنة الجودة والسياق والخصوصية والسرعة والترخيص والعتاد؛ benchmark على موارد متاحة قبل الاختيار. |
 | S4-04 | عقد Model Gateway وسجل النماذج والمزودين | Design in parallel | API موحد وregistry وtimeouts/retries/fallback وversioning وحدود استخدام؛ لا اعتماد إلزامي على مزود واحد. |
