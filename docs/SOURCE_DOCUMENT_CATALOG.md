@@ -1,118 +1,120 @@
 # فهرس وثائق المشاريع ومصادرها
 
 - **تاريخ الجرد:** 16 نوفمبر 2026
-- **الغرض:** حفظ نسخ مرجعية قابلة للتتبع للخطط والمواثيق وسجلات الاستمرارية والقرارات والتشغيل والتحقق.
-- **موقع الأرشيف:** `archive/source-snapshots/2026-11-16/`
-- **الإجمالي المرفوع:** **171 ملفاً**: 164 وثيقة Markdown/نصية + 7 تقارير JSON تقنية.
+- **الغرض:** حفظ نسخ مؤرخة قابلة للتتبع للخطط والمعمارية والمواثيق وسجلات القرارات والاستمرارية والتشغيل والتحقق والملاحظات الهندسية.
+- **الإجمالي:** **171 ملفاً**: 164 ملف Markdown/نصي + 7 تقارير JSON تقنية.
+- **التوزيع:** 150 ملفاً من `main`، و21 ملفاً من PRs غير مدمجة.
 
 ## قواعد قراءة الفهرس
 
-- كل ملف محفوظ تحت اسم المشروع والفرع/PR والـمسار الأصلي؛ لا تُخلط نسخة `main` مع نسخة فرع مفتوح.
-- الأرشيف Snapshot غير قابل للتحرير مكان المصدر. عند التحديث، أنشئ Snapshot جديداً بتاريخ وSHA جديدين.
-- ملف المصدر داخل مستودع المشروع يظل المرجع التشغيلي. الروابط أدناه للتتبع والرجوع، لا تعني أن الملف أصبح مدمجاً أو معتمداً في `main`.
-- لم تُنسخ الشيفرة أو ملفات الإعداد والتبعيات (مثل `requirements.txt` و`package.json` وملفات lock)، أو قواعد البيانات أو ملفات `.env` أو الأسرار أو الملفات الثنائية. كما لم تُنسخ جميع تعليقات GitHub أو سجلات Actions؛ انظر [سجل المناقشات](EXTERNAL_DISCUSSION_REGISTER.md).
+- كل ملف محفوظ تحت اسم المشروع والفرع/PR والمسار الأصلي؛ لا تُخلط نسخة `main` مع نسخة فرع مفتوح.
+- الأرشيف Snapshot مؤرخ؛ لا يحل محل المصدر ولا يتحدث تلقائياً. عند التحديث أنشئ Snapshot بتاريخ وSHA جديدين.
+- ملف المصدر في مستودع المنتج يظل المرجع التشغيلي. لا تعني اللقطة أن PR دُمج أو أن محتواه معتمد.
+- لم تُنسخ الشيفرة أو migrations أو ملفات البناء أو إعدادات النشر أو ملفات الاعتماديات/lock أو قواعد البيانات أو النسخ الاحتياطية أو `.env` أو الأسرار أو الملفات الثنائية.
+- لم تُنسخ جميع تعليقات GitHub أو سجلات Actions؛ لخصت النقاط ذات الصلة وروابطها في [سجل المناقشات](EXTERNAL_DISCUSSION_REGISTER.md).
 
 ## ملخص الأرشفة
 
-| المشروع | الفرع/المصدر | عدد النسخ | المصدر |
-|---|---|---:|---|
-| Lumen | `main` عند `5a065c00ff739c21cad06d551c7e3aa51a3d604b` | 16 | [الأرشيف](../archive/source-snapshots/2026-11-16/lumen-learning-platform/main/) |
-| Lumen | PR #5 Open + Draft، HEAD `96f2b6117d5c86abeb6a53e8b4259a8692a34bcb` | 1 | [لقطة توثيق bootstrap](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-5-open-admin-bootstrap/) |
-| Lumen | PR #154 Draft، HEAD `6c93b49c976245b778800ed63046a2aef321fbb9` | 3 | [لقطة المسودة](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-154-draft/) |
-| Lumen | PR #6 Open + Draft، HEAD `ec44daec83b5c42d20cc91c0cd738d7307fccb24` | 5 | [لقطة الوثائق المقترحة](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-6-open-docs/) |
-| AI Chat App | `main` عند `5d4c46af18838f7cbcebd3063f30279fd6146ad5` | 19 | [الأرشيف](../archive/source-snapshots/2026-11-16/ai-chat-app/main/) |
-| AI Chat App | PR #665 Draft، HEAD `4792285440511833b66e1045bc235143a5a302a5` | 8 | [لقطة المسودة](../archive/source-snapshots/2026-11-16/ai-chat-app/pr-665-draft/) |
-| AI Chat App | PR #671 مفتوح وغير Draft، HEAD `5bbdd5a6ab6e9dbc1c82c4db4ed238ba68d924b6` | 2 | [لقطة PR](../archive/source-snapshots/2026-11-16/ai-chat-app/pr-671-open-docs/) |
-| ERP | `main` عند `946b8c3bfa684143f233df519f075253a15ca621` | 115 | [الأرشيف](../archive/source-snapshots/2026-11-16/erp-global-pro/main/) |
-| | Lumen | PR #5 Open + Draft، HEAD `96f2b6117d5c86abeb6a53e8b4259a8692a34bcb` | 1 | [لقطة PR](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-5-open-docs/) |
-| Lumen | PR #16 Open + Draft، HEAD `e125643f2bf75f0ede15cdbf6c68fb15eabc14e0` | 2 | [لقطة PR](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-16-draft/) |
-| **الإجمالي** |  | **171** |  |
+| المشروع | المصدر | عدد الملفات | HEAD المصدر | مسار الأرشيف |
+|---|---|---:|---|---|
+| Lumen | `main` | 16 | `5a065c00ff739c21cad06d551c7e3aa51a3d604b` | [main](../archive/source-snapshots/2026-11-16/lumen-learning-platform/main/) |
+| Lumen | PR #5 Open + Draft | 1 | `96f2b6117d5c86abeb6a53e8b4259a8692a34bcb` | [PR #5](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-5-open-admin-bootstrap/) |
+| Lumen | PR #16 Open + Draft | 2 | `e125643f2bf75f0ede15cdbf6c68fb15eabc14e0` | [PR #16](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-16-draft/) |
+| Lumen | PR #154 Open + Draft | 3 | `6c93b49c976245b778800ed63046a2aef321fbb9` | [PR #154](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-154-draft/) |
+| Lumen | PR #6 Open + Draft | 5 | `ec44daec83b5c42d20cc91c0cd738d7307fccb24` | [PR #6](../archive/source-snapshots/2026-11-16/lumen-learning-platform/pr-6-open-docs/) |
+| AI Chat App | `main` | 19 | `5d4c46af18838f7cbcebd3063f30279fd6146ad5` | [main](../archive/source-snapshots/2026-11-16/ai-chat-app/main/) |
+| AI Chat App | PR #665 Open + Draft | 8 | `4792285440511833b66e1045bc235143a5a302a5` | [PR #665](../archive/source-snapshots/2026-11-16/ai-chat-app/pr-665-draft/) |
+| AI Chat App | PR #671 Open, non-Draft | 2 | `5bbdd5a6ab6e9dbc1c82c4db4ed238ba68d924b6` | [PR #671](../archive/source-snapshots/2026-11-16/ai-chat-app/pr-671-open-docs/) |
+| ERP Global Pro | `main` | 115 | `946b8c3bfa684143f233df519f075253a15ca621` | [main](../archive/source-snapshots/2026-11-16/erp-global-pro/main/) |
+| **الإجمالي** |  | **171** | **150 main + 21 PR** |  |
 
 ## أبرز محتويات Lumen
 
-### نسخة main (16 ملفاً)
+### نسخة main — 16 ملفاً
 
 تشمل:
-- `README.md` و`backend/README.md` و`frontend/README.md`.
-- `docs/ARCHITECTURE_PLAN.md` و`docs/PROJECT_CHARTER.md`.
-- `docs/DECISIONS.md` و`docs/CONTINUITY.md` و`docs/PROJECT_STATUS.md`.
-- `docs/PROJECT_GOVERNANCE_AR.md` و`docs/ENGINEERING_QUALITY_COVENANT_AR.md`.
-- `docs/QUALITY_BASELINE.md` و`docs/PR_STACK_TRIAGE.md`.
-- `docs/FRONTEND_ARCHITECTURE.md` و`docs/HOSTING_FEASIBILITY.md` و`docs/PYTHON_LAB_SECURITY.md` و`imports/README.md`.
+- `README.md` و`backend/README.md` و`frontend/README.md` و`imports/README.md`.
+- `docs/ARCHITECTURE_PLAN.md` و`docs/PROJECT_CHARTER.md` و`docs/FRONTEND_ARCHITECTURE.md`.
+- `docs/DECISIONS.md` و`docs/CONTINUITY.md` و`docs/PROJECT_STATUS.md` و`docs/PROJECT_GOVERNANCE_AR.md`.
+- `docs/ENGINEERING_QUALITY_COVENANT_AR.md` و`docs/QUALITY_BASELINE.md` و`docs/PR_STACK_TRIAGE.md`.
+- `docs/HOSTING_FEASIBILITY.md` و`docs/PYTHON_LAB_SECURITY.md`.
 
-### PR #5 Open + Draft (ملف واحد)
+### PR #5 — ملف واحد
 
-- `backend/README.md` — تعليمات تشغيل ‏`promote_initial_admin.py` لإنشاء أول مدير بعد إنشاء حساب مؤكد.
+- `backend/README.md`: تعليمات تشغيل `promote_initial_admin.py` لترقية حساب المالك إلى أول مدير بعد التحقق من الحساب.
+- هذه لقطة توثيقية لمسودة قديمة؛ لا تثبت أن PR اجتاز CI أو دُمج.
 
-هذه لقطة توثيقية من فرع قديم، وليست دليلاً على أن bootstrap script أو PR اجتاز CI أو دُمج.
+### PR #16 — ملفان
 
-## PR #154 Draft (3 ملفات)
+- `backend/README.md`
+- `backend/LTI_AGS_SANDBOX_RUNBOOK.md`
+
+هذه نسخة فرع LTI قديم مفتوح. تتقاطع وثائقه مع #154، لذا تحفظ منفصلة لأغراض المقارنة ولا تُعامل على أنها أحدث من #154.
+
+### PR #154 — ثلاثة ملفات
 
 - `backend/LTI_AGS_SANDBOX_RUNBOOK.md`
 - `backend/README.md`
 - `docs/CONTINUITY.md`
 
-هذه النسخة منفصلة عن main ولا تعني دمج PR #154.
+هذه نسخة الفرع المفتوح للمراجعة؛ لا تعني الدمج إلى `main`.
 
+### PR #6 — خمس وثائق
 
+- `docs/ARCHITECTURE_BASELINE_AR.md`
+- `docs/ARCHITECTURE_ROADMAP_AR.md`
+- `docs/DEVELOPMENT_STATUS_AR.md`
+- `docs/DOMAIN_BOUNDARIES_PROPOSAL_AR.md`
+- `docs/PR4_TECHNICAL_REVIEW_AR.md`
 
-### PR #5 وPR #16 (3 ملفات إضافية)
-
-- PR #5 (Open + Draft): نسخة `backend/README.md` من فرع `security/secure-first-admin-bootstrap`.
-- PR #16 (Open + Draft): نسختا `backend/LTI_AGS_SANDBOX_RUNBOOK.md` و`backend/README.md` من فرع `feat/lti-ags-grade-passback`.
-- هذه نسخ تاريخية للمقارنة؛ لا تُعدّل ولا تحل محل ملفات main أو PR #154.
+وثائق مقترحة غير مدمجة؛ يجب مقارنة النقاط الفريدة مع وثائق main قبل نقل أي شيء.
 
 ## أبرز محتويات AI Chat App
 
-### نسخة main (19 ملفاً)
+### نسخة main — 19 ملفاً
 
-تشمل خارطة المنصة وخارطة ما بعد الإصدار H–T وسجل تقسيم PR #665 والحوكمة وميثاق الجودة، أدلة الأمان والنسخ الاحتياطي والتخزين، README للخلفية والواجهة وSDKs وPreview Builder، وأدلة إعداد Embeddings وProduction وDeveloper API وDeployment.
+تشمل خارطتي المنصة وما بعد الإصدار، سجل تفكيك PR #665، الحوكمة وميثاق الجودة، أدلة أمان الأدوات والنسخ الاحتياطي والتخزين، README للخلفية والواجهة وSDKs وPreview Builder، وأدلة Embeddings وProduction وDeveloper API وDeployment.
 
-### PR #665 Draft (8 ملفات)
+### PR #665 — ثمانية ملفات
 
-تشمل نسخة من `README.md` و`ROADMAP.md` وملفات backend/RAG evaluation وRAG index migration plan وتقييم AI Specialist ونسخة H–T من فرع المسودة. هذه مواد فرع اقتراح واسع وليست قراراً منفذاً؛ راجع سجل المصالحة قبل الاعتماد عليها.
+نسخ من README وROADMAP وأدلة AI Specialist وRAG وRAG index migration وProduction. هذه مواد فرع واسع ومقترح، وليست دليلاً على أن التغييرات مدمجة.
 
-### PR #671 (ملفان)
+### PR #671 — ملفان
 
 - `docs/AI_CHAT_APP_HANDOFF_AR.md`
 - `docs/STABILITY_AUDIT_AR_2026-11-08.md`
 
-هذه لقطة توثيقية من فرع PR مبني على Base أقدم، وليست الحالة الحية الحالية.
+لقطة توثيقية من PR مبني على Base قديم؛ لا تمثل الحالة الحية.
 
-## أبرز محتويات ERP
+## أبرز محتويات ERP Global Pro
 
-108 وثائق Markdown/نصية تتضمن:
+115 ملفاً، منها 108 وثائق Markdown/نصية و7 تقارير JSON تقنية.
+
+تشمل:
 - Architecture Decisions، Multi-Tenant Architecture، Implementation Backlog.
 - Baseline/Migration Runbook، Security Baseline، Recovery Note، Continuity وGovernance.
 - Stage 1–25C changelogs/runbooks/validation/test logs.
-- Tenant Ownership Matrix.
-- README وRelease Notes.
-
-إضافة إلى 7 تقارير JSON تقنية من Preflight/PostgreSQL محفوظة تحت مجلد `evidence/` داخل لقطة ERP:
-- Stage17 runtime preflight.
-- Stage22/23/24 PostgreSQL preflight.
-- تقارير backend compatibility preflight الخاصة بالمراحل 21 و22 والحالية.
+- Tenant Ownership Matrix وREADME وRelease Notes.
+- 7 تقارير Preflight/PostgreSQL JSON: أربعة ملفات على الجذر وثلاثة تحت `backend/artifacts/`.
 
 ## ما لم يُنسخ
 
-هذا الجرد خاص بملفات الوثائق والسجلات ذات الامتدادات Markdown/MDX/TXT/RST، وبـ7 تقارير JSON المحددة لـERP. لم تُنسخ:
-- الشيفرة أو migrations أو ملفات البناء أو إعدادات النشر.
-- قواعد البيانات أو النسخ الاحتياطية أو ملفات `.env` أو الأسرار.
+- الشيفرة والمigrations وملفات البناء وملفات الاعتماديات وملفات lock وإعدادات النشر.
+- قواعد البيانات والنسخ الاحتياطية وملفات `.env` والأسرار.
 - الملفات الثنائية والصور والمرفقات.
-- جميع التعليقات والمراجعات في Issues/PRs، ولا جميع سجلات CI/Actions.
-- الملفات المحلية أو غير الموجودة في GitHub.
+- جميع تعليقات Issues/PRs ومراجعات GitHub وكل سجلات Actions.
+- الملفات المحلية غير الموجودة على GitHub.
 
-للنقاشات الهندسية المهمة راجع [EXTERNAL_DISCUSSION_REGISTER.md](EXTERNAL_DISCUSSION_REGISTER.md)، وللتعارضات راجع [CONFLICTS_AND_RECONCILIATION.md](CONFLICTS_AND_RECONCILIATION.md).
-
+راجع [سجل المناقشات والملاحظات](EXTERNAL_DISCUSSION_REGISTER.md) للروابط والملخصات، و[سجل التعارضات والمصالحة](CONFLICTS_AND_RECONCILIATION.md) لحالات التداخل والوثائق القديمة.
 
 ## تحقق سلامة النسخ — 16 نوفمبر 2026
 
-- تمت مطابقة بصمات Git Blob لجميع الملفات المؤرشفة مع المصدر الأصلي: **168/168** تطابق (150 من `main` و18 من PRs غير المدمجة).
-- التوزيع: Lumen `main` 16، PR #154 ثلاثة، PR #6 خمسة؛ AI Chat App `main` 19، PR #665 ثمانية، PR #671 اثنان؛ ERP `main` 115. لم توجد فروقات بصمات أو مسارات بعد تصحيح مسارات أدلة ERP.
-- تقارير ERP JSON السبعة صالحة بنيوياً، ولم تظهر فيها أنماط مفاتيح/أسرار معروفة في الفحص الآلي المحدود. هذا ليس بديلاً عن فحص الأسرار الكامل أو ضماناً مطلقاً لعدم وجود بيانات حساسة.
-- إجمالي الأرشيف **171 ملفاً**: 164 Markdown/نص + 7 JSON. تم حفظ كل ملف تحت مساره الأصلي مع تمييز `main` عن الفروع المفتوحة.
-
+- تمت مطابقة بصمات Git Blob لجميع الملفات المؤرشفة مع مصادرها الأصلية: **171/171** تطابق.
+- التوزيع: **150/150** من `main` و**21/21** من PRs غير المدمجة.
+- ملفات PR المؤرشفة: Lumen #5 (1)، #16 (2)، #154 (3)، #6 (5)، وAI Chat App #665 (8)، #671 (2).
+- تقارير ERP JSON السبعة صالحة بنيوياً ولم تظهر فيها أنماط مفاتيح/أسرار معروفة في فحص آلي محدود. هذا ليس فحصاً شاملاً ولا ضماناً مطلقاً لعدم وجود بيانات حساسة.
+- الإجمالي: **171 ملفاً**، 164 Markdown/نص + 7 JSON.
 
 ## حدود اختيار الملفات
 
-اختيرت خطط المشروع ومواثيق الجودة والمعمارية وسجلات القرار والاستمرارية والتشغيل والتحقق وملفات README والأدلة النصية المرتبطة بالمراحل. لم تُنسخ الملفات التي تحمل امتدادات توثيقية شكلياً لكنها تؤدي دور كود أو إعداد أو اعتماديات (مثل ملفات LICENSE، requirements، package manifests/lockfiles، إعدادات النشر، أو بيانات seed). لذلك فهذا أرشيف الوثائق والخطط الهندسية، وليس نسخة كاملة من المستودعات.
+اختيرت خطط المشروع ومواثيق الجودة والمعمارية وسجلات القرار والاستمرارية والتشغيل والتحقق وملفات README والأدلة النصية المرتبطة بالمراحل. الأرشيف مرجع للوثائق، وليس نسخة كاملة من المستودعات ولا بديلاً عنها.
