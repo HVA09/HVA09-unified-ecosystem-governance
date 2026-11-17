@@ -134,3 +134,20 @@
 - **AI Core / Unified Ecosystem:** العمل الحالي جرد وتصميم وعقود فقط. لا نموذج مفتوح الأوزان منشور، ولا SSO أو service identities أو policy engine أو مفاتيح مشتركة في الإنتاج. Governance PR #2 لا يزال مفتوحاً (head `8154aacb6e3c9ac7966e9319166af621d90dd390`)؛ لا توجد Check Runs على رأسه عند آخر تحقق، لذلك لا دمج حتى تُستوفى ضوابط المستودع.
 
 نطاق التحقق: GitHub PR metadata وworkflow runs وقراءة الملفات فقط. لم تُنفذ تغييرات على بيانات تشغيلية أو أسرار أو إعدادات استضافة، ولم تُجرَ تجربة على قواعد بيانات المستخدم المحلية. تبقى بوابات كل منتج وقرارات مالكي البيانات نافذة.
+
+
+## تحديث تنفيذ ودمج — 18 نوفمبر 2026 (دفعة ثانية)
+
+- **AI Chat App PR #549 (Uvicorn):** تم تحديث الفرع القديم بواسطة Dependabot بعد أن كان متأخراً 180 commit؛ أصبح HEAD `da11a33b077b3df2d58508a4ef9e76ef6c7cb298` مبنياً على main، ahead 1 / behind 0. نجحت جميع متطلبات الفحص السبعة على هذا الرأس (CI: backend/frontend/sdk/preview-builder/production-compose، CodeQL: Python وJavaScript/TypeScript)، ثم دُمج Squash عند `26976f74b73b3f3f4ab3dd7001e945ff85d85b78`. PR #549 مغلق merged.
+- **AI Chat App main بعد PR #549:** جميع الفحوص المطلوبة نجحت على الرأس `26976f74b73b3f3f4ab3dd7001e945ff85d85b78`: CI run #44188534560 (5/5)، CodeQL #44188534626 (2/2)، Publish backend image #44188534621، Production smoke #44188534605. لا يشير سجل هذه الخطوة إلى تغيير إعدادات الاستضافة أو الأسرار.
+- **AI Chat App PR #164:** فرع docker/build-push-action v7.4.0 تمت مزامنته إلى main، HEAD `411c814783ebcf3080b1dfaa04eec80221249044`. CodeQL نجح؛ CI بقي backend فيه قيد التنفيذ وقت هذا التحديث. التغيير workflow واحد فقط. لا دمج قبل اكتمال CI على نفس الرأس والتحقق من نشر صورة backend بعد الدمج.
+- **AI Chat App PR #165:** فرع qrcode 8.2 تمت مزامنته إلى main، HEAD `e98134eb84f3048038f6a0a71bfd2593efa80984`. CodeQL نجح؛ CI backend قيد التنفيذ وقت هذا التحديث. التغيير سطر اعتماد واحد في requirements. لا دمج قبل اكتمال CI.
+- **AI Chat App PR #185:** فرع docker/metadata-action 6.2.0 تمت مزامنته إلى main، HEAD `a923872eafcfd88c7ff1a3136f4382855978314f`. CodeQL نجح؛ CI backend قيد التنفيذ وقت هذا التحديث. التغيير workflow واحد فقط. لا دمج قبل اكتمال CI والتحقق من نشر صورة backend بعد الدمج.
+- **AI Chat App PR #175 (redis-py 8.1):** تمت مزامنة الفرع إلى main، HEAD `c180cfc53aa7f1136351c613d41ed113f3ef865e`. الفحوص كانت قيد التنفيذ وقت هذا التحديث. لا دمج تلقائي حتى لو نجحت CI دون مراجعة runtime: التطبيق يستخدم Redis لتدوير refresh tokens والرموز أحادية الاستخدام وتحديد المعدل، ويستخدم Redis كذلك لـCelery broker/result backend. ترقية redis-py 8.x تغير defaults للبروتوكول وsocket timeout/retry؛ يلزم اختبار provider الفعلي وCelery/critical token flows أو تقييد الإعدادات صراحةً مع regression tests. تم توثيق الملاحظة في PR.
+- **AI Chat App PRs #170/#171/#174:** أُرسلت طلبات `@dependabot rebase`، لكن رؤوس الفروع لم تتغير إلى main وقت التحديث، لذا بقيت stale وغير مؤهلة للدمج أو الاستناد إلى فحوصها التاريخية.
+- **AI Chat App PR #169 (bcrypt 5):** مغلق دون دمج مع توثيق سبب Passlib 1.7.4/bcrypt 5.0.0؛ يظل قيد main `bcrypt>=4.0,<5`.
+- **Lumen:** main `5774c8575bf62a3894a0eb957b77745181ff71e1`; Lumen CI #44183606189 نجح. PR #154 يظل Draft مع 46 ahead / 8 behind، ولا يُدمج قبل إعادة مزامنته وMoodle/Canvas Sandbox واكتمال بوابات الخصوصية/العمال.
+- **ERP:** main `577c105d81bd7b7c926965c0ed7c94379c1cb695`; ERP backend quality #44183566278 نجح. ERP-002 Stage25C ما زال Blocked حتى اختبار نسخة SQLite v8 المستعادة فعلياً؛ `TENANT_DATA_SCOPING_ENABLED=False`.
+- **Governance PR #2:** HEAD `98b506d9783f0cdcab6e9fb6feb4425cd62df6f4`, docs-only. Branch main غير محمي ولا يطلب status checks، لكن لم توجد أي workflow runs على رأس PR؛ لم يُدمج في هذه الدورة حتى لا نساوي غياب CI بالنجاح. يلزم إضافة/تشغيل تحقق docs مناسب أو مراجعة مستقلة قبل قرار الدمج.
+
+نطاق هذه اللقطة: GitHub metadata وActions runs وقراءة الملفات، وتحديث هذا السجل فقط. لا اختبارات على قاعدة المستخدم المحلية ولا تغييرات runtime أو إنتاجية منفذة يدوياً.
