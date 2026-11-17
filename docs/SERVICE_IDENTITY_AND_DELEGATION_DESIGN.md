@@ -164,3 +164,57 @@
 - DEC-005 وDEC-008 وDEC-010 وDEC-015
 
 **الخلاصة:** المطلوب فصل هوية الخدمة عن هوية المستخدم وعن ملكية المورد. service token يثبت من هو المستهلك؛ المنتج المالك وحده يثبت هل يجوز له الوصول إلى مورد معين وما العملية المسموحة.
+
+## 12. ربط التصميم بعقود المنتجات التي تم التحقق منها — 2026-11-17
+
+هذه أمثلة flow مرشحة لتوجيه التنفيذ والاختبارات؛ لا تنشئ صلاحيات فعلية ولا تعني أن المستهلكين الحاليين يستطيعون استخدام المسارات.
+
+### 12.1 Lumen — LUM-LEARN-001
+
+المسارات الحالية: `/curriculum/subjects`, `/curriculum/path`, `/curriculum/topics/{topic_id}`, `/curriculum/topics/{topic_id}/mastery`, `/curriculum/topics/{topic_id}/lessons`.
+
+- `/curriculum/subjects` وبعض محتوى الموضوعات لا يطلب هوية المستخدم في التنفيذ الحالي؛ يمكن أن يبقى محتوى منهجياً عاماً حسب سياسة النشر في Lumen.
+- `/curriculum/path`, `/mastery` و`/lessons` تعتمد `get_current_user` وتعيد معلومات تقدم الطالب أو إتمام الدروس الخاصة بالمستخدم المصادق عليه.
+- لا يرسل AI Core `user_id` رقمياً من AI Chat App على أنه هوية Lumen. يحدد Lumen آلية mapping بين `issuer + subject` والطالب المحلي، أو يطلب تفويضاً من Lumen نفسه.
+- **Flow مقترح:** خدمة تعليمية مسجلة في Lumen → طلب delegated token محدود إلى audience Lumen → تحقق Lumen من issuer/audience/scope/expiry → يحدد الطالب المرتبط بالـsubject من قاعدة Lumen → يعيد فقط الحقول المسموحة لمسار/موضوع محدد.
+- scopes candidate: `learning.catalog.read`, `learning.path.read.self`, `learning.mastery.read.self`, `learning.lessons.read`. هذه أسماء تصميمية وليست صلاحيات معرفة في كود Lumen حالياً.
+- لا يسمح هذا التفويض بإدارة الصفوف أو كشف بيانات زملاء الفصل أو الوصول إلى `teacher/admin` APIs. تفاصيل المعلم والصف تحتاج scope منفصل وموافقة Lumen.
+
+### 12.2 AI Chat App — AIC-DEV-CHAT-001
+
+المسار الحالي: `POST /v1/chat`, authentication عبر `X-API-Key: ak_live_...`.
+
+- نموذج `APIKey` الحالي يحمل `user_id` ويخضع لحصص المستخدم ومساحات العمل؛ لا يوجد `client_id`, `audience`, service principal أو delegation grant في نموذج المفتاح.
+- **ممنوع:** تخزين مفتاح مطور شخصي خاص بمستخدم داخل AI Core أو Lumen أو ERP واستخدامه كاعتماد خدمة دائم. هذا يخلط هوية المستخدم بهوية المستهلك ويجعل استهلاك AI باسم مالك المفتاح.
+- **Flow مقترح منفصل:** AI Core service principal موثوق → token قصير العمر audience=`ai-chat-internal-api` وscope لعملية واحدة → AI Chat API يتحقق من client identity ثم delegated user subject عند الحاجة → AI Chat يعيد التحقق من Conversation/Workspace/Project ownership والصلاحيات الحالية → ينفذ العملية ضمن الحدود المسموحة.
+- scopes candidate: `chat.invoke`, `agent.job.create`, `workspace.resource.read.limited`. لا تعطِ `tools.execute.*` أو MCP server access عام أو صلاحيات إدارة المستخدم.
+- إذا لم يتوفر delegated subject موثوق أو لم تثبت ملكية المحادثة/Workspace/Project، يفشل الطلب مغلقاً. لا يُنشأ conversation تحت مالك الخدمة إلا لسيناريو machine-owned صريح ومراجع.
+
+### 12.3 ERP Global Pro — ERP-COMPANY-CONTEXT-001
+
+المسارات الحالية: `/api/auth/login`, `/api/auth/companies`, `/api/auth/switch-company`, ثم business APIs تحت `/api/...`.
+
+- JWT الحالي هو JWT مستخدم تفاعلي يحمل `sub` و`cid` و`mid` عند اختيار الشركة؛ لا يثبت هوية خدمة خارجية ولا يملك audience خاصاً بمستهلك.
+- **ممنوع:** تمرير bearer JWT الخاص بمستخدم ERP إلى AI Core أو اعتبار `company_id` في body/header إثبات عضوية.
+- **Flow المقترح بعد إغلاق release gate فقط:** service principal يحصل على delegated request موجه إلى ERP API → ERP يثبت service audience/scope → ERP يربط subject بالـuser mapping المعتمد → ERP يتحقق من عضوية الشركة والصلاحية الحالية على سجلاته → كل query تتم داخل company context موثوق وتحت العزل المعتمد.
+- scopes candidate: `erp.customer.read.limited`, `erp.inventory.read.limited`, `erp.report.read.limited`; لا scopes مالية/كتابية عامة ضمن pilot.
+- **Release gate مغلق حالياً:** SQLite v8 هي DB النشطة و`TENANT_DATA_SCOPING_ENABLED=False`؛ app factory يمنع العمليات التشغيلية عند وجود أكثر من شركة. لذلك لا ينفذ AI Core أي read/write تشغيلي على ERP حتى إثبات Stage25C وtenant isolation وPostgreSQL/RLS والنسخ/الاستعادة والrollback.
+
+### 12.4 قواعد claims والـcontext المشتركة
+
+| المعلومة | المصدر الموثوق | هل يرسلها المستهلك مباشرة؟ | قرار التحقق |
+|---|---|---|---|
+| service identity | issuer / key registry لدى مالك API | لا كـ`client_id` ادعائي فقط؛ التوقيع يثبتها | تحقق signature + issuer + audience + active client |
+| end user subject | issuer المنتج الأصلي أو delegation grant | لا كـraw numeric `user_id` | تحقق mapping داخل المنتج المالك |
+| workspace | AI Chat App | لا كدليل عضوية | إعادة lookup للعضوية وresource ACL في AI Chat |
+| project | AI Chat App | يمكن أن يكون locator فقط | إعادة فحص project ACL داخل handler |
+| company | ERP | لا كدليل تفويض | ERP يتحقق من cid/mid/membership وtenant context |
+| student/class/grade | Lumen | لا كدليل ملكية أو access | Lumen يتحقق من user/class enrollment/teacher ownership |
+
+### 12.5 قرار آلية التنفيذ — ما زال مفتوحاً
+
+الخيارات المرشحة هي OAuth 2.0 Client Credentials مع `private_key_jwt`، أو mTLS، مع signed delegated token محدود عند الحاجة إلى سياق المستخدم. الاختيار النهائي يجب أن يقارن دعم المكتبات الحالية، إدارة المفاتيح/JWKS، التدوير والإلغاء، trust boundaries، مراقبة replay، تعقيد التشغيل، وإمكان الاختبار في بيئة staging.
+
+لا تفترض أن وجود OpenID Connect أو OAuth user connectors في AI Chat App يعني وجود OAuth authorization server بين المنتجات. لا يوجد حتى هذا التحديث أي service principal أو issuer مركزي أو token exchange أو mTLS deployment منفذ.
+
+**Acceptance gate:** لا يصبح S5-03 Verified قبل اختيار آلية موثقة، واعتماد مالكي المنتجات، ونشر verifier داخل المنتج المالك، واختبارات cross-issuer/audience/scope/tenant/subject وrevocation/replay على بيئة disposable، مع إثبات عدم تسرب مفاتيح أو بيانات موارد إلى السجلات.
