@@ -126,5 +126,3 @@
 - تمت مقارنة نطاقاتها المعمارية مع `docs/UNIFIED_ECOSYSTEM_MASTER_PLAN.md`. تم استكمال التفاصيل الفريدة عن Research & Discovery وInnovation Studio وProject Forge وVirtual Labs وSmart Technology Operations وOpen Innovation، إضافة إلى الأجهزة الفعلية واختيار التقنية وقابلية التوسع، ضمن الإصدار المركزي 1.5.
 - من الآن فصاعداً المرجع الحاكم للتنسيق والرؤية المشتركة هو المستودع `HVA09/HVA09-unified-ecosystem-governance` والملف `docs/UNIFIED_ECOSYSTEM_MASTER_PLAN.md`. احتفظ بملف Library v0.11 بوصفه لقطة تاريخية؛ لا تحدّث النسختين بشكل مستقل.
 - إجمالي 171 ملفاً في هذا الفهرس هو Snapshot أرشيفي محفوظ كما التُقط؛ لا يُزاد أو يُعدّل ضمن هذه الدفعة. رؤوس `main` الأحدث بعد PRs #715 و#156 و#12 موثقة في الإصدار 1.5، وPRs التوثيقية #716 و#157 و#13 غير مدمجة عند إعداد هذا الملحق.
-
-| `docs/AI_CORE_MODEL_GATEWAY_DESIGN.md` | S4-04 Model Gateway design baseline | Central governance design; no service implementation or model selection | 2026-11-17 |
