@@ -24,6 +24,7 @@
 18. [تصميم تصنيف البيانات والاحتفاظ والخصوصية — S5-05](docs/DATA_CLASSIFICATION_AND_RETENTION_DESIGN.md)
 19. [السجل التاريخي لمقترح دفعة 15 مهمة — مستبدل](docs/UNIFIED_BATCH_EXECUTION_PLAN.md)
 20. [نموذج التفويض الموحد RBAC/ABAC ونطاق الموارد — S5-04](docs/UNIFIED_AUTHORIZATION_MODEL_DESIGN.md)
+21. [مذكرة قرار ملكية الأسئلة والدروس في Lumen — LUM-010](docs/LUMEN_CONTENT_OWNERSHIP_DECISION_BRIEF.md)
 
 ## قاعدة مصدر الحقيقة
 
