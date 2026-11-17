@@ -287,7 +287,7 @@
 
 ### 13.4 مخاطر نطاق بيانات يجب أن تبقى ظاهرة
 
-- AI Chat App Issue [#724](https://github.com/HVA09/ai-chat-app/issues/724) مفتوحة: حذف المشروع يحول ملفات المشروع إلى workspace scope عبر `project_id=NULL` بينما يبقى `workspace_id`، فتتسع دائرة الوصول المحتملة لقوائم أعضاء مساحة العمل واسترجاع RAG. لا تُعتمد إعادة استخدام project-file/RAG cross-product قبل حسم الحذف/الأرشفة/الترقية الصريحة واختبارات عدم التسريب.
+- AI Chat App Issue [#724](https://github.com/HVA09/ai-chat-app/issues/724) مفتوحة. PR [#725](https://github.com/HVA09/ai-chat-app/pull/725) يقترح Retain privately: نقل مرفقات المشروع إلى `workspace_id=NULL` مع الحفاظ على المالك والبايتات/Chunks، وحذف روابطها من المساعدين المشتركين؛ أضيفت اختبارات تمنع list/download/RAG عبر عضو Workspace. PR #725 ما زال Draft، CI pending وCodeQL queued عند HEAD `f75ceefe790538b96be071c4c86b4e072f25e626`؛ لا تعتمد السياسة أو تغلق Issue حتى اكتمال الفحوص والمراجعة واعتماد المالك.
 - Lumen PR #154 لا يحول AGS candidate إلى عقد LMS production: ما زال Draft، متأخراً 4 commits عن main في آخر comparison، وmergeable=false؛ CI 4/4 القديم لا يغلق Moodle/Canvas Sandbox وprivacy/clock gates.
 - لا تعتبر مسارات ERP القائمة عقداً قابلاً للاستخدام من AI Core في بيئة تشغيل متعددة الشركات طالما release gate مغلق.
 
