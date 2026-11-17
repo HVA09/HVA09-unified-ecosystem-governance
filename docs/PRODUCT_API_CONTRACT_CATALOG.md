@@ -441,3 +441,61 @@ These routes establish that Lumen already owns the learning-path and progress se
 - [dependencies.py](https://github.com/HVA09/lumen-learning-platform/blob/ed162b0e0af497abc5710d185fa357357baa6ecc/backend/app/dependencies.py)
 
 **حالة العقد:** route/schema map مثبت للمسارات المذكورة فقط. ليس OpenAPI external contract ولا permission grant ولا integration. تبقى service identity, delegation, student-consent/data-retention, consumer/provider tests وموافقة Lumen prerequisites.
+## 16. بطاقة سياق الشركة وتبديلها — ERP Global Pro — 2026-11-17
+
+**مرجع المصدر:** ERP main `7bb01d23328a68aae67c659fd6c32b6db033637d`؛ `backend/erp/api/auth.py` و`backend/erp/security.py` و`backend/erp/services/tenancy.py` و`backend/erp/config.py` و`backend/erp/__init__.py`.
+
+| البند | العقد المثبت على main |
+|---|---|
+| Contract ID | `ERP-COMPANY-CONTEXT-001` (existing interactive auth flow / external integration blocked) |
+| Owner | ERP Global Pro — Authentication / Tenant Context |
+| Base route group | `/api/auth` |
+| Routes | `GET /api/auth/setup-status`, `POST /api/auth/setup`, `POST /api/auth/login`, `GET /api/auth/me`, `GET /api/auth/companies`, `POST /api/auth/switch-company`, `POST /api/auth/change-password` |
+| Auth | Bearer JWT for authenticated routes; `/setup-status`, first-run `/setup`, and `/login` are public bootstrap/auth routes |
+| Company context | JWT claims `sub`, `iat`, `exp`, plus `cid` and `mid` once a company membership is selected |
+| Effective authorization | current active membership's role and permissions, revalidated on each request |
+| Active DB | Flask + SQLite v8; PostgreSQL is a future cutover target, not the application DB today |
+| Multi-company gate | `TENANT_DATA_SCOPING_ENABLED=False`; operations fail closed if company_count > 1 |
+
+### 16.1 Company-selection flow
+
+- `POST /api/auth/login` accepts JSON `email` and `password`; successful login returns `token` and `user` (including role/permissions and any unambiguous default active_company).
+- `GET /api/auth/companies` requires a valid user token and returns active memberships, `active_company`, `company_count`, and `can_use_operations`.
+- `POST /api/auth/switch-company` accepts a positive integer `company_id` in JSON. The server resolves an active membership for the authenticated `g.user.id`; the client-provided ID is a selection request, not proof of access.
+- If the membership is valid, the server issues a new signed JWT carrying `sub`, `iat`, `exp`, `cid`, and `mid`, returns the user permission payload and `active_company`, and records an audit event.
+- On every request, `security.load_user()` verifies JWT signature/expiry, user active state, and re-resolves the membership by user + company + membership ID. Revoked membership or suspended company invalidates the company-bound context.
+- `current_company_id()` uses trusted `g.company` during HTTP requests and rejects an explicitly supplied `company_id` if it differs from the authenticated company.
+
+### 16.2 Example response contract and errors
+
+**`GET /api/auth/companies` response fields:**
+- `items`: active memberships with `membership_id`, `company_id`, `company_name`, country, currency, industry, role and status.
+- `active_company`: `{id, name, country, currency, industry, role, membership_id}` or null.
+- `company_count`: integer.
+- `can_use_operations`: boolean; does not assert that multi-company production is enabled.
+
+**`POST /api/auth/switch-company` response fields:**
+- `token`: newly issued company-bound JWT.
+- `user`: `{id, email, name, role, permissions, active_company}`.
+- `active_company`: selected company's metadata and membership identity.
+
+**Observed denial/fail-closed behavior:** 401 when auth is missing/invalid; 403 when the user lacks active membership or attempts a company-context mismatch; 409 when active company context is absent or an ambiguous legacy membership cannot be resolved; 422 for invalid `company_id` input; 503 when operational access is blocked because more than one company exists while tenant isolation is disabled.
+
+### 16.3 Cross-product trust boundary
+
+<badge color="warning">Existing product API — blocked for multi-company external use</badge>
+
+1. These JWTs are interactive ERP user tokens, not service-to-service credentials. The inspected token claims include `sub/cid/mid` but no dedicated service principal, issuer/audience contract or consumer scopes.
+2. Do not send the ERP bearer token to AI Chat App, Lumen or AI Core; do not accept a `company_id` from an external consumer as proof of membership.
+3. `roles` and permission templates are still shared/global in the current baseline and require tenant-aware design before multiple-company operations can be enabled.
+4. `TENANT_DATA_SCOPING_ENABLED=False` is a hard release gate. The Flask app factory refuses operational requests when multiple companies exist. Generic CRUD and sampled reports/import-export/file APIs have scoped code, but complete SQL/service/report/job/constraint audit and verified restore/preflight are still outstanding.
+5. No AI service may read or mutate ERP business records through direct SQLite access. A future connector needs a separate service identity with explicit delegation to one user and one verified company, plus per-resource scopes, audit and negative IDOR tests after the ERP release gates close.
+
+**Source links:**
+- [auth.py](https://github.com/HVA09/erp-global-pro/blob/7bb01d23328a68aae67c659fd6c32b6db033637d/backend/erp/api/auth.py)
+- [security.py](https://github.com/HVA09/erp-global-pro/blob/7bb01d23328a68aae67c659fd6c32b6db033637d/backend/erp/security.py)
+- [services/tenancy.py](https://github.com/HVA09/erp-global-pro/blob/7bb01d23328a68aae67c659fd6c32b6db033637d/backend/erp/services/tenancy.py)
+- [config.py](https://github.com/HVA09/erp-global-pro/blob/7bb01d23328a68aae67c659fd6c32b6db033637d/backend/erp/config.py)
+- [application factory](https://github.com/HVA09/erp-global-pro/blob/7bb01d23328a68aae67c659fd6c32b6db033637d/backend/erp/__init__.py)
+
+**حالة العقد:** current-company context and membership validation exist inside ERP. This card is not an approval for ERP multi-company operation or an external AI consumer. Both remain blocked until Stage25C actual restored-copy preflight, full tenant isolation, PostgreSQL/RLS and backup/restore/rollback gates are accepted.
