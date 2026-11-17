@@ -381,3 +381,63 @@
 - [DEVELOPER_API.md](https://github.com/HVA09/ai-chat-app/blob/6645b0502daa6922040ee4c6bb5c281ed59ef366/ai-backend/docs/DEVELOPER_API.md)
 
 **حالة S5-02:** تمت إضافة أول بطاقة عقد مفصلة لمجموعة عامة ثابتة. يبقى جرد schema لكل واجهات Lumen وERP وواجهات AI Chat الأخرى، وعقد service identity منفصل، واختبارات provider/consumer وstaging قبل اعتماد التكامل بين المنتجات.
+## 15. بطاقة Learning API candidate — Lumen — 2026-11-17
+
+**مرجع المصدر:** Lumen main `ed162b0e0af497abc5710d185fa357357baa6ecc`؛ `backend/app/routers/curriculum.py` و`backend/app/schemas/curriculum.py` و`backend/app/dependencies.py`.
+
+| البند | العقد المثبت على main |
+|---|---|
+| Contract ID | `LUM-LEARN-001` (candidate / internal product API group) |
+| Owner | Lumen — Curriculum service |
+| Routes | `GET /curriculum/subjects`, `GET /curriculum/path`, `GET /curriculum/topics/{topic_id}`, `GET /curriculum/topics/{topic_id}/mastery`, `GET /curriculum/topics/{topic_id}/lessons` |
+| Auth | المحتوى العام عبر بعض GET routes؛ البيانات الشخصية في `/path` و`/mastery` و`/lessons` تستخدم `get_current_user` |
+| Data owner | Lumen user/student identity, curriculum, lessons, mastery and progress |
+| Versioning | المسارات الحالية لا تظهر تحت `/v1` ولا يوجد contract-version header موثق لها في المصدر الذي تمت مراجعته |
+| Consumer readiness | Existing routes inside Lumen; no service principal or approved cross-product consumer contract demonstrated |
+
+### 15.1 Public curriculum catalog vs authenticated progress
+
+- `GET /curriculum/subjects` يرجع subjects النشطة وموضوعاتها عبر `SubjectWithTopicsOut`؛ هذا محتوى المنهج وليس بيانات تقدم مستخدم.
+- `GET /curriculum/topics/{topic_id}` يرجع `TopicOut`؛ route لا يضيف `get_current_user` في التنفيذ الحالي، لذلك يصنف كمحتوى موضوع عام وفق سياسة التطبيق الحالية.
+- `GET /curriculum/path` يتطلب `get_current_user` ويرجع `LearningPathOut`: subjects/topics مع recommended_topic_id وtopics_total وtopics_mastered وoverall_mastery.
+- `GET /curriculum/topics/{topic_id}/mastery` يتطلب current user ويقيد الاستعلام بـ`TopicMastery.user_id == current_user.id`; إن لم توجد محاولة يعيد mastery=0 وattempts_count=0 بدلاً من كشف سجل مستخدم آخر.
+- `GET /curriculum/topics/{topic_id}/lessons` يتطلب current user ويرجع الدروس المنشورة مع completed flag المحسوب من `LessonProgress.user_id == current_user.id`.
+
+### 15.2 Response schema boundaries
+
+**`LearningPathOut`:**
+- `subjects: PathSubjectOut[]`
+- `recommended_topic_id: integer | null`
+- `topics_total: integer`
+- `topics_mastered: integer`
+- `overall_mastery: number`
+
+**`PathSubjectOut`:** `id`, `slug`, `name_ar`, `name_en`, `topics: PathTopicOut[]`.
+
+**`PathTopicOut`:** `id`, `slug`, `name_ar`, `name_en`, `learning_outcomes_ar`, `simulation_type`, `prerequisite_topic_id`, `prerequisite_name_ar`, `status` (`locked|available|in_progress|mastered`), `mastery_percentage`, `gateway_quiz_passed`, `lessons_total`, `lessons_completed`, `questions_count`.
+
+**`MasteryOut`:** `topic_id`, `mastery_percentage`, `gateway_quiz_passed`, `attempts_count`, `last_practiced_at`.
+
+**`LessonOut`:** `id`, `topic_id`, `slug`, `title_ar`, `body_md`, `estimated_minutes`, `order_index`, `completed`.
+
+### 15.3 Privacy and authorization contract
+
+1. Subject/topic catalog fields can be considered public curriculum content only according to Lumen's own publication rules.
+2. LearningPath/mastery/lesson completion fields are student-specific progress data; do not send them to AI Core, ERP, or another product merely because a valid Lumen browser token exists.
+3. Any external consumer requires a Lumen-issued service identity, explicit audience and scopes, a delegated subject mapping, user consent/legal basis where applicable, and server-side authorization for the requested student/resource.
+4. A caller-supplied `user_id` must never replace the current principal; current routes derive mastery/progress ownership from authenticated `current_user.id`.
+5. Teacher/class APIs have separate role/ownership rules and may return student identifiers, display names, email addresses and mastery aggregates. They are outside this learning-path read contract and require separate class-scope authorization review.
+6. Do not expose admin-only content or LTI platform credentials to AI Core or external consumers.
+
+### 15.4 Cross-product reuse decision
+
+<badge color="warning">Candidate only — no service contract</badge>
+
+These routes establish that Lumen already owns the learning-path and progress services; they do not establish a service-to-service interface. A future AI tutor may request narrowly scoped curriculum content or an authorized student's progress only through a Lumen-owned adapter. It must not query Lumen's database, reuse its browser cookie, or gain `teacher`/`admin` role. Lumen remains authoritative for lesson mastery and progression; AI Core may return explanations or suggestions but must not write mastery or quiz outcomes unless a separately reviewed Lumen operation exists.
+
+**Source links:**
+- [curriculum.py](https://github.com/HVA09/lumen-learning-platform/blob/ed162b0e0af497abc5710d185fa357357baa6ecc/backend/app/routers/curriculum.py)
+- [schemas/curriculum.py](https://github.com/HVA09/lumen-learning-platform/blob/ed162b0e0af497abc5710d185fa357357baa6ecc/backend/app/schemas/curriculum.py)
+- [dependencies.py](https://github.com/HVA09/lumen-learning-platform/blob/ed162b0e0af497abc5710d185fa357357baa6ecc/backend/app/dependencies.py)
+
+**حالة العقد:** route/schema map مثبت للمسارات المذكورة فقط. ليس OpenAPI external contract ولا permission grant ولا integration. تبقى service identity, delegation, student-consent/data-retention, consumer/provider tests وموافقة Lumen prerequisites.
