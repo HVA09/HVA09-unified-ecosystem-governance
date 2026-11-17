@@ -152,20 +152,20 @@
 
 الحالة التالية دليل على وجود مسارات داخلية في المنتجات، وليست بعد عقود service-to-service معتمدة. لم تُجر أي اتصالات بين الخدمات ولم تُنقل بيانات.
 
-### 12.1 Lumen — main commit ed162b0e0af497abc5710d185fa357357baa6ecc
+### 12.1 Lumen — main commit fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8
 
 | مجموعة الواجهة | دليل المصدر | مالك البيانات | الحالة |
 |---|---|---|---|
 | Auth / User / Two-factor | backend/app/auth/routes.py، backend/app/dependencies.py، backend/app/main.py | Lumen | Existing product API؛ يتطلب consumer contract منفصلاً إن استهلكته خدمة أخرى |
 | Learning / Assessment | curriculum، quiz، content، assignments، SRS، gamification، reports | Lumen | Existing product routes؛ لا يوجد في هذه الجولة OpenAPI contract خارجي معتمد |
-| Classes | backend/app/routers/classes.py وmodels/class_section.py | Lumen | Existing teacher-owned class/enrollment scope؛ ليس organization-wide tenant |
+| Classes | backend/app/routers/classes.py وmodels/class_section.py | Lumen | Existing teacher-owned class/enrollment scope؛ `POST /classes/join` يقبل `UserRole.user` فقط بعد PR #162؛ ليس organization-wide tenant |
 | LTI | backend/app/routers/lti.py وmodels/lti.py | Lumen | LTI 1.3 login/launch ومنصات؛ AGS resource-scoped passback المتقدم في PR #154 غير المدمج فقط |
 | Files | backend/app/routers/files.py | Lumen | User-owned uploads؛ ملف المستخدم لا يصبح مورداً مشتركاً مع AI Core تلقائياً |
-| Admin | backend/app/routers/admin.py | Lumen | Admin-only operations؛ لا تمنح AI Core أو مستخدم خارجي دور admin |
+| Admin | backend/app/routers/admin.py | Lumen | Admin-only operations؛ حماية آخر مدير نشط عبر PR #164؛ لا تمنح AI Core أو مستخدم خارجي دور admin |
 
-**Authorization contract:** Lumen يستخدم أدوار user/teacher/admin على حساب المستخدم، مع Bearer أو browser session cookie، والتحقق من CSRF لطلبات cookie غير الآمنة. لا تفترض أن role string أو user_id من منتج آخر له المعنى نفسه في Lumen.
+**Authorization contract:** Lumen يستخدم أدوار user/teacher/admin على حساب المستخدم، مع Bearer أو browser session cookie، والتحقق من CSRF لطلبات cookie غير الآمنة. `POST /classes/join` محصور بدور `user` (#162)، و`POST /assignments/{assignment_id}/submit` محصور بالطالب (#163)؛ كما تحمي #164 آخر مدير نشط عبر قفل roster معاملاتي مشترك. لا تفترض أن role string أو user_id من منتج آخر له المعنى نفسه في Lumen.
 
-**PR #154 gate:** Draft/Open/Unmerged، HEAD 6c93b49c976245b778800ed63046a2aef321fbb9، 46 ahead / 4 behind main الحالي، mergeable=false. CI run 43779761820 نجح على هذا head، لكنه لا يثبت قبول Moodle/Canvas Sandbox أو الخصوصية والساعة؛ لا يعتمد AGS candidate كعقد production حتى إغلاق تلك البوابات.
+**PR #154 gate:** Draft/Open/Unmerged، HEAD 6c93b49c976245b778800ed63046a2aef321fbb9، 46 ahead / 7 behind Lumen main `fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8`، `mergeable=false`. CI run 43779761820 نجح على ذلك الرأس القديم، لكنه لا يثبت قبول Moodle/Canvas Sandbox أو الخصوصية والساعة؛ لا يعتمد AGS candidate كعقد production حتى إغلاق تلك البوابات.
 
 ### 12.2 ERP Global Pro — main commit 7bb01d23328a68aae67c659fd6c32b6db033637d
 
@@ -203,9 +203,10 @@
 
 | المنتج / SHA | Method + path | الدليل | المصادقة/التحكم المرصود | حالة العقد |
 |---|---|---|---|---|
-| Lumen `ed162b0e0af497abc5710d185fa357357baa6ecc` | `POST /auth/register` | `backend/app/auth/routes.py` + router prefix `/auth` | إنشاء حساب ذاتي؛ يجب ألا يُستخدم كـservice provisioning | Existing product route — لا consumer contract |
+| Lumen `fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8` | `POST /auth/register` | `backend/app/auth/routes.py` + router prefix `/auth` | إنشاء حساب ذاتي؛ يجب ألا يُستخدم كـservice provisioning | Existing product route — لا consumer contract |
 | Lumen | `GET /curriculum/subjects` | `backend/app/routers/curriculum.py` + prefix `/curriculum` | سياق مستخدم Lumen عبر dependencies حيث ينطبق | Existing product route — بيانات تعليمية |
-| Lumen | `POST /classes`, `POST /classes/join` | `backend/app/routers/classes.py` | إنشاء الفصل يتطلب teacher؛ الانضمام عبر دعوة؛ الفصل مملوك للمعلم | Existing product route — لا organization tenant |
+| Lumen | `POST /classes`, `POST /classes/join` | `backend/app/routers/classes.py` | إنشاء الفصل يتطلب teacher؛ الانضمام عبر دعوة؛ endpoint الانضمام يفرض `UserRole.user` فقط (#162)؛ الفصل مملوك للمعلم | Existing product route — لا organization tenant |
+| Lumen | `POST /assignments/{assignment_id}/submit` | `backend/app/routers/assignments.py` | يتطلب حساب الطالب `UserRole.user`؛ teacher/admin يرفضان بـ403 دون إنشاء submission (#163) | Existing product route — لا consumer contract خارجي |
 | Lumen | `GET /files`, `GET /files/{file_id}`, `DELETE /files/{file_id}` | `backend/app/routers/files.py` | كل عمليات الملفات تحت `get_current_user` وملكية `user_id` | Existing product route — user-owned data |
 | Lumen | `GET /lti/jwks`, `GET /lti/login`, `POST /lti/login`, `POST /lti/launch`, `POST /lti/exchange-code` | `backend/app/routers/lti.py` | بروتوكول LTI/OIDC؛ إدارة المنصات تتطلب admin؛ JWKS/login/launch ليست APIs عامة لتسريب درجات | Existing LTI protocol routes؛ AGS passback advanced يبقى PR #154 فقط |
 | AI Chat App `6645b0502daa6922040ee4c6bb5c281ed59ef366` | `POST /agent-jobs` | `ai-backend/app/routers/agent_jobs.py` | `get_current_user`; 202 Accepted؛ سياق المستخدم/Workspace والتحقق من ملكية job | Existing internal product API — لا S2S principal |
@@ -237,7 +238,7 @@
 
 ### 13.1 Lumen — FastAPI
 
-**المصدر:** main `ed162b0e0af497abc5710d185fa357357baa6ecc`، مع مراجعة `backend/app/main.py` وملفات routers ذات الصلة.
+**المصدر:** main `fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8`، مع مراجعة `backend/app/main.py` وملفات routers ذات الصلة.
 
 | Prefix / المجموعة | العمليات المرصودة | نموذج التفويض |
 |---|---|---|
@@ -383,7 +384,7 @@
 **حالة S5-02:** تمت إضافة أول بطاقة عقد مفصلة لمجموعة عامة ثابتة. يبقى جرد schema لكل واجهات Lumen وERP وواجهات AI Chat الأخرى، وعقد service identity منفصل، واختبارات provider/consumer وstaging قبل اعتماد التكامل بين المنتجات.
 ## 15. بطاقة Learning API candidate — Lumen — 2026-11-17
 
-**مرجع المصدر:** Lumen main `ed162b0e0af497abc5710d185fa357357baa6ecc`؛ `backend/app/routers/curriculum.py` و`backend/app/schemas/curriculum.py` و`backend/app/dependencies.py`.
+**مرجع المصدر:** Lumen main `fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8`؛ `backend/app/routers/curriculum.py` و`backend/app/schemas/curriculum.py` و`backend/app/dependencies.py`.
 
 | البند | العقد المثبت على main |
 |---|---|
@@ -436,9 +437,9 @@
 These routes establish that Lumen already owns the learning-path and progress services; they do not establish a service-to-service interface. A future AI tutor may request narrowly scoped curriculum content or an authorized student's progress only through a Lumen-owned adapter. It must not query Lumen's database, reuse its browser cookie, or gain `teacher`/`admin` role. Lumen remains authoritative for lesson mastery and progression; AI Core may return explanations or suggestions but must not write mastery or quiz outcomes unless a separately reviewed Lumen operation exists.
 
 **Source links:**
-- [curriculum.py](https://github.com/HVA09/lumen-learning-platform/blob/ed162b0e0af497abc5710d185fa357357baa6ecc/backend/app/routers/curriculum.py)
-- [schemas/curriculum.py](https://github.com/HVA09/lumen-learning-platform/blob/ed162b0e0af497abc5710d185fa357357baa6ecc/backend/app/schemas/curriculum.py)
-- [dependencies.py](https://github.com/HVA09/lumen-learning-platform/blob/ed162b0e0af497abc5710d185fa357357baa6ecc/backend/app/dependencies.py)
+- [curriculum.py](https://github.com/HVA09/lumen-learning-platform/blob/fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8/backend/app/routers/curriculum.py)
+- [schemas/curriculum.py](https://github.com/HVA09/lumen-learning-platform/blob/fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8/backend/app/schemas/curriculum.py)
+- [dependencies.py](https://github.com/HVA09/lumen-learning-platform/blob/fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8/backend/app/dependencies.py)
 
 **حالة العقد:** route/schema map مثبت للمسارات المذكورة فقط. ليس OpenAPI external contract ولا permission grant ولا integration. تبقى service identity, delegation, student-consent/data-retention, consumer/provider tests وموافقة Lumen prerequisites.
 ## 16. بطاقة سياق الشركة وتبديلها — ERP Global Pro — 2026-11-17
