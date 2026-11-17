@@ -443,7 +443,7 @@
 - السلوك المقترح في PR: تحديث `FileAttachment.workspace_id=NULL` و`project_id=NULL` مع الحفاظ على `user_id` وfile bytes وFileChunks؛ حذف `AssistantFileLink` للمرفقات المتأثرة حتى لا يحتفظ مساعد مشترك بوصول قديم؛ ProjectMemory وProjectFile وpreview artifacts تظل تتبع حذف المشروع/تنظيف المعاينة كما كان.
 - اختبار Regression يثبت أن مالك الملف يراه وينزله من `/files` الشخصية بعد الحذف، بينما عضو مساحة العمل غير المنتمي للمشروع لا يراه في workspace file list ولا يستطيع تنزيله، ولا يحصل RAG الخاص به على أي chunk أو يستدعي embedding provider.
 - تأكيد الواجهة بالعربية والإنجليزية يذكر بوضوح أن المرفقات ستبقى في My Files الخاصة، وستُفصل عن workspace/shared-assistant access، وأن project source files/memory/previews تُحذف وأن المحادثات تبقى في مساحة العمل دون project association.
-- **الفحوص عند آخر تحقق:** CI run `43990553917` pending، وCodeQL run `43990553931` queued على رأس `f75ceef...`. لا توجد نتيجة نجاح بعد.
+- **الفحوص عند آخر تحقق:** CodeQL run `43990553931` نجح (Python وJavaScript/TypeScript، 2/2). CI run `43990553917` ما زال قيد التنفيذ في Backend tests؛ Frontend وSDK وPreview Builder وProduction Compose نجحت. لم يكتمل CI بعد.
 - لم يحدث merge أو data migration أو تعديل سجلات/ملفات إنتاج أو حذف كائنات في Object Storage. PR يبقى Draft حتى إتمام الفحوص والمراجعة واعتماد سياسة الاحتفاظ من مالك المنتج.
 
 **الحالة:** قرار retention المقترح قيد المراجعة، وليس سياسة إنتاجية معتمدة بعد. لا تغلق Issue #724 قبل قبول السلوك واكتمال CI/CodeQL والمراجعة.
