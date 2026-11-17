@@ -301,3 +301,83 @@
 3. تحديد service principals منفصلة وissuer/audience/scopes/expiry/revocation لكل consumer.
 4. إضافة provider/consumer contract tests وnegative authorization/IDOR tests، ثم اختبار في staging أو بيئة disposable.
 5. لا بناء أو نشر Gateway مركزي كشرط مسبق؛ يمكن للعقود أن تعمل بين خدمات مستقلة مباشرة بعد موافقة المالك.
+
+## 14. بطاقة عقد Developer API v1 — AI Chat App — 2026-11-17
+
+**مرجع المصدر:** AI Chat App main `6645b0502daa6922040ee4c6bb5c281ed59ef366`.
+
+| البند | العقد المثبت |
+|---|---|
+| Contract ID | `AIC-DEV-CHAT-001` |
+| Owner | AI Chat App — Developer API |
+| Consumer | مطور خارجي يستخدم API key شخصية؛ لا يوجد service principal بين المنتجات مثبت |
+| Discovery | `GET /v1` |
+| Operation | `POST /v1/chat` |
+| Version | URL version `v1`، ورد ناجح يحمل `X-API-Version: v1` |
+| Authentication | `X-API-Key: ak_live_...` |
+| Request schema | `APIChatRequest` في `ai-backend/app/schemas/api_keys.py` |
+| Response schema | `APIChatResponse` في الملف نفسه |
+| Provider operation | يستدعي AI Chat App داخلياً `get_ai_reply`؛ لا يعرض endpoint provider مباشر |
+| Persistence | ينشئ/يستخدم Conversation ويكتب user/assistant Messages وUsageLog تحت المستخدم المرتبط بالمفتاح |
+| Rate limit | اختياري لكل مفتاح `daily_request_limit` ضمن نافذة متحركة 24h؛ بالإضافة إلى user-plan وworkspace AI limits |
+| Compatibility | التغيير الكاسر في request/response/auth/semantics يتطلب major URL version جديداً مثل `/v2` |
+
+### 14.1 Request / Response
+
+**Request fields:**
+
+| الحقل | النوع | القيد |
+|---|---|---|
+| `message` | string | مطلوب، 1–4000 حرف، trim، غير فارغ |
+| `conversation_id` | integer | null | اختياري؛ يجب أن تكون المحادثة مملوكة للمستخدم المرتبط بالمفتاح وفي مساحة العمل التي حُلت للطلب |
+| `workspace_id` | integer | null | اختياري؛ يحل الخادم Workspace المملوكة للمستخدم ويتحقق من الوصول |
+| `assistant_id` | integer | null | اختياري؛ يحل الخادم المساعد المسموح استخدامه في مساحة العمل |
+| `model` | string | null | اختياري، بحد أقصى 100 حرف؛ يمر عبر قائمة النماذج المتاحة للمستخدم |
+
+**Important omission:** `APIChatRequest` لا يحتوي `project_id` أو `file_ids` أو `tools` أو `stream`. لا توحّد هذا العقد مع `POST /chat` الداخلي أو `/agent-jobs`؛ حقول المشروع/الملفات/الأدوات ليست جزءاً من هذه النسخة العامة.
+
+**Response fields:**
+
+| الحقل | النوع |
+|---|---|
+| `conversation_id` | integer |
+| `reply` | string |
+| `model` | string |
+
+### 14.2 Authentication, ownership and denial semantics
+
+- `APIKey` مرتبط بـ`user_id` عبر FK، وليس باسم تطبيق أو service principal. المفتاح يُنشأ بواسطة مستخدم مصادق عليه في `POST /api-keys`، ويُخزن `key_hash` مع `key_prefix`؛ السر الخام يعاد مرة واحدة عند الإنشاء.
+- المصادقة في `_get_api_key_auth` تتحقق من وجود المفتاح، hash، عدم الإلغاء، عدم انتهاء `expires_at`، وكون حساب المالك فعالاً.
+- إدارة `GET /api-keys` و`POST /api-keys` و`DELETE /api-keys/{key_id}` و`GET /api-keys/{key_id}/usage` تتطلب جلسة المستخدم، وكل عمليات الإدارة scoped إلى `current_user.id`.
+- `conversation_id` يجب أن يطابق `Conversation.user_id` وworkspace الذي تم حله؛ الموارد غير المرئية ترجع 404 وفق مسار المحادثة.
+- الوصول إلى Workspace وAssistant يعاد التحقق منه في خدمة المنتج. الـAPI key يحدد مالك الاستخدام ولا يثبت وحده عضوية Workspace أخرى.
+- المستخدم ومفتاحه يخضعان أيضاً إلى `enforce_daily_ai_limit` و`enforce_workspace_daily_ai_limit`؛ لذلك عدم تعيين `daily_request_limit` للمفتاح لا يعفي من حدود خطة المستخدم/مساحة العمل.
+
+### 14.3 Rate limit / failures
+
+- `daily_request_limit` اختياري، وعند ضبطه يجب أن يكون 1–10000 عند إنشاء المفتاح.
+- يستخدم التطبيق نافذة متحركة مدتها 24 ساعة ويصدر `X-RateLimit-Limit` و`X-RateLimit-Remaining` و`X-RateLimit-Reset` عند انطباق الحد.
+- عند تجاوز حد المفتاح: HTTP 429 مع `Retry-After` وترويسات RateLimit.
+- إذا تعذر limiter في production مع وجود limit: HTTP 503 و`Retry-After: 30` (fail closed).
+- حسب السبب: 401 لمفتاح مفقود/غير صالح/ملغى/منتهي أو حساب غير فعال؛ 422 لمدخل غير مطابق للمخطط أو بيانات إنشاء المفتاح غير صالحة؛ 404 لمورد/مفتاح إدارة غير مملوك؛ 429 لتجاوز المعدل؛ 503 لتعذر خدمة تحديد المعدل في production.
+- اختبارات المصدر: `ai-backend/tests/test_api_keys.py` تغطي الإنشاء/list/revoke، chat auth، owner scoping، invalid/revoked/expired keys، rate-limit headers/429 وmetadata/version header.
+
+### 14.4 قرار إعادة الاستخدام بين المنتجات
+
+<badge color="warning">Not a service identity</badge>
+
+هذا عقد Developer API صالح لمطورين يستخدمون مفتاحاً شخصياً؛ **ليس** عقد ثقة service-to-service بين Lumen وERP وAI Core، للأسباب التالية:
+1. لا يوجد في نموذج `APIKey` حقل service principal أو `audience` أو scopes مستقلة أو consumer identity.
+2. المفتاح مرتبط بحساب شخص محدد ويستهلك حصته وحدوده وملكياته؛ تمريره من منتج آخر يخلط هوية المنتج بهوية المستخدم ويمنح المستهلك حدود المستخدم نفسه.
+3. لا يوجد delegated-user grant مستقل أو token exchange موثق بين issuers.
+4. لا يقبل العقد project/file/tool context المطلوب لبعض سيناريوهات المنتجات؛ لا تمدده ضمن v1 دون مراجعة التوافق.
+
+**النتيجة:** يمكن استخدام هذا API من تكامل مطور خارجي بعد إصدار مفتاحه الشخصي، لكنه لا يؤهل AI Core أو Lumen أو ERP كـservice consumer. يتطلب الربط بين المنتجات عقداً منفصلاً مع service principal وissuer/audience/scopes، وربط delegated subject، وresource owner checks وrevocation واختبارات negative. لا مشاركة JWT أو API keys الشخصية بين المنتجات.
+
+**روابط المصدر:**
+- [api_keys.py](https://github.com/HVA09/ai-chat-app/blob/6645b0502daa6922040ee4c6bb5c281ed59ef366/ai-backend/app/routers/api_keys.py)
+- [schemas/api_keys.py](https://github.com/HVA09/ai-chat-app/blob/6645b0502daa6922040ee4c6bb5c281ed59ef366/ai-backend/app/schemas/api_keys.py)
+- [api_versioning.py](https://github.com/HVA09/ai-chat-app/blob/6645b0502daa6922040ee4c6bb5c281ed59ef366/ai-backend/app/services/api_versioning.py)
+- [DEVELOPER_API.md](https://github.com/HVA09/ai-chat-app/blob/6645b0502daa6922040ee4c6bb5c281ed59ef366/ai-backend/docs/DEVELOPER_API.md)
+
+**حالة S5-02:** تمت إضافة أول بطاقة عقد مفصلة لمجموعة عامة ثابتة. يبقى جرد schema لكل واجهات Lumen وERP وواجهات AI Chat الأخرى، وعقد service identity منفصل، واختبارات provider/consumer وstaging قبل اعتماد التكامل بين المنتجات.
