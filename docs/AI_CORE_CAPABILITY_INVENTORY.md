@@ -477,3 +477,15 @@
 - لم يتضمن PR #162 migration أو schema change أو تغيير بيانات أو إعدادات تشغيل أو نشر.
 
 الأقسام السابقة في هذه الوثيقة التي تشير إلى Lumen main `ed162b0e0af497abc5710d185fa357357baa6ecc` تسجل خط أساس تدقيق 17 نوفمبر قبل PR #162؛ لا تستخدمها بوصفها الرأس الحي الأحدث.
+
+
+## 20. تحديث تدقيق Lumen بعد PR #162/#163/#164 — 17 نوفمبر 2026
+
+**أحدث main المتحقق:** `a386ead55935edd9cfe2c51f109ab894629985cb`. هذا التحديث لا يعدل اللقطات السابقة التي كانت على `ed162b0e0af497abc5710d185fa357357baa6ecc`؛ بل يضيف دليل التغييرات بعد ذلك الرأس.
+
+- **PR #162 — class join:** قصر `POST /classes/join` على `UserRole.user`، ويرفض teacher/admin قبل rate-limit أو إنشاء `ClassEnrollment`. CI #44018148362 نجح 4/4.
+- **PR #163 — assignment submit:** قصر `/assignments/{id}/submit` على student account، مع اختبارات رفض teacher/admin دون side effects ونجاح الطالب المسجل. CI #44019697516 نجح 4/4؛ دمج الرأس عند `a386ead55935edd9cfe2c51f109ab894629985cb`.
+- **PR #164 — last active administrator:** مفتوح على branch `fix/security-preserve-active-admin-20261117`، HEAD `055c9104257f8a86f6cf1aaedbd10c3295c2c50e`، base `a386ead55935edd9cfe2c51f109ab894629985cb`. يضيف قفلاً معاملاتيّاً مشتركاً لمجموعة المديرين النشطين ويمنع حذف/تعطيل/خفض آخر مدير نشط من مسارات profile/admin، ويوسع bootstrap للاستعادة إذا لم يوجد مدير نشط، ويضيف اختبارات انحدار ودليل `ADMIN_RECOVERY_RUNBOOK.md`.
+- **حالة CI على HEAD أعلاه:** Gitleaks PR-range scan وفحص جميع refs/full history/archive نجحا، وFrontend tests/production build نجحت؛ Backend tests وBrowser E2E ما زالا قيد التنفيذ في run #44147071335. لا merge ولا ادعاء بأن main محمي حتى تكمل الوظائف الأربع وتُدمج PR.
+- **حدود S1-02 / LUM-010:** PR #164 يعالج حذف آخر admin فقط؛ لا يحسم سياسة ملكية تحديث/حذف الأسئلة والدروس بين المعلمين، ولا يكمل جرد جميع endpoints وUI أو اختبارات cross-teacher IDOR. تبقى S1-02 وLUM-010 In Progress.
+- لم تُجر أي عملية على قاعدة إنتاج أو حساب فعلي، ولم يحدث promotion أو deployment أو migration أو تغيير secrets أو runtime settings.
