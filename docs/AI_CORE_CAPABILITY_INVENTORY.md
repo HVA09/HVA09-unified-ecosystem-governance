@@ -433,3 +433,17 @@
 - لم نشغّل `--run-live`، ولم نستخدم مفاتيح API أو استهلكنا quota، ولم ننتج baseline أو نتائج model quality.
 
 **التقييم:** تصميم benchmark واعد كبداية: corpus ثابت، labels متدرجة، preflight آمن، metrics واضحة، مقارنة case-level، وrubric متخصص. لكنه لا يصبح S4-09 Verified قبل فصل candidate عن PR #665، مزامنته على main، اجتياز CI/CodeQL، اعتماد rubric من مراجع بشري، إجراء baseline حي مصرح به عند توفر البيئة، وإضافة اختبارات تغطي end-to-end RAG/chunk retrieval وcitation semantic support وsecurity/critical failures. أبقِ التقييم المباشر opt-in، ولا تعتمد درجات اصطناعية كدليل على أداء الإنتاج.
+
+
+## 17. سياسة ملفات المشاريع عند حذفها — AI Chat App PR #725 — 2026-11-17
+
+- **Issue:** [AI Chat App #724](https://github.com/HVA09/ai-chat-app/issues/724) ما زالت مفتوحة.
+- **الاقتراح الحالي:** Retain privately — الاحتفاظ بمرفقات المشروع في نطاق مالك الملف الشخصي بدلاً من الترقية الضمنية إلى نطاق مساحة العمل.
+- **PR:** [AI Chat App #725](https://github.com/HVA09/ai-chat-app/pull/725)، Draft/Open/Unmerged، branch `security/project-delete-private-files-20261117`، HEAD `f75ceefe790538b96be071c4c86b4e072f25e626`، base/main `6645b0502daa6922040ee4c6bb5c281ed59ef366`.
+- السلوك المقترح في PR: تحديث `FileAttachment.workspace_id=NULL` و`project_id=NULL` مع الحفاظ على `user_id` وfile bytes وFileChunks؛ حذف `AssistantFileLink` للمرفقات المتأثرة حتى لا يحتفظ مساعد مشترك بوصول قديم؛ ProjectMemory وProjectFile وpreview artifacts تظل تتبع حذف المشروع/تنظيف المعاينة كما كان.
+- اختبار Regression يثبت أن مالك الملف يراه وينزله من `/files` الشخصية بعد الحذف، بينما عضو مساحة العمل غير المنتمي للمشروع لا يراه في workspace file list ولا يستطيع تنزيله، ولا يحصل RAG الخاص به على أي chunk أو يستدعي embedding provider.
+- تأكيد الواجهة بالعربية والإنجليزية يذكر بوضوح أن المرفقات ستبقى في My Files الخاصة، وستُفصل عن workspace/shared-assistant access، وأن project source files/memory/previews تُحذف وأن المحادثات تبقى في مساحة العمل دون project association.
+- **الفحوص عند آخر تحقق:** CI run `43990553917` pending، وCodeQL run `43990553931` queued على رأس `f75ceef...`. لا توجد نتيجة نجاح بعد.
+- لم يحدث merge أو data migration أو تعديل سجلات/ملفات إنتاج أو حذف كائنات في Object Storage. PR يبقى Draft حتى إتمام الفحوص والمراجعة واعتماد سياسة الاحتفاظ من مالك المنتج.
+
+**الحالة:** قرار retention المقترح قيد المراجعة، وليس سياسة إنتاجية معتمدة بعد. لا تغلق Issue #724 قبل قبول السلوك واكتمال CI/CodeQL والمراجعة.
