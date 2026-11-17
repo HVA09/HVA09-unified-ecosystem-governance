@@ -31,7 +31,7 @@
 
 | المسار | رأس main عند الإعداد | نقطة الاستئناف |
 |---|---|---|
-| Lumen | `fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8` | PRs #162/#163/#164 مدمجة؛ CI #44150551971 نجح 4/4 على main بعد PR #164. PR #154 ما زال Draft/Unmerged ويحتاج refresh/rebase على هذا الرأس، CI حديثاً، ثم بوابات Moodle/Canvas والخصوصية/clock/worker؛ لا يُدمج قبل إغلاقها. |
+| Lumen | `fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8` | PRs #162/#163/#164 مدمجة؛ CI #44150551971 نجح 4/4 على main بعد PR #164. PR #165 للتوثيق فقط مبني على هذا الرأس (3 ahead / 0 behind) وCI #44154286229 نجح 4/4؛ ما زال Open/Unmerged وينتظر المراجعة. PR #154 ما زال Draft/Unmerged، 46 ahead / 7 behind و`mergeable=false`؛ يحتاج refresh/rebase على هذا الرأس، CI حديثاً، ثم بوابات Moodle/Canvas والخصوصية/clock/worker؛ لا يُدمج قبل إغلاقها. |
 | AI Chat App | `6645b0502daa6922040ee4c6bb5c281ed59ef366` | PR #717 دمج مصالحة A–G وH–T؛ #721/#722/#723 أصلحت MCP role gate وproject ACL وscheduled-task RBAC مع CI/CodeQL ناجحين؛ PR #665 يبقى Draft ولا يدمج ككتلة. |
 | ERP | `7bb01d23328a68aae67c659fd6c32b6db033637d` | SQLite v8 نشطة؛ Stage25C على نسخة فعلية مستعادة غير مثبت؛ TENANT_DATA_SCOPING_ENABLED=False. |
 | AI Core | لا يوجد خط أساس برمجي معتمد | يبدأ بجرد القدرات والمتطلبات، بلا شراء GPU أو تكرار قدرات. |
