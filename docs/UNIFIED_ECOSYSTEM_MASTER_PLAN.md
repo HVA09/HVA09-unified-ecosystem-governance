@@ -1,6 +1,6 @@
 # المرجع الرئيسي للمنظومة التقنية المتكاملة
 
-- **الإصدار:** 2.4
+- **الإصدار:** 2.5
 - **تاريخ المراجعة:** 17 نوفمبر 2026
 - **الحالة:** مرجع حوكمة معتمد؛ يحدد الاتجاه المشترك ولا يحل محل مصدر الحقيقة داخل كل منتج.
 - **المستودع الحاكم للتوافق بين المنتجات:** `HVA09/HVA09-unified-ecosystem-governance`
@@ -119,7 +119,7 @@
 
 | المستودع | رأس `main` المتحقق | آخر التغييرات والحالة المؤثرة |
 |---|---|---|
-| Lumen | `fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8` | PR #158/#161/#162/#163/#164 مدمجة. PR #164 يحمي آخر مدير نشط عبر profile/admin/bootstrap بtransaction-scoped PostgreSQL advisory lock وre-read للـactor/target بعد القفل؛ CI #44149632805 نجح 4/4 (Backend، Frontend/build، Browser E2E، Full Git history secret scan)، وthread المراجعة الخاص بسباق roster lock حُلّ بعد إصلاحه وإضافة اختبارات. لا تغيير DB schema/migration ولا ترقية حساب حقيقي ولا deployment. PR #154 يبقى Open + Draft + `mergeable=false`، 46 ahead / 7 behind؛ يحتاج rebase وإعادة CI وMoodle/Canvas Sandbox والخصوصية والتوقيت والعمال. PR #160 توثيقي Open، 13 ahead / 3 behind؛ لا يدمج قبل تحديثه على الرأس الحالي وإعادة فحوصه. Issues #134/#150 مفتوحتان. |
+| Lumen | `fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8` | PR #158/#161/#162/#163/#164 مدمجة. PR #164 يحمي آخر مدير نشط عبر profile/admin/bootstrap بtransaction-scoped PostgreSQL advisory lock وre-read للـactor/target بعد القفل؛ CI #44149632805 على PR و#44150551971 على main نجحا 4/4، وthread المراجعة حُلّ بعد إصلاح سباق roster lock واختبارات الانحدار. لا تغيير DB schema/migration ولا ترقية حساب حقيقي ولا deployment. PR #154 يبقى Open + Draft + `mergeable=false`، 46 ahead / 7 behind؛ يحتاج rebase وإعادة CI وMoodle/Canvas Sandbox والخصوصية والتوقيت والعمال. PR #160 أُغلق كمستبدل؛ تحديث الوثائق الجديد PR #165 مبني على هذا الرأس، 3 ahead / 0 behind، وفحوصه الأربعة كانت queued عند آخر تحقق. Issues #134/#150 مفتوحتان. |
 | AI Chat App | `6645b0502daa6922040ee4c6bb5c281ed59ef366` | PRs #721/#722/#723 مدمجة؛ Issues #718/#719/#720 مغلقة بعد نجاح CI وCodeQL. PR #725 مفتوح وDraft؛ CI #43990553917 وCodeQL #43990553931 نجحا، لكنه ينتظر مراجعة واعتماد مالك المنتج لسياسة الاحتفاظ؛ Issue #724 مفتوحة. PR #665 ما زال Draft وغير قابل للدمج، ولا يدمج ككتلة. Issues #683 و#674 تتطلبان متابعة. |
 | ERP Global Pro | `7bb01d23328a68aae67c659fd6c32b6db033637d` | PR #13 مدمج؛ SQLite v8 ما زالت قاعدة التطبيق النشطة. Stage25C لم يُثبت على نسخة فعلية مستعادة؛ `TENANT_DATA_SCOPING_ENABLED=False` يظل إلزامياً، ولا PostgreSQL cutover أو تفعيل multi-company. |
 
@@ -292,6 +292,7 @@ LTI 1.3 وAGS تكامل إضافي منفصل. لا يُسمح بأن يوقف 
 | 2026-11-17 | 2.2 | تحديث حالة PR #160 التوثيقي بعد دفع نقطة Lumen الجديدة: 13 ahead / 2 behind، mergeable حالياً، وفحوص CI #44023930100 قيد التنفيذ؛ لا دمج قبل انتهائها. |
 | 2026-11-17 | 2.3 | دمج Lumen PR #164 عند `fe3a875` بعد نجاح CI #44149632805 (4/4) وحل مراجعة سباق roster lock؛ تحديث PR #154 إلى 46 ahead / 7 behind وPR #160 إلى 13 ahead / 3 behind؛ إبقاء S1-02 مفتوحة لقرار ملكية المحتوى بين المعلمين. |
 | 2026-11-17 | 2.4 | مطابقة Lumen بعد PR #164 مع CI main #44150551971 الناجح 4/4؛ تثبيت رأس `fe3a875` في نقطة الاستئناف، وتأكيد أن LUM-010/S1-02 يبقيان In Progress حتى حسم ملكية محتوى المنهج واختبارات cross-teacher IDOR؛ إبقاء PR #160 التوثيقي غير مدمج إلى حين تحديثه على أحدث main. |
+| 2026-11-17 | 2.5 | إغلاق Lumen PR #160 التوثيقي القديم لاستناده إلى main سابق، وإنشاء PR #165 من رأس `fe3a875` بعد تحديث الاستمرارية والحالة وفرز PRs؛ compare 3 ahead / 0 behind وفحوص CI الأربعة queued. PR #165 لا يُعتبر مدمجاً قبل نجاح CI ومراجعة التغييرات. |
 
 ## 12. قواعد تحديث المرجع
 
