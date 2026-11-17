@@ -19,7 +19,8 @@
 13. [مصفوفة أدوات وصلاحيات الوكلاء — S4-06](docs/AI_CORE_AGENT_TOOL_MATRIX.md)
 14. [سجل ملكية المنتجات وحدود التكامل](docs/PRODUCT_OWNERSHIP_AND_INTERFACE_CATALOG.md)
 15. [كتالوج عقود API بين المنتجات — S5-02](docs/PRODUCT_API_CONTRACT_CATALOG.md)
-16. [السجل التاريخي لمقترح دفعة 15 مهمة — مستبدل](docs/UNIFIED_BATCH_EXECUTION_PLAN.md)
+16. [تصميم Model Gateway وسجل النماذج — S4-04](docs/AI_CORE_MODEL_GATEWAY_DESIGN.md)
+17. [السجل التاريخي لمقترح دفعة 15 مهمة — مستبدل](docs/UNIFIED_BATCH_EXECUTION_PLAN.md)
 
 ## قاعدة مصدر الحقيقة
 
