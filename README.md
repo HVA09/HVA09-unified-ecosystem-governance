@@ -30,6 +30,7 @@
 24. [نقطة تدقيق الصلاحيات الثالثة في Lumen — UI وE2E والمهام الخلفية](docs/LUMEN_AUTHORIZATION_AUDIT_CHECKPOINT_3_20261117.md)
 25. [نقطة تدقيق الصلاحيات الرابعة في Lumen — الاختبارات والفوترة](docs/LUMEN_AUTHORIZATION_AUDIT_CHECKPOINT_4_20261117.md)
 26. [نقطة تدقيق الصلاحيات الخامسة في Lumen — الصفوف والواجبات والملفات والإدارة](docs/LUMEN_AUTHORIZATION_AUDIT_CHECKPOINT_5_20261117.md)
+27. [نقطة تدقيق الصلاحيات السادسة في Lumen — المصادقة والجلسات و2FA](docs/LUMEN_AUTHORIZATION_AUDIT_CHECKPOINT_6_20261117.md)
 
 ## قاعدة مصدر الحقيقة
 
