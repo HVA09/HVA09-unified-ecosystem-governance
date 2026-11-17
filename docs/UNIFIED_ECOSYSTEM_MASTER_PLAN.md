@@ -119,7 +119,7 @@
 
 | المستودع | رأس `main` المتحقق | آخر التغييرات والحالة المؤثرة |
 |---|---|---|
-| Lumen | `18928282deff93ca9680d30d937ad72675f04cfa` | PR #158/#161 مدمجان. PR #162 مدمج عند هذا الرأس لإصلاح student-only `/classes/join`؛ CI #44018148362 نجح بالكامل (Backend, Frontend/build, Browser E2E, secret scan). PR #154 ما زال Open + Draft و`mergeable=false` (46 ahead / 5 behind)؛ لا دمج قبل rebase وMoodle/Canvas والخصوصية والتوقيت والعمال. PR #160 توثيقي مفتوح لكن `mergeable=false` (10 ahead / 1 behind)، ويحتاج مزامنة بعد تقدم main. Issues #134 و#150 مفتوحتان. لم يُشغّل bootstrap على حساب حقيقي. |
+| Lumen | `18928282deff93ca9680d30d937ad72675f04cfa` | PR #158/#161/#162 مدمجة؛ PR #162 أصلح student-only `/classes/join` وCI #44018148362 نجح 4/4. PR #163 مفتوح لتقييد `/assignments/{id}/submit` على الطلاب؛ CI #44019697516 في Queued. PR #154 يبقى Draft و`mergeable=false` (46 ahead / 5 behind)، ويحتاج rebase وبوابات Moodle/Canvas/الخصوصية/التوقيت/العمال. PR #160 doc-only مفتوح و`mergeable=false` (10 ahead / 1 behind). Issues #134 و#150 مفتوحتان. لم يُشغّل bootstrap على حساب حقيقي. |
 | AI Chat App | `6645b0502daa6922040ee4c6bb5c281ed59ef366` | PRs #721/#722/#723 مدمجة؛ Issues #718/#719/#720 مغلقة بعد نجاح CI وCodeQL. PR #725 مفتوح وDraft على `f75ceefe790538b96be071c4c86b4e072f25e626`؛ CI #43990553917 وCodeQL #43990553931 نجحا، لكنه ينتظر مراجعة واعتماد مالك المنتج لسياسة الاحتفاظ؛ Issue #724 مفتوحة. PR #665 ما زال Draft وغير قابل للدمج، ولا يدمج ككتلة. Issues #683 و#674 تتطلبان متابعة. |
 | ERP Global Pro | `7bb01d23328a68aae67c659fd6c32b6db033637d` | PR #13 مدمج؛ SQLite v8 ما زالت قاعدة التطبيق النشطة. Stage25C لم يُثبت على نسخة فعلية مستعادة؛ `TENANT_DATA_SCOPING_ENABLED=False` يظل إلزامياً، ولا PostgreSQL cutover أو تفعيل multi-company. |
 
