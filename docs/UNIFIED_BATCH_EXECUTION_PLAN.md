@@ -226,3 +226,23 @@
 - **LUM-006:** PR #158 مفتوح على فرع `fix/first-admin-bootstrap-20261116`، Base `9d766cc30525c706bd867d9736b15f74dc2acac7`, Head `9d96128890821e3f9ebe0d80732aa85fa3b2927d`. Browser E2E وFrontend tests/build وfull-history secret scan نجحت في CI #43954238447؛ Backend لا يزال قيد التنفيذ. لا دمج قبل نجاحه.
 - **LUM-006:** PR #5 القديم أغلق دون دمج؛ فرعه متباعد 138 commit خلف main. البديل لا يغيّر route التسجيل أو Dockerfile، لأن main يمنح user عند التسجيل، والأداة الجديدة داخل app package التي تنسخها صورة Docker الحالية.
 - لا تشغيل لأمر bootstrap أو ترقية حساب فعلي ضمن هذه المتابعة.
+
+
+## 12. سجل تحقق لاحق — 17 نوفمبر 2026 (تاريخي؛ لا يعيد تفعيل دفعة 15 مهمة)
+
+هذا الملحق يحفظ نتائج التحقق اللاحقة التي وردت في تحديث PR #3. لا يغيّر حالة هذه الخطة: وثيقة تاريخية مستبدلة، والبرنامج النشط هو خطة المراحل الخمس و50 حزمة في `UNIFIED_50_TASK_EXECUTION_PLAN.md`.
+
+| المجال | نتيجة التحقق حتى 17 نوفمبر | الحالة والقيود |
+|---|---|---|
+| Lumen — الوظائف الأساسية | مراجعة المسارات الأساسية للمصادقة والجلسات والفصول والواجبات والمحتوى والمنهج والتقارير دون عيب مؤكد في النطاق المفحوص؛ CI #43967362902 نجح في Backend وFrontend/build وBrowser E2E وFull Git history secret scan. Browser E2E شمل 390×844 وlocale عربي واختبار RTL/LTR. | LUM-001 Done على مستوى المراجعة وCI؛ لا ادعاء باختبار هاتف فعلي أو نشر إنتاجي. |
+| Lumen — تهيئة المدير | PR #158 دمج bootstrap محروساً، ثم PR #161 أزال `backend/app/create_admin.py` القديم وصحح README؛ main عند `ed162b0e0af497abc5710d185fa357357baa6ecc`. | LUM-006 Done؛ لم يُشغّل أمر ترقية مدير على حساب حقيقي أو قاعدة إنتاج. |
+| Lumen — LTI/AGS | PR #154 ما زال Open + Draft و`mergeable=false`; Sandbox Moodle/Canvas وبوابات same-origin واحتفاظ/تشفير `lti_subject` والساعة/العمال ما زالت مطلوبة. | LUM-002 In Progress؛ لا دمج قبل rebase وإعادة التحقق. |
+| Lumen — Python lab | مراجعة Pyodide داخل iframe بأصل opaque وCSP؛ الحد 20,000 حرف و8 ثوانٍ مع الإلغاء، دون حد ذاكرة صلب. | LUM-007 In Progress؛ Issue #134 مفتوحة، وليس OS sandbox. |
+| AI Chat App — الأمان | PR #717 دمج مصالحة A–G/H–T؛ ثم PRs #721/#722/#723 دمجت قيود MCP العامة وACL لأدوات الملفات وWorkspace RBAC للمهام المجدولة. | CHAT-001 وCHAT-007/#718 وCHAT-008/#719 وCHAT-009/#720 مغلقة وفق CI/CodeQL المسجلين. |
+| AI Chat App — مرفقات المشاريع | Issue #724 مفتوحة؛ PR #725 Draft يقترح الاحتفاظ الخاص بالمرفقات وإزالة روابط المساعدين المشتركين. CI #43990553917 وCodeQL #43990553931 نجحا على رأسه. | CHAT-010 وCORE-005 لا يغلقان قبل المراجعة اليدوية وقبول مالك المنتج لسياسة الاحتفاظ؛ لم يحدث نشر. |
+| AI Chat App — الاستقرار والواجهة | ما زالت متابعة Sidebar/actions/composer/mobile/RTL وتحليل provider failures مطلوبة؛ Issue #674 تتطلب Stage telemetry لتحديد سبب ضغط QueuePool. | CHAT-005 وCHAT-006 In Progress؛ لا تغييرات عشوائية في Render/Supabase. |
+| ERP | PR #13 مدمج؛ SQLite v8 هي قاعدة التطبيق، ولم يثبت Stage25C على نسخة مستخدم مستعادة. `TENANT_DATA_SCOPING_ENABLED=False`. | ERP-002 Blocked وERP-004 In Progress؛ لا PostgreSQL cutover أو multi-company enablement. |
+
+PR #160 في Lumen طلب توثيقي مفتوح على main `ed162b0e0af497abc5710d185fa357357baa6ecc`; لا يُعامل كمهمة منتج منجزة قبل الدمج والتحقق.
+
+لم تغيّر هذه المراجعة المستودعات المنتجية أو قواعد بياناتها أو أسرارها أو إعدادات النشر. جميع أعمال المنتج تبقى في مستودعاتها وفروعها وPRs المستقلة.
