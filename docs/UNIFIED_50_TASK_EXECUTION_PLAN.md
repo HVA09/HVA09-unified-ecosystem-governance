@@ -45,7 +45,7 @@
 | المعرّف | حزمة العمل | الحالة الأولية | الاعتماديات / معيار القبول |
 |---|---|---|---|
 | S1-01 | تهيئة أول مدير ومسار صلاحيات التشغيل المقيد | **Done — merged + CI evidence** | PR #158 أضاف bootstrap المحروس وCI #43957299993 نجح 4/4؛ PR #161 أزال CLI القديم `backend/app/create_admin.py` وصحح README. Lumen main الحالي `a386ead55935edd9cfe2c51f109ab894629985cb` يتضمن دمج #162/#163 اللاحقين. لم يُشغّل أمر ترقية مدير على حساب حقيقي أو قاعدة إنتاج. **مرجع سجل المنتج: LUM-006؛ نفس العمل وليس مهمة إضافية.** |
-| S1-02 | مصفوفة الحسابات والجلسات وأدوار الطالب والمعلم والمدير | In Progress — broader route audit | مراجعة المصدر على main `a386ead55935edd9cfe2c51f109ab894629985cb` تحققت من session-bound cookies وCSRF و`token_version` والتحقق من `AuthSession`، و`require_admin`/`require_teacher`، واختبارات logout per-device وrefresh rotation/replay وpassword reset/change وdeactivation invalidation. PR #162 منع teacher/admin من إنشاء ClassEnrollment؛ CI #44018148362 نجح 4/4. ما زال جرد كل endpoints وIDOR وواجهات الأدوار مطلوباً. **المراجع: LUM-008 (class join, Done) وLUM-010 (audit, In Progress).** |
+| S1-02 | مصفوفة الحسابات والجلسات وأدوار الطالب والمعلم والمدير | In Progress — route audit + content-ownership decision | مراجعة القراءة على main `a386ead55935edd9cfe2c51f109ab894629985cb` شملت auth/session/CSRF/token revocation وclass/assignment ownership، والملفات والتقارير والإشعارات والاشتراكات وLTI والمحتوى والمنهج. PR #162/#163 أغلقا حدي class-join وassignment-submit مع CI 4/4 لكل منهما. الملاحظة غير المحسومة: هل إدارة content سؤال/درس مشتركة لكل المعلمين أم مقيدة بمنشئ المورد؟ `content.py` لا يفحص owner في update/delete، والاختبارات الحالية لا تغطي cross-teacher access. يلزم حسم السياسة وإضافة اختبارات IDOR/negative، إضافة إلى إكمال جرد المسارات وواجهات الدور. **المراجع: LUM-008 وLUM-009 Done؛ LUM-010 In Progress.** |
 | S1-03 | دورة المقرر والتسجيل وإدارة الصفوف | Audit / Ready | إنشاء/نشر/أرشفة وتسجيل/إلغاء التسجيل؛ المعلم يرى صفوفه فقط؛ Backend وBrowser E2E. |
 | S1-04 | دورة الدروس والمحتوى والتقدم | Audit / Ready | نشر وإخفاء الدرس، منع الطالب من رؤية غير المنشور، استمرار completion بعد reload. |
 | S1-05 | الواجبات والاختبارات والتسليم والتصحيح | In Progress — submission-role fix merged | PR #163 مدمج عند `a386ead55935edd9cfe2c51f109ab894629985cb`، وCI #44019697516 نجح 4/4. التغيير يفرض `UserRole.user` على `/assignments/{id}/submit` ويختبر رفض teacher/admin دون آثار جانبية ونجاح الطالب المسجل. تبقى مراجعة دورة الواجبات/الاختبارات كاملة ومعايير القبول الأوسع. **مرجع سجل المنتج: LUM-009؛ لا تنشئ إصلاحاً مكرراً.** |
@@ -151,7 +151,7 @@
 | حزم البرنامج | معرفات السجل المرتبطة | قاعدة منع التكرار |
 |---|---|---|
 | S1-01 | LUM-006 | نفس مسار bootstrap؛ Done وفق PR #158 و#161، مع بقاء قاعدة عدم تشغيل bootstrap على حساب حقيقي دون تفويض تشغيلي مستقل. |
-| S1-02 | LUM-008، LUM-010 | PR #162 أغلق فجوة class-join (Done)؛ LUM-010 يتتبع مراجعة RBAC/session/IDOR الأوسع ولا يُغلق حتى اكتمال جرد المسارات. |
+| S1-02 | LUM-008، LUM-010 | PR #162 أغلق فجوة class-join (Done)؛ LUM-010 يتتبع مراجعة RBAC/session/IDOR الأوسع وقرار ملكية محتوى السؤال/الدرس بين المعلمين، ولا يُغلق حتى اعتماد السياسة واكتمال اختبارات المسارات. |
 | S1-05 | LUM-009 | PR #163 مدمج وCI #44019697516 نجح 4/4 لبوابة student-only submission؛ تبقى دورة الواجبات/التصحيح/الاختبارات الأوسع مفتوحة. |
 | S1-08 | LUM-001 | دليل جزئي فقط: LUM-001 يغطي مراجعة الوظائف وBrowser E2E؛ قبول الهاتف الفعلي في S1-08 ما زال مفتوحاً. |
 | S1-09 | LUM-007 | نفس مسار قبول مختبر Python؛ يبقى In Progress حتى حد الموارد وقبول الجهاز/المتصفح. |
