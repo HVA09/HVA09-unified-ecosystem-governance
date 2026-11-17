@@ -380,7 +380,7 @@
 ## 16. تدقيق Benchmark الاسترجاع وتقييم الوكلاء — 2026-11-17
 
 **مصدر المرشح:** AI Chat App PR #665، الفرع `ai/embedding-provider-separation-20261025`، HEAD `4792285440511833b66e1045bc235143a5a302a5`.  
-**حالة PR عند التدقيق:** Open / Draft / Unmerged / `mergeable=false`، base SHA `509e58368ee679b80c9bba2a3afe0a457fa2ae34` وليس main الحالي `6645b0502daa6922040ee4c6bb5c281ed59ef366`. لم تظهر workflow runs مرتبطة بـHEAD هذا في فحص GitHub الحالي. لذلك كل ملفات benchmark التالية candidate على فرع المسودة وليست capabilities في main، ولا توجد نتائج CI أو baseline معتمدة لهذا الرأس.
+**حالة PR عند المطابقة الحالية:** Open / Draft / Unmerged / `mergeable=false`، HEAD `4792285440511833b66e1045bc235143a5a302a5`، وbase المسجل `509e58368ee679b80c9bba2a3afe0a457fa2ae34` أقدم من main الحالي `6645b0502daa6922040ee4c6bb5c281ed59ef366`؛ المقارنة 460 ahead / 77 behind. CI #41247792816 وCodeQL #41247792783 نجحا على exact head، لكن ذلك لا يثبت التوافق مع main الحالي بعد 77 commit خلفاً. لذلك كل ملفات benchmark التالية candidate على فرع المسودة وليست capabilities في main؛ لا يوجد live baseline أو نتائج جودة نموذج معتمدة.
 
 ### 16.1 مجموعة RAG Retrieval candidate
 
@@ -430,7 +430,7 @@
 - main الحالي يحتوي اختبارات RAG وظيفية/أمنية في `tests/test_rag.py` (18 test functions)، لكنها لا تشكل benchmark relevance-labelled ولا تنتج baseline جودة embeddings.
 - ملفات `rag_evaluation.py` وrunner والfixture وcitation evaluation وspecialist dataset غير موجودة في main؛ هي تغييرات PR #665 غير المدمج.
 - توجد في الفرع 25 اختباراً لمجموعة/مقاييس RAG، و8 اختبارات لاتساق citation IDs، واختباران بنيويان لمجموعة specialist. هذه أعداد الاختبارات المكتوبة في candidate وليست نتائج CI.
-- لم يظهر تشغيل workflow على exact PR #665 head `4792285...`; كما أن PR Draft وmergeable=false وقاعدته قديمة مقارنة بـmain. لا يوجد ما يثبت أن candidate قد اجتاز CI الحالي أو أنه متوافق مع main.
+- CI #41247792816 وCodeQL #41247792783 اكتملَا بنجاح على exact PR #665 head `4792285440511833b66e1045bc235143a5a302a5`. لكن الفرع ما زال 460 ahead / 77 behind main الحالي و`mergeable=false`؛ هذه النتائج تخص الرأس غير المتزامن ولا تثبت التوافق مع main الحالي أو اجتياز فحوص بعد rebase.
 - لم نشغّل `--run-live`، ولم نستخدم مفاتيح API أو استهلكنا quota، ولم ننتج baseline أو نتائج model quality.
 
 **التقييم:** تصميم benchmark واعد كبداية: corpus ثابت، labels متدرجة، preflight آمن، metrics واضحة، مقارنة case-level، وrubric متخصص. لكنه لا يصبح S4-09 Verified قبل فصل candidate عن PR #665، مزامنته على main، اجتياز CI/CodeQL، اعتماد rubric من مراجع بشري، إجراء baseline حي مصرح به عند توفر البيئة، وإضافة اختبارات تغطي end-to-end RAG/chunk retrieval وcitation semantic support وsecurity/critical failures. أبقِ التقييم المباشر opt-in، ولا تعتمد درجات اصطناعية كدليل على أداء الإنتاج.
