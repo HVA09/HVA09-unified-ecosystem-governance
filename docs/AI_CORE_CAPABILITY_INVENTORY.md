@@ -489,3 +489,16 @@
 - **حالة CI على HEAD أعلاه:** Gitleaks PR-range scan وفحص جميع refs/full history/archive نجحا، وFrontend tests/production build نجحت؛ Backend tests وBrowser E2E ما زالا قيد التنفيذ في run #44147071335. لا merge ولا ادعاء بأن main محمي حتى تكمل الوظائف الأربع وتُدمج PR.
 - **حدود S1-02 / LUM-010:** PR #164 يعالج حذف آخر admin فقط؛ لا يحسم سياسة ملكية تحديث/حذف الأسئلة والدروس بين المعلمين، ولا يكمل جرد جميع endpoints وUI أو اختبارات cross-teacher IDOR. تبقى S1-02 وLUM-010 In Progress.
 - لم تُجر أي عملية على قاعدة إنتاج أو حساب فعلي، ولم يحدث promotion أو deployment أو migration أو تغيير secrets أو runtime settings.
+
+
+## 21. نتيجة دمج حماية آخر مدير نشط — Lumen PR #164 — 17 نوفمبر 2026
+
+**الحالة النهائية:** مدمج في Lumen main عند `fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8`، والـparent هو `a386ead55935edd9cfe2c51f109ab894629985cb`.
+
+- PR [#164](https://github.com/HVA09/lumen-learning-platform/pull/164) دمج Squash بعد إصلاح P2 race finding: roster lock يؤخذ قبل قراءة target عند تغيير الدور/الحالة أو الحذف؛ actor وtarget يعاد قراءتهما من DB باستخدام `with_for_update()` و`populate_existing()`؛ حذف الحساب الشخصي يعيد قراءة الحساب ويتحقق من النشاط وtoken_version بعد القفل.
+- **CI run #44149632805** نجح بالكامل على exact head `cb5d896d34bdcd518afa7fdbcd60e5c85a5a120c`: Backend tests، Frontend tests + production build، Browser E2E، Full Git history secret scan.
+- مراجعة Codex وجدت سباقاً في قراءة دور الهدف قبل القفل. أُصلح هذا السباق، أضيفت اختبارات race regression لترقية الهدف/خفض المنفّذ في update/delete/self-delete، ثم تم الرد على finding وحلّ review thread بعد نجاح الفحوص.
+- أضيف `backend/app/admin_guard.py` كقفل مشترك transaction-scoped في PostgreSQL؛ ويستخدمه admin/profile/bootstrap. أضيف `docs/ADMIN_RECOVERY_RUNBOOK.md`، كما أصبح bootstrap يسمح بالاستعادة عند عدم وجود أي مدير نشط حتى لو بقيت سجلات admin غير نشطة.
+- **حدود الأثر:** لا migrations أو schema changes، لا تعديل سجلات/حسابات إنتاج، لا تشغيل أمر bootstrap أو استعادة مدير فعلي، لا أسرار أو إعدادات runtime أو deployment.
+- **ما يبقى في LUM-010 / S1-02:** قرار مالك المنتج بشأن إدارة الأسئلة والدروس: هل المحتوى مشترك بين كل المعلمين أم owner-scoped؟ مسارات update/delete في `content.py` لا تطبق حالياً تحقق منشئ المورد، والاختبارات cross-teacher غير موجودة. يبقى هذا القرار واختبارات IDOR وجرد endpoints/UI مفتوحاً؛ دمج #164 لا يغلق LUM-010 أو S1-02 بالكامل.
+- **تبعيات Lumen الأخرى:** PR #154 ما زال Draft وغير قابل للدمج، 46 ahead / 7 behind؛ يحتاج rebase وCI ومختبري Moodle/Canvas وبوابات الخصوصية والتوقيت/العمال. PR #160 توثيقي متأخر 3 commits عن main ويجب تحديثه قبل الدمج.
