@@ -19,11 +19,14 @@
 
 ### 2.1 Lumen
 
-**المصدر:** main `ed162b0e0af497abc5710d185fa357357baa6ecc`.
+**المصدر:** Lumen main الحالي بعد PR #164: `fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8`.
 
 - `UserRole` على مستوى حساب المنصة: `user`, `teacher`, `admin`.
 - `get_current_user` يقبل Bearer أو browser session cookie، ويتحقق من session binding وCSRF لطلبات cookie غير الآمنة.
 - `require_teacher` يسمح teacher/admin؛ `require_admin` محصور بـadmin.
+- `POST /classes/join` يفرض `UserRole.user` فقط؛ teacher/admin يحصلان على 403 قبل إنشاء enrollment (PR #162).
+- `POST /assignments/{assignment_id}/submit` يفرض دور الطالب فقط ويرفض teacher/admin قبل lookup/creation للـsubmission (PR #163).
+- حماية آخر مدير نشط تشترك فيها مسارات حذف الحساب الذاتي وتغيير الدور/التفعيل والحذف الإداري وbootstrap/recovery عبر transaction-scoped PostgreSQL advisory lock وإعادة قراءة actor/target بعد القفل (PR #164). هذا لا يعني أن recovery نُفّذ على حساب أو قاعدة إنتاج.
 - الفصول مملوكة عبر `ClassSection.teacher_user_id`; إدارة الفصل للمعلم المالك أو admin؛ الطالب يكتسب نطاق الفصل من `ClassEnrollment.student_user_id`.
 - mastery وlesson progress مملوكان للمستخدم الحالي؛ لا يقبل الخادم user_id مرسلاً من العميل كبديل لهوية current_user في المسارات التي تمت مراجعتها.
 - هذه أدوار تعليمية محلية وليست company roles أو workspace roles؛ لا تُحوّل `teacher` إلى دور مدير عام في AI Core.
