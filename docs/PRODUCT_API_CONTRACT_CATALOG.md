@@ -243,9 +243,9 @@
 | Prefix / المجموعة | العمليات المرصودة | نموذج التفويض |
 |---|---|---|
 | `/auth` | CSRF، التسجيل، الدخول، refresh | Bearer/session؛ عمليات الويب تتطلب CSRF حسب طريقة الطلب |
-| `/users` و`/admin` | الملف الشخصي والإدارة | `get_current_user` أو `require_admin` حسب المسار |
-| `/curriculum`، `/quiz`، `/content`، `/srs`، `/assignments`، `/reports` | التعلم والتقييم والتقدم | نطاق الطالب الحالي والمعلم/admin في العمليات المحددة؛ ليس سياق شركة عام |
-| `/classes` | إنشاء الصفوف، قائمة الصفوف، تفاصيلها وتعديلها، رموز الدعوة والانضمام وإدارة الطلاب | المعلم المالك أو admin؛ enrollment يربط student_user_id بالصف |
+| `/users` و`/admin` | الملف الشخصي والإدارة | `get_current_user` أو `require_admin` حسب المسار؛ PR #164 يحمي آخر مدير نشط عبر قفل roster معاملاتي مشترك |
+| `/curriculum`، `/quiz`، `/content`، `/srs`، `/assignments`، `/reports` | التعلم والتقييم والتقدم | نطاق الطالب الحالي والمعلم/admin في العمليات المحددة؛ `POST /assignments/{assignment_id}/submit` للطالب فقط (#163)؛ ليس سياق شركة عام |
+| `/classes` | إنشاء الصفوف، قائمة الصفوف، تفاصيلها وتعديلها، رموز الدعوة والانضمام وإدارة الطلاب | إدارة الفصل للمعلم المالك أو admin؛ `POST /classes/join` للطالب فقط (#162)، وenrollment يربط student_user_id بالصف |
 | `/lti` | platforms، JWKS، login، launch، exchange-code | إدارة المنصة admin-only؛ login/launch تدفق LTI منفصل |
 | `/files` | upload/list/get/delete | ملفات مملوكة بـuser_id مع فحص النوع والحجم والحصة وفحص malware حسب إعداد الإنتاج |
 | `/billing` و`/notifications` | الدفع والإشعارات | مسارات المنتج؛ لا تُمنح صلاحياتها تلقائياً لأي مستهلك service |
