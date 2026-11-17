@@ -23,6 +23,7 @@
 17. [تصميم هوية الخدمات والتفويض — S5-03](docs/SERVICE_IDENTITY_AND_DELEGATION_DESIGN.md)
 18. [تصميم تصنيف البيانات والاحتفاظ والخصوصية — S5-05](docs/DATA_CLASSIFICATION_AND_RETENTION_DESIGN.md)
 19. [السجل التاريخي لمقترح دفعة 15 مهمة — مستبدل](docs/UNIFIED_BATCH_EXECUTION_PLAN.md)
+20. [نموذج التفويض الموحد RBAC/ABAC ونطاق الموارد — S5-04](docs/UNIFIED_AUTHORIZATION_MODEL_DESIGN.md)
 
 ## قاعدة مصدر الحقيقة
 
