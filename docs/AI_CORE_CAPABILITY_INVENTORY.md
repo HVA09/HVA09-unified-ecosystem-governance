@@ -464,3 +464,16 @@
 
 **قاعدة القراءة:** الأقسام 2.1 و7 لقطات تاريخية متعمدة، والأقسام اللاحقة تضيف الأدلة بالترتيب الزمني. عند التعارض، تكون حالة `main` وPR/CI الحاليين الموثقين في هذا الملخص أعلى سلطة من لقطة سابقة. لا تُسجل خاصية على أنها منشورة لمجرد أن PR أو التصميم موجود.
 
+
+
+## 19. تحديث Lumen بعد PR #162 — 17 نوفمبر 2026
+
+**أحدث خط أساس Lumen:** main `18928282deff93ca9680d30d937ad72675f04cfa` بعد دمج PR #162.
+
+- أصلح PR #162 مسار `POST /classes/join`: أصبح يشترط `UserRole.user`، ويعيد 403 لحسابي teacher/admin قبل حجز rate-limit أو إنشاء ClassEnrollment.
+- أضاف الاختبار `test_only_student_role_can_join_class` الذي يثبت رفض teacher/admin بلا أثر جانبي، ثم نجاح student.
+- CI run #44018148362 اكتمل بنجاح: Backend tests، Frontend tests and production build، Browser E2E، Full Git history secret scan.
+- **حالة الحوكمة:** LUM-008 Done؛ S1-02 يبقى In Progress لأن المراجعة الأوسع لكل مسارات الأدوار وIDOR لم تُغلق بعد.
+- لم يتضمن PR #162 migration أو schema change أو تغيير بيانات أو إعدادات تشغيل أو نشر.
+
+الأقسام السابقة في هذه الوثيقة التي تشير إلى Lumen main `ed162b0e0af497abc5710d185fa357357baa6ecc` تسجل خط أساس تدقيق 17 نوفمبر قبل PR #162؛ لا تستخدمها بوصفها الرأس الحي الأحدث.
