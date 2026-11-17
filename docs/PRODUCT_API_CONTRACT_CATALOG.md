@@ -190,3 +190,37 @@
 7. لا endpoint candidate يعد جاهزاً حتى يوجد OpenAPI/JSON Schema، owner، version، consumer/provider tests، negative authorization tests، idempotency/failure model وrollback.
 
 **تقدم S5-02:** تم جرد مجموعات الواجهات الفعلية وحدود auth/tenant/role في المنتجات الثلاثة على مستوى المصدر. تبقى مطابقة signatures وschemas لجميع endpoints، تصنيف البيانات، decision on identity mapping، وبناء consumer/provider contract tests؛ لذلك المهمة لا تزال In Progress.
+
+
+### 12.5 أمثلة endpoints فعلية تم التحقق منها من route decorators
+
+الأمثلة التالية تثبت وجود route في main فقط؛ لا تعني أن endpoint معتمد للاستهلاك بين المنتجات أو أن OpenAPI consumer contract قد تم اعتماده. المسارات مبنية على router prefix وعمليات `include_router/register_blueprint` في commit المالك.
+
+| المنتج / SHA | Method + path | الدليل | المصادقة/التحكم المرصود | حالة العقد |
+|---|---|---|---|---|
+| Lumen `ed162b0e0af497abc5710d185fa357357baa6ecc` | `POST /auth/register` | `backend/app/auth/routes.py` + router prefix `/auth` | إنشاء حساب ذاتي؛ يجب ألا يُستخدم كـservice provisioning | Existing product route — لا consumer contract |
+| Lumen | `GET /curriculum/subjects` | `backend/app/routers/curriculum.py` + prefix `/curriculum` | سياق مستخدم Lumen عبر dependencies حيث ينطبق | Existing product route — بيانات تعليمية |
+| Lumen | `POST /classes`, `POST /classes/join` | `backend/app/routers/classes.py` | إنشاء الفصل يتطلب teacher؛ الانضمام عبر دعوة؛ الفصل مملوك للمعلم | Existing product route — لا organization tenant |
+| Lumen | `GET /files`, `GET /files/{file_id}`, `DELETE /files/{file_id}` | `backend/app/routers/files.py` | كل عمليات الملفات تحت `get_current_user` وملكية `user_id` | Existing product route — user-owned data |
+| Lumen | `GET /lti/jwks`, `GET /lti/login`, `POST /lti/login`, `POST /lti/launch`, `POST /lti/exchange-code` | `backend/app/routers/lti.py` | بروتوكول LTI/OIDC؛ إدارة المنصات تتطلب admin؛ JWKS/login/launch ليست APIs عامة لتسريب درجات | Existing LTI protocol routes؛ AGS passback advanced يبقى PR #154 فقط |
+| AI Chat App `6645b0502daa6922040ee4c6bb5c281ed59ef366` | `POST /agent-jobs` | `ai-backend/app/routers/agent_jobs.py` | `get_current_user`; 202 Accepted؛ سياق المستخدم/Workspace والتحقق من ملكية job | Existing internal product API — لا S2S principal |
+| AI Chat App | `GET /agent-jobs`, `GET /agent-jobs/{job_id}` | `ai-backend/app/routers/agent_jobs.py` | قائمة المستخدم وسجلات jobs المملوكة له فقط؛ MCP metadata منقح للمستخدم غير المخول | Existing owner-scoped product API |
+| AI Chat App | `POST /agent-jobs/{job_id}/pause`, `POST /agent-jobs/{job_id}/resume` | `ai-backend/app/routers/agent_jobs.py` | تحقق مالك job وحالته قبل تعديل workflow | Existing user action; external invocation غير معتمد |
+| ERP `7bb01d23328a68aae67c659fd6c32b6db033637d` | `POST /api/auth/login`, `GET /api/auth/me` | `backend/erp/api/auth.py` | Bearer JWT؛ عند اختيار الشركة يتحقق `cid/mid` من عضوية نشطة | Existing product route — لا ترسل token إلى منتج آخر |
+| ERP | `GET /api/auth/companies`, `POST /api/auth/switch-company` | `backend/erp/api/auth.py` | يدرج memberships الخاصة بالمستخدم؛ switch يثبت العضوية ويصدر سياقاً جديداً | Existing company-context routes؛ لا multi-company operations |
+| ERP | `GET /api/reports/dashboard`, `GET /api/reports/sales-summary` | `backend/erp/api/reports.py` | `reports.read` مع تمرير company context للخدمات | Existing product route sample؛ محجوب للتكامل التجاري الخارجي حتى release gates |
+| ERP | `GET /api/{resource}`, `POST /api/{resource}`, `GET /api/{resource}/{id}`, `PATCH /api/{resource}/{id}`, `DELETE /api/{resource}/{id}` | `backend/erp/crud.py`، Blueprint لكل Resource | permission لكل Resource، و`company_id` من السياق الموثوق فقط، لا يقبل client-supplied company_id | Existing generic CRUD pattern؛ لا تعمم هذا الضمان على custom SQL غير المدقق |
+| ERP | `GET /api/file-objects`, `POST /api/file-objects/upload`, `GET /api/file-objects/{id}/download`, `DELETE /api/file-objects/{id}` | `backend/erp/api/file_objects.py` | `documents.read/write` وcompany-scoped private file storage | Existing sample; يخضع للحاجز العام متعدد الشركات |
+
+### 12.6 نتيجة فحص route prefixes ووجود الواجهات
+
+- Lumen وAI Chat App يسجلان FastAPI routers مباشرة من `main.py` دون prefix شامل إضافي في موضع التسجيل الذي تمت مراجعته؛ لذلك أمثلة المسارات أعلاه هي المسارات المحلية للمنتج، وليست paths موحدة تبدأ بـ`/api/v1`.
+- ERP يسجل Flask Blueprints تحت `/api` أو `/api/{resource}`، لذلك تختلف بنية المسار بوضوح عن المنتجين الآخرين.
+- أنواع الواجهات غير متجانسة: FastAPI/Pydantic في Lumen وAI Chat App، وFlask/JSON في ERP. لا تُنشأ client SDK مشتركة أو افتراضات response envelopes قبل اعتماد schemas وعقود توافق صريحة.
+- مسارات Lumen وERP وAI Chat المذكورة هنا عينة مثبتة من ملفات route محددة؛ لم يكتمل بعد استخراج جميع endpoints أو schemas ولا اختبارات كل consumer/provider. تبقى `S5-02 / ECO-001` In Progress.
+
+### 12.7 متطلبات الانتقال من route موجود إلى عقد مقبول
+
+لكل واجهة مرشحة في الجدول أعلاه يجب إضافة ملف OpenAPI/JSON Schema في مستودع المالك يتضمن: request/response models، status codes، auth audience/scopes، resource ownership، data classification، rate/payload limits، idempotency/retry semantics، trace metadata، retention، consumer/provider tests، وسيناريوهات deny/IDOR/revocation. لا يُنسخ تعريف endpoint إلى المستودع المركزي بوصفه مصدراً تنفيذياً، ولا يفتح الاتصال قبل موافقة مالك المنتج.
+
+**تحديث الحكم:** اكتمل جرد مجموعات الواجهات وأضيفت عينات method/path موثقة من المصدر. لا يوجد حتى الآن عقد service-to-service معتمد أو consumer/provider tests أو service principal مشترك. تظل S5-02 In Progress.
