@@ -147,6 +147,8 @@ LTI 1.3 وAGS تكامل إضافي منفصل. لا يُسمح بأن يوقف 
 
 تحديد عقود التكامل وإصداراتها، وحدود الهوية والتفويض، وسجلات التدقيق، وسياسات البيانات، ومراقبة الاعتمادية، وإجراءات التعافي. لا قاعدة بيانات عالمية مشتركة ولا اعتماد إلزامي على خدمة واحدة.
 
+**تقدم التصميم:** أُعد خطا تصميم S5-03 وS5-05 في [`SERVICE_IDENTITY_AND_DELEGATION_DESIGN.md`](SERVICE_IDENTITY_AND_DELEGATION_DESIGN.md) و[`DATA_CLASSIFICATION_AND_RETENTION_DESIGN.md`](DATA_CLASSIFICATION_AND_RETENTION_DESIGN.md). يظلان تصميمين غير مطبقين: لا SSO أو service tokens أو classification engine أو data-retention enforcement مشتركة حتى اعتماد مالكي المنتجات.
+
 ### 5.6 الابتكار والتوسع — المرحلة السادسة المؤجلة
 
 تظل هذه القدرات ضمن الرؤية طويلة الأجل، وليست ميزات منفذة أو أولوية حالية قبل استقرار المسارات الخمسة:
