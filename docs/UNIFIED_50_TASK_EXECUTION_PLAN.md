@@ -31,7 +31,7 @@
 
 | المسار | رأس main عند الإعداد | نقطة الاستئناف |
 |---|---|---|
-| Lumen | `ed162b0e0af497abc5710d185fa357357baa6ecc` | PR #158 مدمج؛ PR #154 ما زال Draft/Unmerged عند `6c93b49`، 46 ahead / 4 behind وmergeable=false؛ CI 4/4 على HEAD القديم لا يغلق Moodle/Canvas Sandbox أو الخصوصية/clock gates. |
+| Lumen | `18928282deff93ca9680d30d937ad72675f04cfa` | PR #158/#161/#162 مدمجة؛ PR #154 ما زال Draft/Unmerged عند `6c93b49`، 46 ahead / 5 behind وmergeable=false؛ يحتاج rebase وإعادة CI ثم بوابات Moodle/Canvas والخصوصية/clock/worker. |
 | AI Chat App | `6645b0502daa6922040ee4c6bb5c281ed59ef366` | PR #717 دمج مصالحة A–G وH–T؛ #721/#722/#723 أصلحت MCP role gate وproject ACL وscheduled-task RBAC مع CI/CodeQL ناجحين؛ PR #665 يبقى Draft ولا يدمج ككتلة. |
 | ERP | `7bb01d23328a68aae67c659fd6c32b6db033637d` | SQLite v8 نشطة؛ Stage25C على نسخة فعلية مستعادة غير مثبت؛ TENANT_DATA_SCOPING_ENABLED=False. |
 | AI Core | لا يوجد خط أساس برمجي معتمد | يبدأ بجرد القدرات والمتطلبات، بلا شراء GPU أو تكرار قدرات. |
@@ -44,7 +44,7 @@
 
 | المعرّف | حزمة العمل | الحالة الأولية | الاعتماديات / معيار القبول |
 |---|---|---|---|
-| S1-01 | تهيئة أول مدير ومسار صلاحيات التشغيل المقيد | **Done — merged + CI evidence** | PR #158 أضاف bootstrap المحروس وCI #43957299993 نجح 4/4؛ PR #161 أزال CLI القديم `backend/app/create_admin.py` وصحح README، ثم استقر Lumen main عند `ed162b0e0af497abc5710d185fa357357baa6ecc` بعد نجاح CI #43967362902. لم يُشغّل أمر ترقية مدير على حساب حقيقي أو قاعدة إنتاج. **مرجع سجل المنتج: LUM-006؛ نفس العمل وليس مهمة إضافية.** |
+| S1-01 | تهيئة أول مدير ومسار صلاحيات التشغيل المقيد | **Done — merged + CI evidence** | PR #158 أضاف bootstrap المحروس وCI #43957299993 نجح 4/4؛ PR #161 أزال CLI القديم `backend/app/create_admin.py` وصحح README، كان Lumen main عند `ed162b0e0af497abc5710d185fa357357baa6ecc` بعد PR #161، ثم تقدم إلى `18928282deff93ca9680d30d937ad72675f04cfa` بعد PR #162 ونجاح CI #44018148362. لم يُشغّل أمر ترقية مدير على حساب حقيقي أو قاعدة إنتاج. **مرجع سجل المنتج: LUM-006؛ نفس العمل وليس مهمة إضافية.** |
 | S1-02 | مصفوفة الحسابات والجلسات وأدوار الطالب والمعلم والمدير | In Progress — initial role gap fixed | مراجعة المصدر أكدت session-bound cookies وCSRF وtoken_version وrequire_admin/require_teacher. فجوة `/classes/join` أُصلحت عبر PR #162 المدمج في `18928282deff93ca9680d30d937ad72675f04cfa`؛ CI #44018148362 نجح 4/4. يبقى استكمال مصفوفة مراجعة بقية المسارات وIDOR/role boundaries لكل APIs، لذلك لا تغلق S1-02 بعد. Tracker: LUM-008 Done. |
 | S1-03 | دورة المقرر والتسجيل وإدارة الصفوف | Audit / Ready | إنشاء/نشر/أرشفة وتسجيل/إلغاء التسجيل؛ المعلم يرى صفوفه فقط؛ Backend وBrowser E2E. |
 | S1-04 | دورة الدروس والمحتوى والتقدم | Audit / Ready | نشر وإخفاء الدرس، منع الطالب من رؤية غير المنشور، استمرار completion بعد reload. |
