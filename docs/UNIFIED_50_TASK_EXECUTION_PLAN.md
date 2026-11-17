@@ -44,29 +44,29 @@
 
 | المعرّف | حزمة العمل | الحالة الأولية | الاعتماديات / معيار القبول |
 |---|---|---|---|
-| S1-01 | تهيئة أول مدير ومسار صلاحيات التشغيل المقيد | **Done — merged + PR CI 4/4** | PR #158 مدمج في main عند 108c2eab؛ CI #43957299993 نجح 4/4 على رأس PR؛ لم يتم تشغيل أمر ترقية مدير فعلياً ولا الوصول إلى قاعدة إنتاج. |
+| S1-01 | تهيئة أول مدير ومسار صلاحيات التشغيل المقيد | **Done — merged + CI evidence** | PR #158 أضاف bootstrap المحروس وCI #43957299993 نجح 4/4؛ PR #161 أزال CLI القديم `backend/app/create_admin.py` وصحح README، ثم استقر Lumen main عند `ed162b0e0af497abc5710d185fa357357baa6ecc` بعد نجاح CI #43967362902. لم يُشغّل أمر ترقية مدير على حساب حقيقي أو قاعدة إنتاج. **مرجع سجل المنتج: LUM-006؛ نفس العمل وليس مهمة إضافية.** |
 | S1-02 | مصفوفة الحسابات والجلسات وأدوار الطالب والمعلم والمدير | Audit / Ready | RBAC لكل API وواجهة، IDOR ورفض الوصول المتبادل وإبطال الجلسات؛ لا إعادة بناء auth الموجود. |
 | S1-03 | دورة المقرر والتسجيل وإدارة الصفوف | Audit / Ready | إنشاء/نشر/أرشفة وتسجيل/إلغاء التسجيل؛ المعلم يرى صفوفه فقط؛ Backend وBrowser E2E. |
 | S1-04 | دورة الدروس والمحتوى والتقدم | Audit / Ready | نشر وإخفاء الدرس، منع الطالب من رؤية غير المنشور، استمرار completion بعد reload. |
 | S1-05 | الواجبات والاختبارات والتسليم والتصحيح | Audit / Ready | تصحيح خادمي، محاولات ومهل وبوابات، حفظ التسليم، عدم كشف answer keys، اختبارات نجاح وفشل. |
 | S1-06 | تقدم المتعلم والتقارير ولوحات المتابعة | Audit / Ready | اتساق completion والدرجات والتجميعات حسب الطالب/المعلم/المدير، مع اختبارات صلاحيات. |
 | S1-07 | رفع الملفات والمرفقات والفحص والحذف والاستعادة | Audit / Ready | رحلة ملف كاملة، فحص ضار ورفض آمن، لا orphan records، واختبار backup/restore للملفات والبيانات. |
-| S1-08 | قبول الهاتف وRTL وإمكانية الوصول | Open acceptance | قبول يدوي على هاتف: الدخول والتنقل والمقرر والدرس والواجب والملف؛ RTL/LTR والتركيز ولوحة المفاتيح. |
-| S1-09 | عزل مختبر Python وحدود التنفيذ والموارد | In Progress / Browser acceptance | Issue #134: opaque origin وCSP ورسائل آمنة وإلغاء وحد زمني وقيود الموارد؛ لا ادعاء OS sandbox. |
-| S1-10 | LTI 1.3 وAGS وربط الدرجة بالمورد الأصلي | Blocked on external gates | PR #154 وIssue #150؛ resource A/B وnon-LTI، Moodle وCanvas Sandbox، same-origin، retention لـlti_subject، clock skew/workers. |
+| S1-08 | قبول الهاتف وRTL وإمكانية الوصول | Open acceptance | يتطلب قبولاً يدوياً على هاتف فعلي: الدخول والتنقل والمقرر والدرس والواجب والملفات وRTL/LTR والتركيز ولوحة المفاتيح. نتائج Browser E2E عند 390×844 لا تثبت قبول جهاز فعلي. `LUM-001` يغطي مراجعة الوظائف وBrowser E2E فقط، ولا يغلق هذا القبول اليدوي. |
+| S1-09 | عزل مختبر Python وحدود التنفيذ والموارد | In Progress / Browser acceptance | Issue #134: opaque origin وCSP ورسائل آمنة وإلغاء وحد زمني وقيود الموارد؛ لا ادعاء OS sandbox، ولا حد ذاكرة صلب موثق. **مرجع سجل المنتج: LUM-007؛ نفس مسار القبول.** |
+| S1-10 | LTI 1.3 وAGS وربط الدرجة بالمورد الأصلي | Blocked on external gates | PR #154 وIssue #150؛ resource A/B وnon-LTI، Moodle وCanvas Sandbox، same-origin، retention لـ`lti_subject`، clock skew/workers وإعادة مزامنة الفرع مع main. **مراجع سجل المنتج: LUM-002 (AGS) وLUM-003 (Sandbox)؛ لا تُحسب كمهام إضافية.** |
 
 ## المرحلة الثانية — AI Chat App: 10 مهام
 
 | المعرّف | حزمة العمل | الحالة الأولية | الاعتماديات / معيار القبول |
 |---|---|---|---|
-| S2-01 | إغلاق بوابة الاستقرار التشغيلي H | Open acceptance | إعادة فحص health/ready والنسخ والاستعادة وحماية main وCI/CodeQL وAuto Deploy مقابل render.yaml. |
-| S2-02 | قبول الهاتف وإمكانية الوصول I | Open manual acceptance | اختبار حقيقي للدخول والقائمة وتبديل المحادثة والإرسال والملفات والميكروفون ولوحة المفاتيح وRTL. |
+| S2-01 | إغلاق بوابة الاستقرار التشغيلي H | Open acceptance | إعادة فحص health/ready والنسخ والاستعادة وحماية main وCI/CodeQL وAuto Deploy مقابل render.yaml. **مرتبط بـCHAT-005/CHAT-006؛ يبقى السجل المحلي مرجع الحالة.** |
+| S2-02 | قبول الهاتف وإمكانية الوصول I | Open manual acceptance | اختبار حقيقي للدخول والقائمة وتبديل المحادثة والإرسال والملفات والميكروفون ولوحة المفاتيح وRTL. **مرتبط بقبول UX/mobile في CHAT-005؛ لم يكتمل القبول اليدوي.** |
 | S2-03 | صيانة معمارية الواجهة J | Ready for audit | قياس App.jsx/hooks ودورة الطلبات والإلغاء؛ فصل مسؤوليات محدود واختبارات سلوكية، بلا إعادة كتابة واسعة. |
 | S2-04 | الأداء والاستجابة K | Ready for baseline | قياس bundle والتحميل والتفاعل وإعادة التصيير والقوائم والمحادثات وطلبات API؛ مقارنة قبل/بعد. |
 | S2-05 | دورة المحادثة والرسائل والوسائط L | Ready for audit | إرسال/streaming/إلغاء/retry/edit/regenerate/delete/share وصوت/صور؛ لا ازدواج ولا فقد رسائل عند الفشل. |
-| S2-06 | الملفات والمعرفة وRAG M | In Progress — gated | دورة ملف وفهرسة وحذف ومنع التكرار وعزل Workspace؛ تقييم retrieval؛ restore إلى staging قبل backfill/reindex. |
+| S2-06 | الملفات والمعرفة وRAG M | In Progress — gated | دورة ملف وفهرسة وحذف ومنع التكرار وعزل Workspace؛ تقييم retrieval؛ restore إلى staging قبل backfill/reindex. **مراجع سجل المنتج: CHAT-010 وCORE-005؛ PR #725 وIssue #724 ما زالا ينتظران قبول سياسة الاحتفاظ.** |
 | S2-07 | Agent وProject Builder N | Audit / Ready | مشروع end-to-end وcheckpoints/retry/cancel/resume وفشل build آمن وحدود time/cost/tools وعزل preview. |
-| S2-08 | Workspace والتعاون والصلاحيات O | Audit / Ready | دعوات وأدوار وسحب وصول وقراءة فقط وتعاون؛ cross-user/role-based backend tests. |
+| S2-08 | Workspace والتعاون والصلاحيات O | Audit / Ready | دعوات وأدوار وسحب وصول وقراءة فقط وتعاون؛ cross-user/role-based backend tests. PRs #721/#722/#723 أغلقت ثلاث فجوات محددة فقط؛ **مراجعها CHAT-007/CHAT-008/CHAT-009 (Done)، ولا تعني اكتمال قبول Workspace ككل.** |
 | S2-09 | Developer API وSDKs وWebhooks P | Audit / Ready | توافق API v1 مع Python/JS SDK، versioning وrequest IDs وrate limits وretry/webhooks/OAuth. |
 | S2-10 | الأمن والخصوصية والاعتمادية والتوثيق والإصدار Q–T | Parallel audit | IDOR/BOLA والأسرار والاحتفاظ والحذف والمراقبة والحوادث والنسخ والrollback وREADME والترخيص؛ release بعد قبول وCI/Smoke. |
 
@@ -75,7 +75,7 @@
 | المعرّف | حزمة العمل | الحالة الأولية | الاعتماديات / معيار القبول |
 |---|---|---|---|
 | S3-01 | حفظ النسخة الأصلية وخط الأساس القابل للاستعادة | Ready / Verify | SHA-256 للأرشيف، dependencies، اختبارات نظيفة، مؤشرات مالية/مخزون، نسخة احتياطية مستعادة؛ لا تعديل للأصل. |
-| S3-02 | Stage25C على نسخة SQLite v8 فعلية مستعادة | Blocked — needs user backup | نسخة مستقلة ومصرح بها مع SHA/time/source وintegrity_check وforeign_key_check وuniqueness preflight read-only. |
+| S3-02 | Stage25C على نسخة SQLite v8 فعلية مستعادة | Blocked — needs user backup | نسخة مستقلة ومصرح بها مع SHA/time/source وintegrity_check وforeign_key_check وuniqueness preflight read-only. **مرجع سجل المنتج: ERP-002؛ الحالة Blocked حتى توفر نسخة فعلية مستعادة.** |
 | S3-03 | مصفوفة التفويض وعضويات الشركة والسياق الموقّع | In Progress / Gated | membership/roles/suspension/expiry/replay/tampering؛ لا اعتبار GUC العميل هوية موثوقة. |
 | S3-04 | تدقيق عزل CRUD والمراجع والمسارات المخصصة | In Progress | اختبارات شركتين تمنع list/get/update/delete/reference/IDOR المتبادل عبر resources وcallbacks. |
 | S3-05 | عزل الخدمات التشغيلية والمخزون والمبيعات والمشتريات والإعدادات | Ready after audit | company context في callbacks وinventory/accounting/settings/sequences/POS/purchasing؛ rollback واختبارات شركتين. |
@@ -83,7 +83,7 @@
 | S3-07 | التقارير والاستيراد والتصدير والتدقيق والمهام الخلفية | Audit / In Progress | مراجعة Stage14 ثم HTTP tests فعلية للـdashboard/import/export/sequences/audit/webhooks/jobs. |
 | S3-08 | الملفات الخاصة والفحص والحصص والنسخ الذري | Ready | quarantine وAV قبل التنزيل، tenant quotas/retention، atomic DB+file backup/restore وorphan dry-run. |
 | S3-09 | PostgreSQL schema وETL وRLS والقيود المركبة | Deferred until preflight | Disposable PG فقط؛ migrations/ledger وcomposite FK/unique وETL/reconciliation/rollback؛ لا dual-write ولا app cutover. |
-| S3-10 | بوابة إطلاق تعدد الشركات وحزم القطاعات | Feature gate closed | لا تفعيل TENANT_DATA_SCOPING_ENABLED قبل اكتمال isolation/restore/security؛ Industry Packs اختيارية ولا ادعاء امتثال دون مراجعة. |
+| S3-10 | بوابة إطلاق تعدد الشركات وحزم القطاعات | Feature gate closed | لا تفعيل `TENANT_DATA_SCOPING_ENABLED` قبل اكتمال isolation/restore/security؛ Industry Packs اختيارية ولا ادعاء امتثال دون مراجعة. **مرجع سجل المنتج: ERP-004؛ يبقى العلم False.** |
 
 ## المرحلة الرابعة — AI Core: 10 مهام
 
@@ -142,3 +142,34 @@
 - **AI Core / Unified Ecosystem:** `AI_CORE_CAPABILITY_INVENTORY.md` و`PRODUCT_OWNERSHIP_AND_INTERFACE_CATALOG.md` و`UNIFIED_ENGINEERING_STANDARDS.md` و`DECISION_REGISTER.md` و`CONFLICTS_AND_RECONCILIATION.md`؛ إنشاء مستودعات مستقلة بعد اعتماد التصميم والحدود فقط.
 
 هذه الخطة تنظّم 50 حزمة عمل، ولا تعلن أن المهام بدأت أو اكتملت. تتغير الحالة فقط مع تنفيذ العمل وتسجيل دليله.
+
+
+## 7. خريطة الربط مع سجلات المشاريع ومنع تكرار العمل
+
+معرّفات `S1–S5` هي معرفات حزم برنامج الخمسين، ومعرّفات `LUM/CHAT/ERP/CORE/ECO` هي سجلات متابعة مرتبطة بالمستودعات والحوكمة. الربط أدناه **مرجعي وليس إنشاءً لمهام إضافية**. عند وجود تطابق أو تداخل، يُحدّث سجل المشروع المحلي ويظل هو مرجع حالة التنفيذ؛ لا يُنشأ PR ثانٍ لنفس التغيير.
+
+| حزم البرنامج | معرفات السجل المرتبطة | قاعدة منع التكرار |
+|---|---|---|
+| S1-01 | LUM-006 | نفس مسار bootstrap؛ Done وفق PR #158 و#161، ولا يعاد تنفيذه. |
+| S1-08 | LUM-001 | دليل جزئي فقط: LUM-001 يغطي مراجعة الوظائف وBrowser E2E؛ قبول الهاتف الفعلي في S1-08 ما زال مفتوحاً. |
+| S1-09 | LUM-007 | نفس مسار قبول مختبر Python؛ يبقى In Progress حتى حد الموارد وقبول الجهاز/المتصفح. |
+| S1-10 | LUM-002، LUM-003 | AGS في LUM-002 وSandbox في LUM-003؛ لا دمج قبل البوابات الخارجية. |
+| S2-01 | CHAT-005، CHAT-006 | مسارات UX والاستقرار وQueuePool؛ لا تكرر إصلاحاً مدمجاً من #687/#664/#676. |
+| S2-02 | CHAT-005 | قبول الهاتف وRTL؛ يتطلب اختباراً يدوياً منفصلاً. |
+| S2-06 | CHAT-010، CORE-005 | دورة المرفقات/RAG والاحتفاظ؛ PR #725 يحتاج اعتماد سياسة المالك. |
+| S2-08 | CHAT-007، CHAT-008، CHAT-009 | ثلاثة إصلاحات محددة مدمجة؛ لا يعني ذلك إغلاق تدقيق Workspace الأوسع. |
+| S3-02 | ERP-002 | نفس بوابة Stage25C؛ تبقى Blocked حتى النسخة المستعادة الفعلية. |
+| S3-03، S3-04، S3-10 | ERP-004، ERP-005 | ارتباط بحدود multi-company وسياق الشركة؛ لا تفعيل أو cutover قبل البوابات. |
+| S4-01 | CORE-001 | سجل جرد القدرات ومنع التكرار. |
+| S4-02 | CORE-003 | متطلبات الوكلاء المتخصصين. |
+| S4-04 | CORE-007 | تصميم Model Gateway. |
+| S4-06 | CORE-004 | مصفوفة أدوات وصلاحيات الوكلاء. |
+| S4-08 | CORE-005 | RAG والذاكرة ودورة حياة المعرفة. |
+| S4-09 | CORE-006 | Benchmark والتقييم. |
+| S5-01 | ECO-003 | سجل الملكية وحدود الواجهات. |
+| S5-02 | ECO-001 | عقود API وإصداراتها. |
+| S5-03 | ECO-002 | هوية الخدمات والتفويض. |
+| S5-04 | ECO-005 | نموذج التفويض RBAC/ABAC. |
+| S5-05 | ECO-004 | تصنيف البيانات والاحتفاظ والخصوصية. |
+
+لا يوجد تطابق حالي معلن لباقي الحزم؛ تظل حزم البرنامج قابلة للتتبع بمعرفها، ويُضاف الربط إلى سجل المشروع عند إنشاء المهمة هناك. لا يُحوّل تداخل جزئي إلى حالة Done تلقائياً.
