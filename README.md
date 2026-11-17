@@ -20,7 +20,9 @@
 14. [سجل ملكية المنتجات وحدود التكامل](docs/PRODUCT_OWNERSHIP_AND_INTERFACE_CATALOG.md)
 15. [كتالوج عقود API بين المنتجات — S5-02](docs/PRODUCT_API_CONTRACT_CATALOG.md)
 16. [تصميم Model Gateway وسجل النماذج — S4-04](docs/AI_CORE_MODEL_GATEWAY_DESIGN.md)
-17. [السجل التاريخي لمقترح دفعة 15 مهمة — مستبدل](docs/UNIFIED_BATCH_EXECUTION_PLAN.md)
+17. [تصميم هوية الخدمات والتفويض — S5-03](docs/SERVICE_IDENTITY_AND_DELEGATION_DESIGN.md)
+18. [تصميم تصنيف البيانات والاحتفاظ والخصوصية — S5-05](docs/DATA_CLASSIFICATION_AND_RETENTION_DESIGN.md)
+19. [السجل التاريخي لمقترح دفعة 15 مهمة — مستبدل](docs/UNIFIED_BATCH_EXECUTION_PLAN.md)
 
 ## قاعدة مصدر الحقيقة
 
