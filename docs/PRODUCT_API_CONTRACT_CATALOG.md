@@ -229,3 +229,75 @@
 لكل واجهة مرشحة في الجدول أعلاه يجب إضافة ملف OpenAPI/JSON Schema في مستودع المالك يتضمن: request/response models، status codes، auth audience/scopes، resource ownership، data classification، rate/payload limits، idempotency/retry semantics، trace metadata، retention، consumer/provider tests، وسيناريوهات deny/IDOR/revocation. لا يُنسخ تعريف endpoint إلى المستودع المركزي بوصفه مصدراً تنفيذياً، ولا يفتح الاتصال قبل موافقة مالك المنتج.
 
 **تحديث الحكم:** اكتمل جرد مجموعات الواجهات وأضيفت عينات method/path موثقة من المصدر. لا يوجد حتى الآن عقد service-to-service معتمد أو consumer/provider tests أو service principal مشترك. تظل S5-02 In Progress.
+
+
+## 13. خريطة المسارات الفعلية الموثقة — 2026-11-17
+
+هذه خريطة لمجموعات المسارات التي تمت مراجعتها في source، وليست نسخة OpenAPI كاملة. وجود مسار في الجدول لا يعني وجود consumer service principal أو اعتماد تكامل من منتج آخر.
+
+### 13.1 Lumen — FastAPI
+
+**المصدر:** main `ed162b0e0af497abc5710d185fa357357baa6ecc`، مع مراجعة `backend/app/main.py` وملفات routers ذات الصلة.
+
+| Prefix / المجموعة | العمليات المرصودة | نموذج التفويض |
+|---|---|---|
+| `/auth` | CSRF، التسجيل، الدخول، refresh | Bearer/session؛ عمليات الويب تتطلب CSRF حسب طريقة الطلب |
+| `/users` و`/admin` | الملف الشخصي والإدارة | `get_current_user` أو `require_admin` حسب المسار |
+| `/curriculum`، `/quiz`، `/content`، `/srs`، `/assignments`، `/reports` | التعلم والتقييم والتقدم | نطاق الطالب الحالي والمعلم/admin في العمليات المحددة؛ ليس سياق شركة عام |
+| `/classes` | إنشاء الصفوف، قائمة الصفوف، تفاصيلها وتعديلها، رموز الدعوة والانضمام وإدارة الطلاب | المعلم المالك أو admin؛ enrollment يربط student_user_id بالصف |
+| `/lti` | platforms، JWKS، login، launch، exchange-code | إدارة المنصة admin-only؛ login/launch تدفق LTI منفصل |
+| `/files` | upload/list/get/delete | ملفات مملوكة بـuser_id مع فحص النوع والحجم والحصة وفحص malware حسب إعداد الإنتاج |
+| `/billing` و`/notifications` | الدفع والإشعارات | مسارات المنتج؛ لا تُمنح صلاحياتها تلقائياً لأي مستهلك service |
+
+`backend/app/main.py` يسجل هذه routers مباشرة؛ لا نضيف بادئة `/api` إلى Lumen في وثائق العقد من دون دليل من نشره أو إعداد reverse proxy. لا يوجد في الجرد الحالي OpenAPI contract خارجي منشور ومعتمد لاستهلاك هذه الموارد من منتج آخر.
+
+### 13.2 AI Chat App — FastAPI
+
+**المصدر:** main `6645b0502daa6922040ee4c6bb5c281ed59ef366`.
+
+| Prefix / المجموعة | العمليات المرصودة | نموذج التفويض |
+|---|---|---|
+| `/chat` | compare/models/vision/chat/stream/feedback/bookmark/delete/regenerate/edit | مستخدم المصادقة وملكية المحادثة/الملفات/مساحة العمل بحسب المسار |
+| `/conversations` | list/get/update/pin/archive/folder/tags/assistant/branch/duplicate/import/export/trash/delete | ملكية المستخدم والمشاركات المسموح بها |
+| `/files` | upload/list/attach/detach/get/reindex/index-image/delete | مالك الملف أو صلاحية workspace/project التي يعيد الخادم التحقق منها |
+| `/workspaces` | list/create/update/model/limit/budget/usage/audit-logs | عضوية workspace وصلاحياتها |
+| `/agent-jobs` | create/list/get/pause/resume/cancel | ملكية المستخدم وعضوية workspace؛ snapshots تخفي بيانات MCP العامة عن غير admin |
+| `/projects` | create/list/import/export/update/members/validate/preview/artifacts/delete | project ACL؛ file tools تعيد التحقق من ACL عند كل عملية |
+| `/api-keys` | create/list/revoke/usage | إدارة مفتاح المستخدم؛ لا تستخدمه خدمة أخرى كدليل هوية مستخدم نهائي |
+| `/webhooks` | create/list/update/delete/deliveries/test | endpoints مملوكة للمستخدم؛ HMAC-SHA256 وتحقق SSRF وbounded retries |
+| `/v1` | `GET /v1` discovery و`POST /v1/chat` | `X-API-Key`، الإصدار في `X-API-Version: v1`؛ التغيير الكاسر يتطلب major URL version جديداً |
+
+- `AgentRuntime` نفسه خدمة داخلية bounded وليست endpoint عام مستقل؛ الواجهة التشغيلية الحالية للـbackground agent runs هي `/agent-jobs`. لا تعرض Runtime كـservice-to-service API حتى يضاف endpoint وعقد مستقلان.
+- SDKs الرسمية Python وJavaScript تستعمل `POST /v1/chat`، لكنها لا تثبت وجود contract بين المنتجات الثلاثة تلقائياً؛ يلزم service identity وconsumer scope خاص.
+- لا يُفوض MCP application-global إلا لمسار admin الحالي، ولا تُعتبر allowlist العامة بديلاً عن resource ACL.
+
+### 13.3 ERP Global Pro — Flask
+
+**المصدر:** main `7bb01d23328a68aae67c659fd6c32b6db033637d`.
+
+| Prefix / المجموعة | العمليات المرصودة | نموذج التفويض |
+|---|---|---|
+| `/api/auth` | setup-status/setup/login/me/companies/switch-company/change-password | JWT مع `cid` و`mid` بعد تحقق membership؛ إعداد النظام فقط public |
+| `/api/{resource}` | list/get/create/update/delete للموارد العامة | generic Resource يفرض company_id على كل CRUD ويرفض company_id من العميل |
+| `/api/reports` | dashboard/sales-summary/top-products/top-customers/profitability/forecast/reorder/statement/ageing | permission checks مع company context؛ مراجعة المصدر شملت هذه المجموعة |
+| `/api` custom business | payments/cancel/credit-applications/payment-accounts/POS checkout وغيرها | كل endpoint يحتاج مراجعة مخصصة للخدمة والاستعلامات والقيود |
+| `/api/file-objects` | list/usage/upload/get/download/delete | company-scoped file metadata/storage مع private tenant directories |
+
+**قيد تكامل ملزم:** التطبيق SQLite v8؛ `TENANT_DATA_SCOPING_ENABLED=False`. middleware يمنع العمليات التشغيلية عند وجود أكثر من شركة، كما أن role definitions لا تزال مشتركة وتبقى custom SQL/services/constraints بحاجة تدقيق شامل. لذلك هذه المسارات Existing داخل المنتج لكنها **Blocked** كعقود multi-company service-to-service حتى Stage25C وإثبات العزل والنسخ/الاستعادة وPostgreSQL/RLS.
+
+### 13.4 مخاطر نطاق بيانات يجب أن تبقى ظاهرة
+
+- AI Chat App Issue [#724](https://github.com/HVA09/ai-chat-app/issues/724) مفتوحة: حذف المشروع يحول ملفات المشروع إلى workspace scope عبر `project_id=NULL` بينما يبقى `workspace_id`، فتتسع دائرة الوصول المحتملة لقوائم أعضاء مساحة العمل واسترجاع RAG. لا تُعتمد إعادة استخدام project-file/RAG cross-product قبل حسم الحذف/الأرشفة/الترقية الصريحة واختبارات عدم التسريب.
+- Lumen PR #154 لا يحول AGS candidate إلى عقد LMS production: ما زال Draft، متأخراً 4 commits عن main في آخر comparison، وmergeable=false؛ CI 4/4 القديم لا يغلق Moodle/Canvas Sandbox وprivacy/clock gates.
+- لا تعتبر مسارات ERP القائمة عقداً قابلاً للاستخدام من AI Core في بيئة تشغيل متعددة الشركات طالما release gate مغلق.
+
+### 13.5 إغلاق جرد المسارات وما بقي
+
+<badge color="success">Source map recorded</badge>
+
+تم تحديد مجموعات الـrouters ومسارات الخدمة الممثلة ورؤوس main وملاك الهوية والبيانات. بقيت الخطوات التالية قبل اعتبار S5-02 Done:
+1. استخراج OpenAPI/route schemas لكل endpoint مع request/response models والحقول nullable وحدود payload.
+2. مراجعة كل controller/service/query في ERP قبل اعتماد أي custom business route خارجياً.
+3. تحديد service principals منفصلة وissuer/audience/scopes/expiry/revocation لكل consumer.
+4. إضافة provider/consumer contract tests وnegative authorization/IDOR tests، ثم اختبار في staging أو بيئة disposable.
+5. لا بناء أو نشر Gateway مركزي كشرط مسبق؛ يمكن للعقود أن تعمل بين خدمات مستقلة مباشرة بعد موافقة المالك.
