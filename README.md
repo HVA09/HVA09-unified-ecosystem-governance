@@ -25,6 +25,7 @@
 19. [السجل التاريخي لمقترح دفعة 15 مهمة — مستبدل](docs/UNIFIED_BATCH_EXECUTION_PLAN.md)
 20. [نموذج التفويض الموحد RBAC/ABAC ونطاق الموارد — S5-04](docs/UNIFIED_AUTHORIZATION_MODEL_DESIGN.md)
 21. [مذكرة قرار ملكية الأسئلة والدروس في Lumen — LUM-010](docs/LUMEN_CONTENT_OWNERSHIP_DECISION_BRIEF.md)
+22. [نقطة تدقيق الصلاحيات وIDOR في Lumen — LUM-010](docs/LUMEN_AUTHORIZATION_AUDIT_CHECKPOINT_20261117.md)
 
 ## قاعدة مصدر الحقيقة
 
