@@ -32,6 +32,8 @@
 26. [نقطة تدقيق الصلاحيات الخامسة في Lumen — الصفوف والواجبات والملفات والإدارة](docs/LUMEN_AUTHORIZATION_AUDIT_CHECKPOINT_5_20261117.md)
 27. [نقطة تدقيق الصلاحيات السادسة في Lumen — المصادقة والجلسات و2FA](docs/LUMEN_AUTHORIZATION_AUDIT_CHECKPOINT_6_20261117.md)
 
+28. [نقطة تدقيق الصلاحيات السابعة في Lumen — النسخ الاحتياطي والاستعادة وملفات المستخدمين](docs/LUMEN_AUTHORIZATION_AUDIT_CHECKPOINT_7_20261117.md)
+
 ## قاعدة مصدر الحقيقة
 
 - كود كل منتج: `main` في مستودعه، بعد التحقق من SHA الحالي.
