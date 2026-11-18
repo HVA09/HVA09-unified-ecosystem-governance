@@ -32,7 +32,7 @@
 | المسار | رأس main عند الإعداد | نقطة الاستئناف |
 |---|---|---|
 | Lumen | `fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8` | PRs #162/#163/#164 مدمجة؛ CI #44150551971 نجح 4/4 على main بعد PR #164. PR #165 للتوثيق فقط مبني على هذا الرأس (3 ahead / 0 behind) وCI #44154286229 نجح 4/4؛ ما زال Open/Unmerged وينتظر المراجعة. PR #154 ما زال Draft/Unmerged، 46 ahead / 7 behind و`mergeable=false`؛ يحتاج refresh/rebase على هذا الرأس، CI حديثاً، ثم بوابات Moodle/Canvas والخصوصية/clock/worker؛ لا يُدمج قبل إغلاقها. |
-| AI Chat App | `6645b0502daa6922040ee4c6bb5c281ed59ef366` | PR #717 دمج مصالحة A–G وH–T؛ #721/#722/#723 أصلحت MCP role gate وproject ACL وscheduled-task RBAC مع CI/CodeQL ناجحين؛ PR #665 يبقى Draft ولا يدمج ككتلة. |
+| AI Chat App | `26976f74b73b3f3f4ab3dd7001e945ff85d85b78` | رأس main الحي عند نقطة التحقق 18 نوفمبر؛ PR #717 دمج مصالحة A–G وH–T؛ #721/#722/#723 أصلحت MCP role gate وproject ACL وscheduled-task RBAC مع CI/CodeQL ناجحين؛ PR #665 يبقى Draft ولا يدمج ككتلة (460 ahead / 93 behind هذا الرأس). |
 | ERP | `7bb01d23328a68aae67c659fd6c32b6db033637d` | SQLite v8 نشطة؛ Stage25C على نسخة فعلية مستعادة غير مثبت؛ TENANT_DATA_SCOPING_ENABLED=False. |
 | AI Core | لا يوجد خط أساس برمجي معتمد | يبدأ بجرد القدرات والمتطلبات، بلا شراء GPU أو تكرار قدرات. |
 | Unified Ecosystem | المستودع المركزي | حوكمة وعقود مشتركة فقط، لا كود منتجات أو DBs. |
@@ -89,7 +89,7 @@
 
 | المعرّف | حزمة العمل | الحالة الأولية | الاعتماديات / معيار القبول |
 |---|---|---|---|
-| S4-01 | جرد قدرات AI الحالية ومنع التكرار | **In Progress — AI Chat authorization fixes merged; Lumen/ERP service-boundary audit recorded** | `AI_CORE_CAPABILITY_INVENTORY.md` يوثق AI Chat App على main `6645b0502daa6922040ee4c6bb5c281ed59ef366` مع دمج #721/#722/#723 وفحوص CI/CodeQL الناجحة، ويضيف جرد الهوية والواجهات وحدود البيانات في Lumen main الحالي `fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8` بعد ضوابط #162/#163/#164، وERP main `7bb01d23328a68aae67c659fd6c32b6db033637d`. يبقى تدقيق service/route الكامل والاختبارات وعقود إعادة الاستخدام قبل إغلاق CORE-001؛ لا إنشاء بدائل AI runtime. |
+| S4-01 | جرد قدرات AI الحالية ومنع التكرار | **In Progress — AI Chat authorization fixes merged; Lumen/ERP service-boundary audit recorded** | `AI_CORE_CAPABILITY_INVENTORY.md` يوثق AI Chat App على main `26976f74b73b3f3f4ab3dd7001e945ff85d85b78` مع دمج #721/#722/#723 وفحوص CI/CodeQL الناجحة، ويضيف جرد الهوية والواجهات وحدود البيانات في Lumen main الحالي `fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8` بعد ضوابط #162/#163/#164، وERP main `7bb01d23328a68aae67c659fd6c32b6db033637d`. يبقى تدقيق service/route الكامل والاختبارات وعقود إعادة الاستخدام قبل إغلاق CORE-001؛ لا إنشاء بدائل AI runtime. |
 | S4-02 | حالات الاستخدام ومتطلبات الوكلاء المتخصصين | **In Progress — requirements baseline documented** | `docs/AI_CORE_SPECIALIZED_AGENT_REQUIREMENTS.md` يحدد ملفات وكلاء البرمجة وLinux والشبكات وCloud/DevOps والأمن، وتحليل الملفات المشترك، وعقود المدخلات/المخرجات والحدود والاختبارات؛ تبقى مراجعة المتطلبات وربطها بعقود الأدوات والـbenchmark. |
 | S4-03 | تقييم نماذج مفتوحة الأوزان منخفضة التكلفة | Design / No paid GPU | مقارنة الجودة والسياق والخصوصية والسرعة والترخيص والعتاد؛ benchmark على موارد متاحة قبل الاختيار. |
 | S4-04 | عقد Model Gateway وسجل النماذج والمزودين | **In Progress — design baseline documented** | `AI_CORE_MODEL_GATEWAY_DESIGN.md` يحدد scope وحدود reuse من Provider Factory الحالية، Model Registry/capabilities، service identity، request/response/stream contracts، routing/fallback/limits/cost/privacy/tests؛ لا نموذج مختار ولا Gateway service/API منفذ، ويتطلب S4-01/S5-03/S5-05 قبل pilot. |
@@ -165,6 +165,7 @@
 | S3-03، S3-04، S3-10 | ERP-004، ERP-005 | ارتباط بحدود multi-company وسياق الشركة؛ لا تفعيل أو cutover قبل البوابات. |
 | S4-01 | CORE-001 | سجل جرد القدرات ومنع التكرار. |
 | S4-02 | CORE-003 | متطلبات الوكلاء المتخصصين. |
+| S4-03 | CORE-002 | تقييم نماذج/runtime مفتوحة الأوزان ومتطلبات الموارد؛ CORE-002 هو سجل التنفيذ القائم، ويُحدّث بدلاً من إنشاء مهمة مكررة. |
 | S4-04 | CORE-007 | تصميم Model Gateway. |
 | S4-06 | CORE-004 | مصفوفة أدوات وصلاحيات الوكلاء. |
 | S4-08 | CORE-005 | RAG والذاكرة ودورة حياة المعرفة. |
@@ -175,7 +176,7 @@
 | S5-04 | ECO-005 | نموذج التفويض RBAC/ABAC. |
 | S5-05 | ECO-004 | تصنيف البيانات والاحتفاظ والخصوصية. |
 
-لا يوجد تطابق حالي معلن لباقي الحزم؛ تظل حزم البرنامج قابلة للتتبع بمعرفها، ويُضاف الربط إلى سجل المشروع عند إنشاء المهمة هناك. لا يُحوّل تداخل جزئي إلى حالة Done تلقائياً.
+لا يوجد تطابق حالي معلن لباقي الحزم غير المدرجة في crosswalk؛ تظل قابلة للتتبع بمعرفها، ويُضاف الربط إلى سجل المشروع عند إنشاء المهمة هناك. لا يُحوّل تداخل جزئي إلى حالة Done تلقائياً.
 
 
 ## نقطة تحقق الخطة — 18 نوفمبر 2026
