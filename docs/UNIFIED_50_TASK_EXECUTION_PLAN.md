@@ -75,7 +75,7 @@
 | المعرّف | حزمة العمل | الحالة الأولية | الاعتماديات / معيار القبول |
 |---|---|---|---|
 | S3-01 | حفظ النسخة الأصلية وخط الأساس القابل للاستعادة | Ready / Verify | SHA-256 للأرشيف، dependencies، اختبارات نظيفة، مؤشرات مالية/مخزون، نسخة احتياطية مستعادة؛ لا تعديل للأصل. |
-| S3-02 | Stage25C على نسخة SQLite v8 فعلية مستعادة | Blocked — needs user backup | نسخة مستقلة ومصرح بها مع SHA/time/source وintegrity_check وforeign_key_check وuniqueness preflight read-only. **مرجع سجل المنتج: ERP-002؛ الحالة Blocked حتى توفر نسخة فعلية مستعادة.** |
+| S3-02 | Stage25C على نسخة SQLite v8 فعلية مستعادة | Ready — DEFER-COMPUTER | Runbook وruntime preflight جاهزان؛ تؤجل الاستعادة والفحوص المحلية فقط حتى يتوفر كمبيوتر المستخدم ونسخة SQLite v8 المستقلة. عند الاستئناف: preflight فعلي ثم تقرير blockers/reconciliation/rollback. لا ETL/dual-write/PostgreSQL cutover، وتبقى `TENANT_DATA_SCOPING_ENABLED=False` قبل القبول. مرجع سجل المنتج: ERP-002. |
 | S3-03 | مصفوفة التفويض وعضويات الشركة والسياق الموقّع | In Progress / Gated | membership/roles/suspension/expiry/replay/tampering؛ لا اعتبار GUC العميل هوية موثوقة. |
 | S3-04 | تدقيق عزل CRUD والمراجع والمسارات المخصصة | In Progress | اختبارات شركتين تمنع list/get/update/delete/reference/IDOR المتبادل عبر resources وcallbacks. |
 | S3-05 | عزل الخدمات التشغيلية والمخزون والمبيعات والمشتريات والإعدادات | Ready after audit | company context في callbacks وinventory/accounting/settings/sequences/POS/purchasing؛ rollback واختبارات شركتين. |
@@ -160,7 +160,7 @@
 | S2-02 | CHAT-005 | قبول الهاتف وRTL؛ يتطلب اختباراً يدوياً منفصلاً. |
 | S2-06 | CHAT-010، CORE-005 | دورة المرفقات/RAG والاحتفاظ؛ PR #725 يحتاج اعتماد سياسة المالك. |
 | S2-08 | CHAT-007، CHAT-008، CHAT-009 | ثلاثة إصلاحات محددة مدمجة؛ لا يعني ذلك إغلاق تدقيق Workspace الأوسع. |
-| S3-02 | ERP-002 | نفس بوابة Stage25C؛ تبقى Blocked حتى النسخة المستعادة الفعلية. |
+| S3-02 | ERP-002 | نفس بوابة Stage25C؛ التحضير جاهز، والتنفيذ المحلي مؤجل فقط (`DEFER-COMPUTER`). |
 | S3-03، S3-04، S3-10 | ERP-004، ERP-005 | ارتباط بحدود multi-company وسياق الشركة؛ لا تفعيل أو cutover قبل البوابات. |
 | S4-01 | CORE-001 | سجل جرد القدرات ومنع التكرار. |
 | S4-02 | CORE-003 | متطلبات الوكلاء المتخصصين. |
