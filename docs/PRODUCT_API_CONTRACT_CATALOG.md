@@ -4,6 +4,7 @@
 - **الحالة:** مسودة كتالوج وتصميم عقود؛ لا يصف endpoints منفذة ما لم يذكر لها دليل مستقل.
 - **المراجع:** `docs/PRODUCT_OWNERSHIP_AND_INTERFACE_CATALOG.md` و`docs/UNIFIED_ENGINEERING_STANDARDS.md`.
 - **القاعدة:** مالك البيانات يظل مالك API ومصدر الحقيقة؛ لا وصول مباشر إلى قاعدة بيانات منتج آخر.
+- **تاريخ اللقطة:** جرد المسارات في الأقسام 12–13 مبني على رؤوس تدقيق 17 نوفمبر 2026 (Lumen `fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8`، ERP `7bb01d23328a68aae67c659fd6c32b6db033637d`، AI Chat App `6645b0502daa6922040ee4c6bb5c281ed59ef366`). عند نقطة تحقق 18 نوفمبر أصبحت رؤوس main هي Lumen `5774c8575bf62a3894a0eb957b77745181ff71e1`، ERP `577c105d81bd7b7c926965c0ed7c94379c1cb695`، AI Chat App `26976f74b73b3f3f4ab3dd7001e945ff85d85b78`. لم يُعد فحص جميع المسارات على هذه الرؤوس اللاحقة؛ لذلك تُقرأ مراجع الأقسام 12–13 كأدلة تاريخية لا كجرد حي محدث.
 
 ## 1. الهدف والنطاق
 
@@ -152,7 +153,7 @@
 
 الحالة التالية دليل على وجود مسارات داخلية في المنتجات، وليست بعد عقود service-to-service معتمدة. لم تُجر أي اتصالات بين الخدمات ولم تُنقل بيانات.
 
-### 12.1 Lumen — main commit fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8
+### 12.1 Lumen — audit snapshot main `fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8` (17 نوفمبر 2026)
 
 | مجموعة الواجهة | دليل المصدر | مالك البيانات | الحالة |
 |---|---|---|---|
@@ -165,9 +166,9 @@
 
 **Authorization contract:** Lumen يستخدم أدوار user/teacher/admin على حساب المستخدم، مع Bearer أو browser session cookie، والتحقق من CSRF لطلبات cookie غير الآمنة. `POST /classes/join` محصور بدور `user` (#162)، و`POST /assignments/{assignment_id}/submit` محصور بالطالب (#163)؛ كما تحمي #164 آخر مدير نشط عبر قفل roster معاملاتي مشترك. لا تفترض أن role string أو user_id من منتج آخر له المعنى نفسه في Lumen.
 
-**PR #154 gate:** Draft/Open/Unmerged، HEAD 6c93b49c976245b778800ed63046a2aef321fbb9، 46 ahead / 7 behind Lumen main `fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8`، `mergeable=false`. CI run 43779761820 نجح على ذلك الرأس القديم، لكنه لا يثبت قبول Moodle/Canvas Sandbox أو الخصوصية والساعة؛ لا يعتمد AGS candidate كعقد production حتى إغلاق تلك البوابات.
+**PR #154 gate:** Draft/Open/Unmerged، HEAD `6c93b49c976245b778800ed63046a2aef321fbb9`. المقارنة التاريخية في لقطة 17 نوفمبر كانت 46 ahead / 7 behind Lumen main `fe3a87591a6a6c5f909b0dba162cdd8b4ba47ce8`. عند نقطة تحقق 18 نوفمبر، سجل المهام الحي يقارن الفرع مع Lumen main `5774c8575bf62a3894a0eb957b77745181ff71e1` ويظهر 46 ahead / 8 behind؛ استخدم المقارنة الأحدث عند تخطيط المزامنة. CI run 43779761820 نجح على الرأس القديم، لكنه لا يثبت قبول Moodle/Canvas Sandbox أو الخصوصية والساعة؛ لا يعتمد AGS candidate كعقد production حتى إغلاق تلك البوابات.
 
-### 12.2 ERP Global Pro — main commit 7bb01d23328a68aae67c659fd6c32b6db033637d
+### 12.2 ERP Global Pro — audit snapshot main `7bb01d23328a68aae67c659fd6c32b6db033637d` (17 نوفمبر 2026)
 
 | مجموعة الواجهة | دليل المصدر | مالك البيانات | الحالة |
 |---|---|---|---|
@@ -180,7 +181,7 @@
 
 **Authorization contract:** ERP يعمل حالياً على Flask + SQLite v8. JWT يتضمن cid/mid عند اختيار الشركة بعد التحقق من العضوية؛ middleware يضع g.company ويعيد التحقق في كل طلب. الأدوار الفعالة من company membership، لكن role catalog ما زال مشتركاً. إعداد TENANT_DATA_SCOPING_ENABLED=False، والتطبيق يرفض العمليات التشغيلية عندما يتجاوز عدد الشركات واحدة والحاجز مغلق. ولذلك كل ERP Company/Business API يبقى Candidate/Blocked للتكامل التشغيلي متعدد الشركات إلى أن تُغلق Stage25C وPostgreSQL/RLS والـrestore gates.
 
-### 12.3 AI Chat App — current main commit 6645b0502daa6922040ee4c6bb5c281ed59ef366
+### 12.3 AI Chat App — audit snapshot main `6645b0502daa6922040ee4c6bb5c281ed59ef366` (17 نوفمبر 2026)
 
 جرد المصدر السابق في هذا الكتالوج/AI_CORE_CAPABILITY_INVENTORY.md أثبت وجود Agent Runtime وTool Registry وMCP وAgent Jobs وRAG وWorkspace/Project authorization. إصلاحات التفويض PR #721/#722/#723 مدمجة، واختبارات CI وCodeQL نجحت على رؤوسها. هذا لا يحول داخلياً مسارات المنتج إلى API مشتركة؛ يجب توثيق endpoint/service consumer contract لكل capability يراد استهلاكها خارج التطبيق.
 
@@ -289,7 +290,7 @@
 ### 13.4 مخاطر نطاق بيانات يجب أن تبقى ظاهرة
 
 - AI Chat App Issue [#724](https://github.com/HVA09/ai-chat-app/issues/724) مفتوحة. PR [#725](https://github.com/HVA09/ai-chat-app/pull/725) يقترح Retain privately: نقل مرفقات المشروع إلى `workspace_id=NULL` مع الحفاظ على المالك والبايتات/Chunks، وحذف روابطها من المساعدين المشتركين؛ أضيفت اختبارات تمنع list/download/RAG عبر عضو Workspace. CI run `43990553917` اكتمل بنجاح وCodeQL run `43990553931` نجح 2/2 على HEAD `f75ceefe790538b96be071c4c86b4e072f25e626`؛ PR #725 ما زال Draft/Unmerged وينتظر مراجعة واعتماد مالك المنتج لسياسة الاحتفاظ قبل الدمج أو إغلاق Issue.
-- Lumen PR #154 لا يحول AGS candidate إلى عقد LMS production: ما زال Draft، متأخراً 4 commits عن main في آخر comparison، وmergeable=false؛ CI 4/4 القديم لا يغلق Moodle/Canvas Sandbox وprivacy/clock gates.
+- Lumen PR #154 لا يحول AGS candidate إلى عقد LMS production: ما زال Draft/Unmerged؛ المقارنة الحية المسجلة عند نقطة تحقق 18 نوفمبر هي 46 ahead / 8 behind مع Lumen main `5774c8575bf62a3894a0eb957b77745181ff71e1`، بينما المقارنة ذات 4 commits خلفاً كانت لقطة أقدم ولا تمثل الحالة الحالية. CI القديم لا يغلق Moodle/Canvas Sandbox وprivacy/clock gates.
 - لا تعتبر مسارات ERP القائمة عقداً قابلاً للاستخدام من AI Core في بيئة تشغيل متعددة الشركات طالما release gate مغلق.
 
 ### 13.5 إغلاق جرد المسارات وما بقي
