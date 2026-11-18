@@ -59,8 +59,18 @@
 
 ## 4. شكل claims مقترح
 
-هذا مثال تصميمي وليس token فعلياً ولا يحدد خوارزمية توقيع معتمدة:
+هذا مثال تصميمي وليس token فعلياً ولا يحدد خوارزمية توقيع معتمدة. يجب وضع `kid` في **Protected JOSE Header** وفق RFC 7515 §4.1.4، وليس كـclaim داخل payload. المثالان التاليان توضيحيان فقط:
 
+Protected JOSE Header:
+```json
+{
+  "typ": "JWT",
+  "alg": "ES256",
+  "kid": "key-version-identifier"
+}
+```
+
+JWT Claims Payload:
 ```json
 {
   "iss": "https://identity.lumen.example",
@@ -73,8 +83,7 @@
   "iat": 0,
   "nbf": 0,
   "exp": 0,
-  "jti": "unique-token-id",
-  "kid": "key-version-identifier"
+  "jti": "unique-token-id"
 }
 ```
 
@@ -82,7 +91,7 @@
 1. خوارزميات توقيع غير متماثلة allowlisted فقط؛ يمنع قبول `alg=none` أو تغيير الخوارزمية من token.
 2. `iss` و`aud` exact-match مع قائمة موثوقة؛ لا wildcard audience.
 3. عمر قصير قابل للتهيئة، ورفض `exp/nbf` غير صالحين، مع tolerance محدود لانحراف الساعة.
-4. تحقق `kid` من key set موثوق مع تدوير وإلغاء؛ لا تنزيل JWKS من URL يقدمه العميل.
+4. اقرأ `kid` من Protected JOSE Header، ثم تحقق منه داخل key set موثوق مع تدوير وإلغاء؛ لا تقبل قيمة `kid` من payload بديلاً عن header، ولا تنزّل JWKS من URL يقدمه العميل.
 5. `jti` لمنع replay للعمليات الحساسة أو إضافة nonce/receipt حيث يلزم.
 6. لا scopes عامة مثل `*` ولا تفويضاً يتجاوز الدور أو policy الخاصة بالمنتج المصدر.
 
