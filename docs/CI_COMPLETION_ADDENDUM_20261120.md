@@ -40,3 +40,14 @@ PR [#8](https://github.com/HVA09/HVA09-unified-ecosystem-governance/pull/8) rema
 - No PR was merged, retargeted, or force-pushed as part of this verification.
 - No production deployment, live database operation, secret change, or repository protection change was performed.
 - Green CI is evidence for the exact tested commit, not independent security approval, production acceptance, or permission to bypass stacked dependencies.
+
+## Follow-up operational review — AI Chat App #739
+
+A deployment-configuration review confirms that the current Render Blueprint sets `EMBEDDED_CELERY=true`; `ai-backend/scripts/start.sh` starts both the Celery worker and Beat processes and watches them. The production Compose configuration also defines separate `celery_worker` and `celery_beat` services. Therefore, worker/Beat definition is present in the checked-in deployment configurations; runtime health in the live Render instance was not independently queried in this review.
+
+A follow-up review note was posted to [PR #739](https://github.com/HVA09/ai-chat-app/pull/739), GitHub comment ID `7027894144`. Remaining acceptance items:
+1. Add a PostgreSQL concurrency integration test using independent connections/transactions to prove two workers cannot claim the same outbox row. Current worker tests use a helper bound to the same test connection with savepoints and do not prove cross-connection contention behavior.
+2. Document an operator procedure and monitoring/alerting for rows reaching `status='failed'`, including controlled inspection and replay.
+3. Evaluate the fixed 15-minute lease against batches of up to 200 sequential storage operations; consider smaller batches, lease renewal, or an ownership token if a batch can outlive its lease.
+
+These are follow-up acceptance gaps, not CI failures. No production runtime health check, database change, or deployment was performed. PR #739 remains Draft and stacked on #738/#733.
