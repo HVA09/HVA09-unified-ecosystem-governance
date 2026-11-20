@@ -250,3 +250,13 @@
 - **ERP:** PR #15 توثيقي، فرعه 1 ahead / 0 behind وCI #44650847647 ناجح. تبقى استعادة SQLite v8 الفعلية مؤجلة إلى بيئة الكمبيوتر، مع إبقاء `TENANT_DATA_SCOPING_ENABLED=False` وعدم تفعيل multi-company أو PostgreSQL cutover.
 - **Governance:** PR #8 توثيقي؛ فرعه 13 ahead / 0 behind. لم تُرجع الاستعلامات أي workflow runs على رؤوس المرشح المتاحة؛ لذلك لا يُسجل CI نجاحاً أو فشلاً.
 - لم يحدث merge أو deployment أو migration أو تغيير إنتاج/بيانات/أسرار/حماية فروع في هذا التحقق.
+
+
+### AI Chat App storage outbox — deeper code review (20 Nov 2026)
+
+- Rechecked current #740 source and migration chain: `0082_file_index_fingerprints → 0083_storage_cleanup_outbox → 0084_storage_cleanup_lease_token`; #739 adds the durable outbox table/indexes/check constraints, and #740 adds nullable `lease_token`. No migration was run.
+- Current test file includes independent PostgreSQL-session reclaim/fencing cases, stale completion/failure cases, 12-attempt dead-letter behavior, local fallback traversal rejection, missing-file idempotency, and prefix isolation. S3 tests remain mocked; they do not establish real Stage duplicate-delete behavior.
+- The worker claims a default batch of 50 at once and processes storage I/O serially while the lease is fixed at 15 minutes from claim time. Later rows can therefore age while waiting in the batch. Lease-token fencing prevents stale database state updates, not duplicate external I/O. Stage must measure per-item/batch duration before deciding whether to alter claim size or lease policy.
+- The normal `DELETE /files/{file_id}` route still performs external object deletion before committing metadata deletion and does not use the cleanup outbox. A DB commit failure after successful object deletion can leave a metadata row pointing to a missing object. Review a transactional-outbox design for this path; no code changed.
+- The inspected admin router has user-deletion enqueue/dispatch, but no cleanup-outbox inspection/replay endpoint was found. No cleanup-specific metrics/alerts were found for oldest pending age, running lease age, retries, failed count, or Worker/Beat liveness. Track these as acceptance gaps in Issue #741.
+- Findings were added to [Issue #741](https://github.com/HVA09/ai-chat-app/issues/741) in a review comment. Issue remains Stage-only; no bucket mutation, production deletion, DB migration, secrets, or service scaling was performed.
