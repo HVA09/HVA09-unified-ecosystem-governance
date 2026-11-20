@@ -217,3 +217,16 @@
 - تم التحقق من أن Render Blueprint الحالي يضبط `EMBEDDED_CELERY=true`، وأن `ai-backend/scripts/start.sh` يبدأ Worker وBeat ويتابع عمليتيهما؛ كما يعرّف `docker-compose.prod.yml` الخدمتين. هذا يثبت وجود التكوين في المستودع فقط، لا سلامة runtime الحي.
 - أضيف تعليق مراجعة إلى AI Chat App PR #739 (comment ID `7027894144`) يطلب اختبار PostgreSQL concurrency عبر اتصالات مستقلة، إجراء مراقبة/تنبيه وإعادة معالجة controlled للصفوف `failed`، ومراجعة احتمال تجاوز batch من 200 عملية متسلسلة لمهلة lease الثابتة 15 دقيقة.
 - لا يوجد review submission رسمي حتى الآن؛ #739 يبقى Draft. لم يتغير كود التطبيق أو نشر الإنتاج.
+
+
+
+## تحديث تحقق AI Chat App — 20 نوفمبر 2026، 07:40 +02
+
+- PR #733: HEAD `6865548ce11edb78bc5f93f88110eef2a406dc1a`؛ CI وCodeQL ناجحان على الرأس الحالي.
+- PR #738: HEAD `927cd4d9c1fba1545a76b8b339d2f105a3266c5c`؛ CI وCodeQL ناجحان على الرأس الحالي.
+- PR #739: HEAD `f1b5838d85c015ef4f736e9ccee361e81c019df4`؛ CI وCodeQL ناجحان على الرأس الحالي.
+- PR #740: HEAD `77a2d6573b9720e739f435d2ac8be63b7a90fd21`؛ CI run #44675068289 وCodeQL run #44675068497 اكتمل كلاهما بنجاح. Backend، PostgreSQL migration/schema، downgrade/re-upgrade، frontend/build، SDK، preview-builder وproduction-compose نجحت.
+- #740 يضيف lease-token fencing واختبارين PostgreSQL يستخدمان SQLAlchemy sessions/connections مستقلة: إعادة الاستحواذ بواسطة العامل B أثناء IO للعامل A، ثم إثبات أن إكمال/فشل A المتأخر لا يغيّر نتيجة B.
+- الترتيب لا يزال #733 → #738 → #739 → #740. جميعها Open، ولم يحدث دمج. #739 و#740 Draft.
+- بوابات القبول المفتوحة: مراجعة dead-letter inspection/replay، إثبات مراقبة Celery Worker/Beat في بيئة اختبار/مرحلة، وتقييم lease duration/batch sizing بأدلة. نجاح CI ليس إثباتاً للتشغيل الفعلي.
+- لا تغييرات إنتاج أو بيانات أو أسرار أو إعدادات صلاحيات/حماية فروع. لا تُغلق CHAT-010 أو S2-06 بناءً على هذه الفحوص وحدها.
