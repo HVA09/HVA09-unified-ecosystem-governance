@@ -71,3 +71,12 @@ The repository inventory did not show a separate AI Core repository. AI Core rem
 - No PR in the product repositories was merged, retargeted, force-pushed, or closed.
 - No paid service or GPU resource was provisioned.
 - This document is a dated evidence snapshot, not a substitute for a fresh GitHub check before the next code change.
+
+
+## 8. Documentation reconciliation PRs opened from this snapshot
+
+- Governance snapshot: [PR #8](https://github.com/HVA09/HVA09-unified-ecosystem-governance/pull/8) — dated live-status record.
+- Lumen continuity refresh: [PR #176](https://github.com/HVA09/lumen-learning-platform/pull/176) — current observed main SHA and historical checkpoint distinction.
+- ERP README checkpoint refresh: [PR #15](https://github.com/HVA09/erp-global-pro/pull/15) — current observed main SHA and preservation of Stage25C safety gates.
+
+All three are documentation-only Draft PRs. Their workflow-run lookup did not return PR-triggered runs at the time of this snapshot update; do not infer CI success or failure from an empty result. Keep them unmerged until their actual required checks and review status are confirmed.
