@@ -80,3 +80,20 @@ The repository inventory did not show a separate AI Core repository. AI Core rem
 - ERP README checkpoint refresh: [PR #15](https://github.com/HVA09/erp-global-pro/pull/15) — current observed main SHA and preservation of Stage25C safety gates.
 
 All three are documentation-only Draft PRs. Their workflow-run lookup did not return PR-triggered runs at the time of this snapshot update; do not infer CI success or failure from an empty result. Keep them unmerged until their actual required checks and review status are confirmed.
+
+
+## 9. Follow-up verification — 2026-11-20
+
+A subsequent read-only check and isolated test addition updated the evidence state:
+
+- AI Chat App PR #739 now has head `f1b5838d85c015ef4f736e9ccee361e81c019df4` (40 commits, 16 changed files). A focused test module, `ai-backend/tests/test_storage_s3.py`, was added on the existing stacked branch. It covers:
+  - S3 `delete_file` bucket/key arguments and local fallback removal;
+  - user-prefix pagination and batches capped at 1,000 keys;
+  - partial S3 `Errors` responses raising `StorageError`;
+  - exact `users/{user_id}/` prefix selection and no delete call for an empty result.
+- The previous successful CI and CodeQL evidence applies to the earlier exact head `c5cd0275d7d9ebf10c97c1597b88f09df2ff69ff`, not the new test commit. The workflow-run lookup for `f1b5838d85c015ef4f736e9ccee361e81c019df4` returned no PR-triggered runs at this check; do not infer that the new tests passed. Keep PR #739 open and Draft.
+- Lumen PR #176 remains open/Draft. Its CI run #44650844591 is still in progress: Browser E2E, frontend tests/build, and full-history secret scan succeeded; the backend test job was still running.
+- ERP PR #15 remains open/Draft. CI run #44650847647 completed successfully, including Python 3.11/3.12 backend suites and live PostgreSQL adapter integration jobs.
+- Governance PR #8 remains open/Draft; its commit workflow-run lookup returned no PR-triggered runs. This is not evidence of either success or failure.
+
+No PR was merged, no branch was retargeted, and no production, live database, deployment, secret, or branch-protection setting was changed during this follow-up.
